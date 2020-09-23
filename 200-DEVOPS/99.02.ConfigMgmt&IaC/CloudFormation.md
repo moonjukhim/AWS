@@ -4,11 +4,11 @@
 
 # 1.인프라 자동화
 
-CloudFormation
+# CloudFormation
 
 Building Blocks
 
-- Resources
+- Resources(mandatory) : 사용자 지정 리소스 값(URL, 사용자 이름 등)
 - Parameter
 - Mappings
 - Outputs
