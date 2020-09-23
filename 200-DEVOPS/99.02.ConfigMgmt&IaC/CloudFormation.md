@@ -2,15 +2,18 @@
 
 ---
 
-# CloudFormation
+# 1.인프라 자동화
+
+CloudFormation
 
 Building Blocks
-  1. Resources
-  2. Parameter
-  3. Mappings
-  4. Outputs
-  5. Conditionals
-  6. Metadata
+
+- Resources
+- Parameter
+- Mappings
+- Outputs
+- Conditionals
+- Metadata
    
 ---
 
