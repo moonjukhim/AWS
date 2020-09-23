@@ -8,33 +8,36 @@
 
 Building Blocks
 
+
+- Description 
+- Parameter :  템플릿 입력 변수
+- Mappings : 정적 변수, 키-값 페어
+- Conditions : 특정 리소스의 생성 또는 업데이트 여부와 시기를 제어
+- Transform
 - Resources(mandatory) : 사용자 지정 리소스 값(URL, 사용자 이름 등)
-- Parameter
-- Mappings
-- Outputs
-- Conditionals
 - Metadata
+- Outputs
 
 ```yaml
 ---
 AWSTemplateFormatVersion: "2020-01-09"
 
-Description:
+Description: 
     String
 
 Parameters:
     set of parameters
 
-Mappings:
+Mappings: 
     set of mappings
 
-Conditions:
+Conditions: 
     set of conditions
 
-Transform:
+Transform: 사용할 AWS SAM 버전을 지정
     set of transform
 
-Resources:
+Resources: 
     set of resources
 
 Outputs:
