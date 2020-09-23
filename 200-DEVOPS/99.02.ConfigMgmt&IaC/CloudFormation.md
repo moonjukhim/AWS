@@ -1,3 +1,6 @@
+# 자동화 : 인프라 자동화 & 구성관리 자동화
+
+---
 
 # CloudFormation
 
@@ -9,7 +12,7 @@ Building Blocks
   5. Conditionals
   6. Metadata
    
----
+--
 
 # 
 ```bash
