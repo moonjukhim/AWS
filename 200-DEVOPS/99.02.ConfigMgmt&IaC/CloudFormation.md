@@ -14,7 +14,17 @@ Building Blocks
 - Outputs
 - Conditionals
 - Metadata
-   
+
+```yaml
+---
+AWSTemplateFormatVersion: "2020-01-09"
+
+Description:
+    String
+
+
+```
+
 ---
 
 # 
