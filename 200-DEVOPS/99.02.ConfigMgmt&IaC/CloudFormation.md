@@ -22,7 +22,23 @@ AWSTemplateFormatVersion: "2020-01-09"
 Description:
     String
 
+Parameters:
+    set of parameters
 
+Mappings:
+    set of mappings
+
+Conditions:
+    set of conditions
+
+Transform:
+    set of transform
+
+Resources:
+    set of resources
+
+Outputs:
+    set of outputs
 ```
 
 ---
