@@ -56,5 +56,9 @@ aws cloudformation create-stack --stack-name myteststack --template-body file://
 
 ---
 
+- Intrinsic Functions
 - 헬퍼 함수{cfn-init, cfn-hup, cfn-get-metadata, cfn-signal}
 - Nested Stack
+- Stack Policy
+- Custom Resources
+- Drift Detection
