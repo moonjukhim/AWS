@@ -54,3 +54,6 @@ aws cloudformation create-stack --stack-name myteststack --template-body file://
 }
 ```
 
+---
+
+- 헬퍼 함수{cfn-init, cfn-hup, cfn-get-metadata, cfn-signal}
