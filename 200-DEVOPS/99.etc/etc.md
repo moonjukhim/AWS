@@ -28,3 +28,15 @@ for bucket in s3.buckets.all():
     print(bucket.name)
 ```
 
+4.deactivate
+
+```bash
+deactivate
+```
+
+
+5.로그인할 때 가상 환경을 자동으로 활성화하려면 ~/.bashrc 파일에 추가
+
+```bash
+echo "source ${HOME}/my_app/env/bin/activate" >> ${HOME}/.bashrc
+```
