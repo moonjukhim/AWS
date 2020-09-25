@@ -1,6 +1,8 @@
 # 기타 내용
 # Python
 
+---
+
 1.Python 설치
 
 ```bash
@@ -40,3 +42,31 @@ deactivate
 ```bash
 echo "source ${HOME}/my_app/env/bin/activate" >> ${HOME}/.bashrc
 ```
+
+---
+
+# MariaDB
+
+1.MariaDB 설치
+
+
+
+2.DB & Table 생성
+
+3.데이터 임포트
+
+```mysql
+LOAD DATA LOCAL INFILE '파일명'
+REPLACE
+INTO TABLE `mydb`.`target_table`
+COLUMNS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+```
+
+
+
+
+
+
