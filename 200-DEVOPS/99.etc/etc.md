@@ -49,6 +49,51 @@ echo "source ${HOME}/my_app/env/bin/activate" >> ${HOME}/.bashrc
 
 1.MariaDB 설치
 
+```bash
+yum install MariaDB-server MariaDB-client
+sudo service mysql start
+```
+
+2.언어 변경
+
+```bash
+sudo mysql -uroot -p
+```
+
+```sql
+use mysql
+update user set password = password('비밀번호') where user='root';
+flush privileges;
+```
+
+```bash
+sudo cp /etc/my.cnf /etc/my.cnf.old
+sudo vi /etc/my.cnf
+```
+
+```
+[client]
+default-character-set=utf8
+
+[mysqld]
+port = 3306
+init_connect="SET collation_connection=utf8_general_ci"
+init_connect="SET NAMES utf8"
+character-set-server=utf8
+collation-server=utf8_general_ci
+skip-character-set-client-handshake
+
+[mysqldump]
+default-character-set=utf8
+
+[mysql]
+default-character-set=utf8
+```
+
+```bash
+sudo service mysql restart
+```
+
 
 
 2.DB & Table 생성
