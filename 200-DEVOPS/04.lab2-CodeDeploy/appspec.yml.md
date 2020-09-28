@@ -33,7 +33,18 @@ hooks:
 
  # 작업: 5 AWS CodeDeploy를 사용하여 배포 번들을 Amazon S3로 푸시
 
+파일을 번들링
+
  ```bash
  aws deploy push --application-name CodeDeploy-Demo --source HeartBeat-App \
     --s3-location s3://heartbeat-codedeploy-artifacts-[your-initials]-[your-zip-code]/HeartBeat-App.zip
  ```
+
+ S3로 푸시
+
+ ```
+ aws deploy create-deployment --application-name CodeDeploy-Demo \
+    --deployment-group-name HeartBeat-Deployment --deployment-config-name CodeDeployDefault.AllAtOnce \
+    --description "Initial Deployment" \
+    --s3-location bucket=heartbeat-codedeploy-artifacts-[your-initials]-[your-zip-code],key=HeartBeat-App.zip,bundleType=zip
+```
