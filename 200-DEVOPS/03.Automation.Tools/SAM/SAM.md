@@ -21,12 +21,16 @@ curl http://127.0.0.1:3000/hello
 ```
 
 # Step 4 - 애플리케이션 패키징
+```bash
 aws s3 mb s3://aws-devops-demo-sam-henry
-sam package --output-template-file packaged.yaml --s3-bucket aws-devops-demo-sam-henry --region ap-northeast-2 --profile aws-devops
+sam package --output-template-file packaged.yaml --s3-bucket aws-devops-demo-sam-henry --region ap-northeast-2 
+```
 
 # Step 5 - 애플리케이션 배포
-sam deploy --template-file packaged.yaml --capabilities CAPABILITY_IAM --stack-name aws-sam-getting-started --region ap-northeast-2 --profile aws-devops
+```bash
+sam deploy --template-file packaged.yaml --capabilities CAPABILITY_IAM --stack-name aws-sam-getting-started --region ap-northeast-2 
+```
 
 --- 
 
-# Step 6 - CI/CD 파이프라인을 사용하여 배포 자동화
+# Step 6 - (TODO) CI/CD 파이프라인을 사용하여 배포 자동화
