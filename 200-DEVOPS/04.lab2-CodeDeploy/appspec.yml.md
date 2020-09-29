@@ -1,5 +1,64 @@
 # appspec.yml
 
+AppSpec 파일 구조
+- appspec'파일'섹션(EC2/온프레미스 배포만 가능)
+- appspec'리소스'섹션(Amazon ECS and AWS Lambda 배포만 가능)
+- appspec'권한'섹셕(EC2/온프레미스 배포만 가능)
+- appspec'후크'섹션
+
+```yaml
+files:
+  - source: source-file-location
+    destination: destination-file-location
+
+resources:
+  - name-of-function-to-deploy:
+      type: "AWS::Lambda::Function" # 람다에 대한 부분
+      properties:
+        name: name-of-lambda-function-to-deploy
+        alias: alias-of-lambda-function-to-deploy
+        currentversion: version-of-the-lambda-function-traffic-currently-points-to
+        targetversion: version-of-the-lambda-function-to-shift-traffic-to
+
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service # ECS에 대한 부분
+      Properties:
+        TaskDefinition: "task-definition-ARN"
+        LoadBalancerInfo: 
+          ContainerName: "ECS-container-name-for-your-ECS-application" 
+          ContainerPort: port-used-by-your-ECS-application
+# Optional properties
+      PlatformVersion: "ecs-service-platform-version"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets: ["ecs-subnet-1","ecs-subnet-n"] 
+          SecurityGroups: ["ecs-security-group-1","ecs-security-group-n"] 
+          AssignPublicIp: "ENABLED-or-DISABLED"
+
+permissions:
+  - object: object-specification
+    pattern: pattern-specification
+    except: exception-specification
+    owner: owner-account-name
+    group: group-name
+    mode: mode-specification
+    acls: 
+      - acls-specification 
+    context:
+      user: user-specification
+      type: type-specification
+      range: range-specification
+    type:
+      - object-type
+
+Hooks:
+  - BeforeInstall: "BeforeInstallHookFunctionName"
+  - AfterInstall: "AfterInstallHookFunctionName"
+  - AfterAllowTestTraffic: "AfterAllowTestTrafficHookFunctionName"
+  - BeforeAllowTraffic: "BeforeAllowTrafficHookFunctionName"
+  - AfterAllowTraffic: "AfterAllowTrafficHookFunctionName"
+```
 
 Example
 
