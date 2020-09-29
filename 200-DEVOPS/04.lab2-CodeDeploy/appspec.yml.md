@@ -20,7 +20,7 @@ resources:
         currentversion: version-of-the-lambda-function-traffic-currently-points-to
         targetversion: version-of-the-lambda-function-to-shift-traffic-to
 
-Resources:
+resources:
   - TargetService:
       Type: AWS::ECS::Service # ECS에 대한 부분
       Properties:
@@ -52,7 +52,7 @@ permissions:
     type:
       - object-type
 
-Hooks:
+hooks:
   - BeforeInstall: "BeforeInstallHookFunctionName"
   - AfterInstall: "AfterInstallHookFunctionName"
   - AfterAllowTestTraffic: "AfterAllowTestTrafficHookFunctionName"
