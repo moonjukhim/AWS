@@ -1,3 +1,5 @@
+
+```yaml
 version: 0.2
 phases:
   install:
@@ -13,3 +15,4 @@ artifacts:
   files:
     - template.yaml
     - outputtemplate.yaml
+```
