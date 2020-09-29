@@ -4,7 +4,7 @@ From: https://docs.aws.amazon.com/serverless-application-model/latest/developerg
 
 # Step 1 - sample application 다운로드
 ```bash
-sam init --runtime python3.8
+sam init --runtime python3.6
 ```
 
 # Step 2 - 애플리케이션 빌드
@@ -13,15 +13,20 @@ cd sam-app
 sam build
 ```
 
-# Step 3 - Test the function
+# Step 3 - 람다 테스트
 ```bash
 sam local invoke "HelloWorldFunction" -e events/event.json
 sam local start-api
 curl http://127.0.0.1:3000/hello 
 ```
 
-# Step 4 - Package your application
-sam package --output-template packaged.yaml --s3-bucket aws-devops-course-stephane --region eu-west-1 --profile aws-devops
+# Step 4 - 애플리케이션 패키징
+aws s3 mb s3://aws-devops-demo-sam-henry
+sam package --output-template-file packaged.yaml --s3-bucket aws-devops-demo-sam-henry --region ap-northeast-2 --profile aws-devops
 
-# Step 5 - Deploy your application
-sam deploy --template-file packaged.yaml --capabilities CAPABILITY_IAM --stack-name aws-sam-getting-started --region eu-west-1 --profile aws-devops
+# Step 5 - 애플리케이션 배포
+sam deploy --template-file packaged.yaml --capabilities CAPABILITY_IAM --stack-name aws-sam-getting-started --region ap-northeast-2 --profile aws-devops
+
+--- 
+
+# Step 6 - CI/CD 파이프라인을 사용하여 배포 자동화
