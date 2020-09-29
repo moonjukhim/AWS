@@ -2,7 +2,7 @@ From: https://docs.aws.amazon.com/serverless-application-model/latest/developerg
 
 ---
 
-# Step 1 - sample application 다운로드
+# Step 1 - sample 애플리케이션 다운로드
 ```bash
 sam init --runtime python3.6
 ```
