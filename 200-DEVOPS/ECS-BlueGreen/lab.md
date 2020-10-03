@@ -1,4 +1,11 @@
+# 
+
+![ecs_bluegreen](https://ap-northeast-1-tcprod.s3.amazonaws.com/courses/ILT-TF-200-DEVOPS/v3.0.4/lab-5-CICDwECS/instructions/ko_kr/images/architecture.png)
+
+---
 # 1.소스 파일 설정
+
+buildspec.yaml
 
 ```yml
 version: 0.2
