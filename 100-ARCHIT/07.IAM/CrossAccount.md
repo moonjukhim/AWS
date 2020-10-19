@@ -10,6 +10,7 @@
     - VPCFullAccess 정책을 부여
 
 ## Task2.사용자 생성
+
   - iamtest
     - 인라인 정책 지정
 
