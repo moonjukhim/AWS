@@ -22,7 +22,7 @@
             "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": "sts:AssumeRole",
-            "Resource": "arn:aws:iam::[AWS account id]:role/NetworkAdmin"
+            "Resource": "arn:aws:iam::[ACCOUNT ID]:role/NetworkAdmin"
         }
     ]
 }
