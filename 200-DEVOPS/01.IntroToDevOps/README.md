@@ -1,6 +1,6 @@
 # DevOps
 
-목표
+과정 목표
 
 - List the advantages of small DevOps teams
 - List the roles and responsibilities of the members of a typical small DevOps team
@@ -20,7 +20,11 @@
 - Automate release pipelines (build, test, deploy) with AWS CodePipeline
 - Monitor an application and environment using AWS tools and technologies
 
+
+
 ---
+
+참고자료
 
 - What is Continuous Integration?: https://aws.amazon.com/devops/continuous-integration/
 - What is Continuous Delivery: https://aws.amazon.com/devops/continuous-delivery/
@@ -35,3 +39,16 @@
 - DevOps Culture at Amazon: https://www.youtube.com/watch?v=mBU3AJ3j1rg 
 - Using DevOps, Microservices, & Serverless to Accelerate Innovation: https://www.youtube.com/watch?v=eXl6Bumksnk 
 - Moving to DevOps the Amazon Way: https://www.youtube.com/watch?v=Pvb74TlV8SA
+
+---
+
+"DevOps" 원칙 준수
+
+DevOps principles
+In short, the main principles of DevOps are automation, continuous delivery, and fast reaction to feedback. 
+You can find a more detailed explanation of DevOps pillars in the CAMS acronym:
+
+- Culture represented by human communication, technical processes, and tools
+- Automation of processes
+- Measurement of KPIs
+- Sharing feedback, best practices, and knowledge
