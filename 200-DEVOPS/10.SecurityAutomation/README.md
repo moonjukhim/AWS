@@ -1,3 +1,16 @@
+# Module 10 overview: Security Automation
+
+This module is intended to bring to the forefront the security aspect in a DevOps practice. 
+The slides explain how we should be implementing security at different stages in the CI/CD pipeline. 
+The module breaks down into the following sections:
+
+- Introduction to DevSecOps
+- Security of the pipeline
+- Security in the pipeline
+- Threat detection tools
+
+---
+
 IAM policy example
 
 다음은 사용자가 us-west-2 리전의 MyFirstPipeline이라는 파이프 라인에서 모든 단계 전환을 활성화 및 비활성화 할 수 있도록 허용하는 권한 정책의 예를 보여줍니다.
