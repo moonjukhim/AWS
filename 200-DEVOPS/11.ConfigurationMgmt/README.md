@@ -1,6 +1,9 @@
 # 모듈 11 개요 : 구성 관리
 
-이 모듈에서는 구성 관리 프로세스, 워크 플로, AWS Config, AWS Systems Manager의 기능 및 AWS OpsWorks (Chef 및 Puppet) 및 AWS OpsWorks Stacks에 대한 간략한 소개에 대해 학습합니다. 이 모듈에 새로 추가 된 사항에는 AMI 옵션과 사전 구축 된 AMI가 포함됩니다. 모듈은 다음 섹션으로 나뉩니다.
+이 모듈에서는 구성 관리 프로세스, 워크 플로, AWS Config, AWS Systems Manager의 기능 및 AWS OpsWorks (Chef 및 Puppet) 
+및 AWS OpsWorks Stacks에 대한 간략한 소개에 대해 학습합니다. 
+이 모듈에 새로 추가 된 사항에는 AMI 옵션과 사전 구축 된 AMI가 포함됩니다. 
+모듈은 다음 섹션으로 나뉩니다.
 
 - 구성 관리 프로세스 소개
 - 구성 관리를위한 AWS 서비스 및 도구
