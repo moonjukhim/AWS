@@ -23,3 +23,24 @@
 - Snowflake 서버 (Martin Fowler) : https://martinfowler.com/bliki/SnowflakeServer.html 
 - AWS CodeStar를 사용한 사용자 지정 AWS Config 규칙 : https://aws.amazon.com/blogs/mt/how-to-create-custom-aws-config-rules-with-aws-codestar/
 - 동적 DevOps 환경의 IT 거버넌스 : https://aws.amazon.com/blogs/devops/it-governance-in-a-dynamic-devops-environment/ 
+
+---
+
+11.1 구성관리란?
+
+11.2 구성 관리 프로세스
+- 이벤토리/구성 추적
+- 제어
+- 변경 오케스트레이션
+- OS 및 애플리케이션 스택 관리
+
+11.2.3 변경 오케스트레이션
+- AWS 리소스 변경 조정 및 관리(생성, 변경 및 종료)
+- 오케스트레이션 도구:
+  - AWS CloudFormation
+  - AWS Service Catalog
+  - AWS System Manager
+  - AWS Elastic Beanstalk
+  - AWS OpsWorks
+  - 타사 도구(HashiCorp Terraform 등)
+
