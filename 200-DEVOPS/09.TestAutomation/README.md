@@ -20,7 +20,10 @@ Topics
 - Macie
 - GuardDuty
 
+---
 
+Pipeline Template URL
+https://ap-northeast-1-tcprod.s3.amazonaws.com/courses/ILT-TF-200-DEVOPS/v3.0.8/lab-6-DevOpsTools/scripts/releasePipelineTemplate.yaml
 
 
 
