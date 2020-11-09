@@ -24,3 +24,5 @@ https://martinfowler.com/articles/break-monolith-into-microservices.html
 # 모놀리스 분해 방법
 
  https://aws.amazon.com/getting-started/projects/break-monolith-app-microservices-ecs-docker-ec2/
+
+ https://github.com/awslabs/amazon-ecs-nodejs-microservices 
