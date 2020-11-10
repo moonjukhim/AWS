@@ -14,3 +14,9 @@
 - AWS Elastic Beanstalk Express 샘플 앱 : 
   https://github.com/aws-samples/eb-node-express-sample/tree/xray
 - 관찰 가능성 : https://www.youtube.com/watch?v=pAmHHQJ0zwY
+
+---
+
+releasePipeline 파이프라인
+
+https://ap-northeast-2-tcprod.s3.amazonaws.com/courses/ILT-TF-200-DEVOPS/v3.0.8/lab-6-DevOpsTools/scripts/releasePipelineTemplate.yaml
