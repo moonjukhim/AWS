@@ -1,6 +1,13 @@
 # 모듈11: AWS Glue를 사용하여 ETL 워크로드 자동화
 
+
 ---
+
+## 참고자료
+
+[AWS Glue 리소스에 대한 액세스 권한 관리]https://docs.aws.amazon.com/ko_kr/glue/latest/dg/access-control-overview.html
+
+
 
 Kinesis agent 설치
 
