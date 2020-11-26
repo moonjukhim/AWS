@@ -16,9 +16,25 @@
 
 # Demo
 
-```python
-spark = SparkSession.builder.appName('Amazon reviews word count').getOrCreate()
-df.selectExpr("explode(split(lower(review_body), ' ')) as words").groupBy("words").count().explain()
- 
-quit()
+
+```bash
+touch hello.txt
+echo "hello world hello spark" >> hello.txt
+aws s3 mb s3://hello-spark
+aws s3 cp hello.txt s3://hello-spark/
+```
+
+```scala
+val file = sc.textFile("s3://hello-spark/hello.txt")
+
+val counts = file.
+  flatMap(line => line.
+    toLowerCase().
+    replace(".", " ").
+    replace(",", " ").
+    split(" ")).
+  map(word => (word, 1L)).
+  reduceByKey(_ + _).explain()
+
+counts.collect().sortBy(wc => -wc._2)
 ```
