@@ -1,6 +1,16 @@
-#
+# 실습 4: 로그 수집 및 분석
 
-## 
+## 과제 1: 배스천 호스트에 연결
+
+## 과제 2: Amazon Kinesis Data Firehose 전송 스트림 생성 및 Fluent Bit DaemonSet 구성
+
+## 과제 3: 샘플 애플리케이션 배포, 로그 데이터 수집 및 Amazon Athena를 사용하여 데이터 분석
+
+## 과제 4: Amazon CloudWatch Container Insights 배포 및 구성
+
+## 과제 5: AWS X-Ray 배포 및 트레이스 지표 검토
+
+---
 
 cluster.yaml
 
