@@ -29,7 +29,7 @@
 ```
 
 ## Task3.사용자로 로그인 하여 권한 확인
-  - https://[ACCOUNT ALIAS]].signin.aws.amazon.com/console
+  - https://[ACCOUNT ID].signin.aws.amazon.com/console
   부여된 권한이 없기 때문에 어떠한 작업도 수행할 수 없습니다.
 
 ## Task4.역할 전환
