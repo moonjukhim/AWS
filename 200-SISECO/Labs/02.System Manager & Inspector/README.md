@@ -1,3 +1,7 @@
+# 실습 2: AWS Systems Manager 및 Amazon Inspector 사용
+
+### 과제1: Amazon Inspector 에이전트 설치
+
 ```bash
 aws ssm send-command --targets Key=tag:SecurityScan,Values=true \
 --document-name "AmazonInspector-ManageAWSAgent" \
@@ -12,5 +16,8 @@ aws ssm list-command-invocations --details \
 --query "CommandInvocations[*].[InstanceId,DocumentName,Status]" \
 --command-id <CommandId>
 ```
+### 과제2: Amazon Inspector 설정
 
-## 과제4: 패치 기준선 생성 및 적용
+### 과제3: 스캔 결과 검토
+
+### 과제4: 패치 기준선 생성 및 적용
