@@ -8,7 +8,8 @@
 
 ## 과제 4: AWS CodePipeline을 사용하여 도커 이미지 생성
 
-codebuild buildspec에서 "apt update"이전에 "apt-key adv --refresh-keys --keyserver keyserver.ubuntu.com" 
+
+codebuild buildspec에서 "apt update"이전에 "apt-key adv --refresh-keys --keyserver keyserver.ubuntu.com" 추가
 
 ## 과제 5: Kubernetes 매니페스트 파일 배포 및 업데이트
 
