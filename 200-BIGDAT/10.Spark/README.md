@@ -22,6 +22,7 @@ touch hello.txt
 echo "hello world hello spark" >> hello.txt
 aws s3 mb s3://hello-spark
 aws s3 cp hello.txt s3://hello-spark/
+spark-shell
 ```
 
 ```scala
@@ -34,7 +35,9 @@ val counts = file.
     replace(",", " ").
     split(" ")).
   map(word => (word, 1L)).
-  reduceByKey(_ + _).explain()
+  reduceByKey(_ + _)
 
-counts.collect().sortBy(wc => -wc._2)
+counts.collect.foreach(println)
+counts.toDebugString
+# counts.collect().sortBy(wc => -wc._2)
 ```
