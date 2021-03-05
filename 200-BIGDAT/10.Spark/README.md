@@ -26,6 +26,7 @@ spark-shell
 ```
 
 ```scala
+# RDD
 val file = sc.textFile("s3://hello-spark/hello.txt")
 
 val counts = file.
@@ -40,4 +41,22 @@ val counts = file.
 counts.collect.foreach(println)
 counts.toDebugString
 # counts.collect().sortBy(wc => -wc._2)
+
+# DataFrame
+val file = spark.read.textFile("s3://hello-spark/hello.txt")
+file.show()
+
+val peopleDF = spark.sparkContext.
+  textFile("s3://hello-spark/hello.txt").
+  flatMap(line => line.
+    toLowerCase().
+    replace(".", " ").
+    replace(",", " ").
+    split(" ")).
+  map(word => (word, 1L)).
+  reduceByKey(_ + _)
+
+peopleDF.toDF().show()
+// Register the DataFrame as a temporary view
+peopleDF.createOrReplaceTempView("people")
 ```
