@@ -63,7 +63,7 @@
 8. Launch AVM Stage (약 20분 정도 소요)
     - CodeBuild로 실행됨
     - python3 launch_avm.py $log_level $wait_time $current/manifest.yaml $sm_arn_launch_avm $batch_size
-    - 
+    - StackSet 화 한 내용을 각 계정에 배포하고 있음
 
 Ref. Deployment Time
 
