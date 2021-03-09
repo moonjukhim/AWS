@@ -4,7 +4,9 @@
 
 멀티계정의 환경을 손쉽게 배포하고 관리하기 위한 서비스
 
+---
 
+# Day1
 
 [[prerequisite]]
 1.AWS계정과 google 계정 or 4개의 개인 이메일이 필요
@@ -28,13 +30,15 @@
 
 3. Core Accounts Stage (약 25분 정도 소요)
     [LandingZoneStateMachineTriggerLambda -> StateMachine -> ]
-    - Organization 이 만들어짐
+    - Organization 이 만들어짐 
+    - Organization State Machine
     - SCP가 만들어지지만 이를 나중에 enable 시킬 것임
 
 4. SCP Stage(Policy)
     - SCP를 enable되고
     - Service control policy에 2개의 Policy가 생성이 됨
       - 절대 삭제하면 안됨
+    - SCP State Machine
 
 5. Core Resource Stage (약 10분 정도 소요)
     - CoreStackSet이 생성
@@ -51,9 +55,20 @@
     - AVM이 생성
     - LandingZoneServiceCatalogStateMachine 이 수행
 
-7. Baseline Resource (약 27분 정도 소요)
+7. Baseline Resource Stage (약 27분 정도 소요)
     - Baseline resource stackset이 생성
     - CodeBuild가 사용됨
     - Baseline의 대부분의 리소스가 여기서 생성되므로 시간이 상당히 소요
 
-8. 
+8. Launch AVM Stage (약 20분 정도 소요)
+    - CodeBuild로 실행됨
+    - python3 launch_avm.py $log_level $wait_time $current/manifest.yaml $sm_arn_launch_avm $batch_size
+    - 
+
+Ref. Deployment Time
+
+[[SSO]]
+
+--- 
+
+# Day2 
