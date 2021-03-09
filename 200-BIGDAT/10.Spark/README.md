@@ -22,9 +22,11 @@ touch hello.txt
 echo "hello world hello spark" >> hello.txt
 aws s3 mb s3://hello-spark
 aws s3 cp hello.txt s3://hello-spark/
+spark-shell
 ```
 
 ```scala
+# RDD
 val file = sc.textFile("s3://hello-spark/hello.txt")
 
 val counts = file.
@@ -34,7 +36,27 @@ val counts = file.
     replace(",", " ").
     split(" ")).
   map(word => (word, 1L)).
-  reduceByKey(_ + _).explain()
+  reduceByKey(_ + _)
 
-counts.collect().sortBy(wc => -wc._2)
+counts.collect.foreach(println)
+counts.toDebugString
+# counts.collect().sortBy(wc => -wc._2)
+
+# DataFrame
+val file = spark.read.textFile("s3://hello-spark/hello.txt")
+file.show()
+
+val peopleDF = spark.sparkContext.
+  textFile("s3://hello-spark/hello.txt").
+  flatMap(line => line.
+    toLowerCase().
+    replace(".", " ").
+    replace(",", " ").
+    split(" ")).
+  map(word => (word, 1L)).
+  reduceByKey(_ + _)
+
+peopleDF.toDF().show()
+// Register the DataFrame as a temporary view
+peopleDF.createOrReplaceTempView("people")
 ```
