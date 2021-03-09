@@ -69,6 +69,12 @@ Ref. Deployment Time
 
 [[SSO]]
 
+1. SSO Enable
+
+2. SSO 서비스에서 Permission을 먼저 생성(AdministratorAccess)
+
+3. SSO에서 Users를 생성하고 어느 계정에 줄 것인지 Assign
+
 --- 
 
 # Day2 
