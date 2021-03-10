@@ -24,13 +24,14 @@
 
 
 [[CodePipeline]]
-1. Source Stage 
+1. Source Stage (Management Account에서 시작!!!)
     - CodePipeline에서 S3에 파일을 수정하여 다시 업로드
 2. Build Stage 진행
 
 3. Core Accounts Stage (약 25분 정도 소요)
     [LandingZoneStateMachineTriggerLambda -> StateMachine -> ]
     - Organization 이 만들어짐 
+    - OU 생성
     - Organization State Machine
     - SCP가 만들어지지만 이를 나중에 enable 시킬 것임
 
