@@ -121,5 +121,29 @@ Management Console / IAM / Account settings에는 12로 설정되어 있음
 
 
 
-[[Service Catalog]]
+### [[Service Catalog]]
 
+Service Catalog를 생성 -> Service Baseline을 생성
+
+AVM을 사용하여 계정을 자동 생성
+
+### [[SCP]]
+
+Root OU
+    |- Core OU
+    |- Application OU
+
+
+1. 추가적인 
+    - aws-core-common-guardrail.json
+    - --> policies 디렉토리 밑에 복사
+
+
+### [[AWS Config]]
+
+Organization (Billing --> Governance)
+
+
+### 
+
+Google 계정은 Organization 각각의 계정에 카드 정보를 입력
