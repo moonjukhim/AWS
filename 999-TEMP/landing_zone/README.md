@@ -79,3 +79,47 @@ Ref. Deployment Time
 --- 
 
 # Day2 
+Landing Zone을 사용해보는 것이 목표
+
+[[Code를 사용]]
+SSO 사용자에 대해
+--> KMS에 권한 부여
+
+
+S3에서 --> CodeCommit으로 변경(GitOps)
+
+
+```yaml
+# SCP와 OU의 리소스를 제외한 나머지는 AWS Core Service/Baseline을 호출하여 생성
+
+# Landing Zone Core Account Structure (#3 Stage)
+organizational_units:
+
+# Landing Zone Service Control Policies (#4 SCP Stage)
+organization_policies:
+
+# Landing Zone Service Catalog portolfios/products (Optional/Baseline) (# Service Catalog에 밀어넣을 Portfolio를 생성)
+portfolios:
+
+# Landing Zone Service Baseline Resources
+baseline_resources:
+```
+
+### Policy를 변경하는 작업을 해봄
+파라미터와 template을 두 군데 다 바꾸어야 함
+
+parameters / aws_baseline / aws-landing-zone-iam-password-policy.json
+templates / aws_baseline / aws-landing-zone-iam-password-policy.template
+
+지금 환경에서 패스워드 설정에 대한 부분을 확인
+
+Management Console / IAM / Account settings에는 12로 설정되어 있음
+
+
+3. 다시 12자리의 패스워드로 원복
+    - git-remote로 하는 이유
+
+
+
+[[Service Catalog]]
+
