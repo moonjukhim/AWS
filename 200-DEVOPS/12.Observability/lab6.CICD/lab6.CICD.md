@@ -35,37 +35,37 @@
     * Add Jenkins
 
 * Deploy
-    - AWS AppConfig
-    - AWS CloudFormation
-    - AWS CloudFormation Stack Instances
-    - AWS CloudFormation Stack Set
-    - AWS CodeDeploy
-    - AWS Elastic Beanstalk
-    - AWS OpsWorks Stacks
-    - AWS Service Catalog
-    - Alexa Skills Kit
-    - Amaxon ECS
-    - Amazon ECS (Blue/Green)
-    - Amazon S3
+    * AWS AppConfig
+    * AWS CloudFormation
+    * AWS CloudFormation Stack Instances
+    * AWS CloudFormation Stack Set
+    * AWS CodeDeploy
+    * AWS Elastic Beanstalk
+    * AWS OpsWorks Stacks
+    * AWS Service Catalog
+    * Alexa Skills Kit
+    * Amaxon ECS
+    * Amazon ECS (Blue/Green)
+    * Amazon S3
 
-Invoke
-    - AWS Lambda
-    - AWS Step Functions
+* Invoke
+    * AWS Lambda
+    * AWS Step Functions
 
-Source
-    - AWS CodeCommit
-    - Amazon ECR
-    - Amazon S3
-    - Bitbucket
-    - GitHub (Version 1)
-    - GitHub (Version 2)
-    - GitHub Enterprise Server
+* Source
+    * AWS CodeCommit
+    * Amazon ECR
+    * Amazon S3
+    * Bitbucket
+    * GitHub (Version 1)
+    * GitHub (Version 2)
+    * GitHub Enterprise Server
 
-Test
-    - AWS CodeBuild
-    - AWS Device Farm
-    - Add Jenkins
-    - BlazeMeter
-    - Ghost Inspector UI Testing
-    - Micro Focus StormRunner Load
-    - Runscope API Monitoring
+* Test
+    * AWS CodeBuild
+    * AWS Device Farm
+    * Add Jenkins
+    * BlazeMeter
+    * Ghost Inspector UI Testing
+    * Micro Focus StormRunner Load
+    * Runscope API Monitoring
