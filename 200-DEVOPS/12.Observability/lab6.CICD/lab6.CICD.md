@@ -27,14 +27,14 @@
 
 ---
 
-Approval
+* Approval
     * Manual approval
 
-Build
+* Build
     * AWS CodeBuild
     * Add Jenkins
 
-Deploy
+* Deploy
     - AWS AppConfig
     - AWS CloudFormation
     - AWS CloudFormation Stack Instances
