@@ -1,4 +1,4 @@
-# appspec.yml
+### appspec.yml
 
 AppSpec 파일 구조
 - appspec'파일'섹션(EC2/온프레미스 배포만 가능)
@@ -93,7 +93,7 @@ hooks:
 
 ---
 
- # 작업: 5 AWS CodeDeploy를 사용하여 배포 번들을 Amazon S3로 푸시
+ #### 작업: 5 AWS CodeDeploy를 사용하여 배포 번들을 Amazon S3로 푸시
 
 파일을 번들링
 
