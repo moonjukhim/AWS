@@ -28,11 +28,11 @@
 ---
 
 Approval
-    - Manual approval
+    * Manual approval
 
 Build
-    - AWS CodeBuild
-    - Add Jenkins
+    * AWS CodeBuild
+    * Add Jenkins
 
 Deploy
     - AWS AppConfig
