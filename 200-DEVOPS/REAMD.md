@@ -1,6 +1,6 @@
 ### Module 5. Microservices
 
-1. ["Principles of Microservices", Sam Newman, accessed October 24, 2019)[https://samnewman.io/talks/principles-of-microservices/]
+1. ["Principles of Microservices", Sam Newman, accessed October 24, 2019](https://samnewman.io/talks/principles-of-microservices/)
 
 ### Module 6. DevOps_and_containers
 
