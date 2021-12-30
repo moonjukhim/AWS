@@ -1,0 +1,1 @@
+https://docs.aws.amazon.com/redshift/latest/dg/c_sampledb.html
