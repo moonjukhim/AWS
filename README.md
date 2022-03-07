@@ -2,10 +2,10 @@
 |-----|-----|-----|
 |AWS Certified Alexa Skill Builder - Specialty|||
 |AWS Certified Big Data - Specialty|||
+|AWS Certified Cloud Practitioner|||
+|AWS Certified Data Analytics - Specialty|||
+|AWS Certified Database - Specialty|||
 
-AWS Certified Cloud Practitioner: AWS Certified Cloud Practitioner (CLF-C01)
-AWS Certified Data Analytics - Specialty: AWS Certified Data Analytics - Specialty (DAS-C01)
-AWS Certified Database - Specialty: AWS Certified Database - Specialty
 AWS Certified Developer Associate: AWS Certified Developer Associate
 AWS Certified Machine Learning - Specialty: AWS Certified Machine Learning - Specialty (MLS-C01)
 AWS Certified Security - Specialty: AWS Certified Security - Specialty
