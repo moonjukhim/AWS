@@ -1,4 +1,4 @@
-![boto3.aws.s3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#service-resource)
+[boto3.aws.s3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#service-resource)
 
 ```python
 # Create S3 resource
