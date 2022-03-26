@@ -67,5 +67,5 @@ aws lambda update-function-code --function-name PythonCalculator --zip-file file
 
 5. CloudWatch 확인
    
-![CloudWatch Log](.img/lambda-cloudwatch.jpg)
+![CloudWatch Log](./img/lambda-cloudwatch.jpg)
 
