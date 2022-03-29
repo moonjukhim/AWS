@@ -22,30 +22,29 @@
 |Level|Code|Title|Date|Check|
 |-----|-----|-----|-----|-----|
 |100|BES|Business-Essential|||
-|AWS Certified Big Data - Specialty|||
-|AWS Certified Cloud Practitioner|||
-|AWS Certified Data Analytics - Specialty|||
-|AWS Certified Database - Specialty|||
-|AWS Certified Developer Associate|||
-|AWS Certified Machine Learning - Specialty|||
-|AWS Certified Security - Specialty|||
-|AWS Certified Solutions Architect - Associate |||
-|AWS Certified Solutions Architect - Professional|||
-|AWS Certified SysOps Administrator - Associate|||
-|AWS DevOps Engineer Professional|||
+|100|TECESS|Technical-Essential|||
+|200|ANBDLK|Business-Essential|||
+|200|BES|Building-Data-Lakes-on-AWS|||
+|200|ARCHIT|Architecting-on-AWS|||
+|200|BIGDAT|Big-Data-on-AWS|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
+|100|BES|Business-Essential|||
 
 
-
-
-100-ACPEXX-AWS Cloud Practitioner Essentials
-2022-01-04  오후 03:49    <DIR>          100-BES-Business-Essential
-2022-01-04  오후 03:49    <DIR>          100-CECEBL-AWS Cloud Essential for Business Leaders
-2022-01-04  오후 03:49    <DIR>          100-CECEFS-AWS Cloud Essential for Business Leaders-- Financial Services
-2022-01-18  오전 11:14    <DIR>          100-MSMEDM-Media-Essentials-for-IT-Business-Decision-Makers
-2021-12-29  오전 11:34    <DIR>          100-TECESS-Technical-Essential
-2022-01-04  오후 03:50    <DIR>          200-ANBDLK-Building-Data-Lakes-on-AWS
-2022-03-21  오후 04:00    <DIR>          200-ARCHIT-Architecting-on-AWS
-2021-12-29  오전 11:34    <DIR>          200-BIGDAT-Big-Data-on-AWS
+2022-03-21  오후 04:00    <DIR>          --
+2021-12-29  오전 11:34    <DIR>          --
 2022-01-04  오후 03:50    <DIR>          200-BSD-2X-KO-PPT-EV
 2021-12-29  오전 11:34    <DIR>          200-COREKS-Running-Containers-on-Amazon-Elastic-Kubernetes-Service
 2022-01-18  오전 11:14    <DIR>          200-CSAWAF-Well-Architected-Best-Practices
