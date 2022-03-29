@@ -36,25 +36,13 @@
 |200|MLDEEP|Deep-Learning-on-AWS|||
 |200|MLDWTS|The-Machine-Learning-Pipeline-on-AWS|||
 |200|MLPDSS|Practical-Data-Science-with-Amazon-SageMaker|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-
-
-
-2021-12-29  오전 11:34    <DIR>          200-MLPOPS-MLOps-Engineering-on-AWS
-2021-12-29  오전 11:36    <DIR>          200-MSVSES-Video Streaming Essentials for-AWS Media Services
-2021-12-30  오전 11:43    <DIR>          200-SISECO-Security-Engineering-on-AWS
-2021-12-29  오전 11:36    <DIR>          200-SISGOV-Security-Governance
-2021-11-16  오전 11:22    <DIR>          200-STSCTR-20-KO-IG-PPT
-2022-01-04  오후 03:50    <DIR>          200-SVDVSS-Developing-Serverless-Solutions-on-AWS
-2022-01-04  오후 03:49    <DIR>          200-SYSOPS-Systems-Operations-on-AWS
-2021-12-30  오후 01:37    <DIR>          300-ACARCH-Architecting-On-AWS-Accelerator
-2021-12-30  오후 01:31    <DIR>          300-ADVARC-Advanced-Architecting-on-AWS
-2021-12-30  오후 01:35    <DIR>          300-ADVDEV-Advanced-Developing-on-AWS
-2021-12-30  오후 01:25    <DIR>          300-CORCEM-33-KO-IG-PPTX
+|200|MLPOPS|MLOps-Engineering-on-AWS|||
+|200|MSVSES|Video Streaming Essentials for-AWS Media Services|||
+|200|SISECO|Security-Engineering-on-AWS|||
+|200|SISGOV|Security-Governance|||
+|200|SVDVSS|Developing-Serverless-Solutions-on-AWS|||
+|200|SYSOPS|Systems-Operations-on-AWS|||
+|300|ACARCH|Architecting-On-AWS-Accelerator|||
+|300|ADVARC|Advanced-Architecting-on-AWS|||
+|300|ADVDEV|Advanced-Developing-on-AWS|||
+|300|CORCEM||||
