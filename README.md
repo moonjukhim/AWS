@@ -27,13 +27,13 @@
 |200|BES|Building-Data-Lakes-on-AWS|||
 |200|ARCHIT|Architecting-on-AWS|||
 |200|BIGDAT|Big-Data-on-AWS|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
-|100|BES|Business-Essential|||
+|200|COREKS|Running-Containers-on-Amazon-Elastic-Kubernetes-Service|||
+|200|CSAWAF|Well-Architected-Best-Practices|||
+|200|DAREDS|Building-Data-Analytics-Solutions-Using-Amazon-Redshift|||
+|200|DBDBAW|Planning-and-Designing-Databases-on-AWS|||
+|200|DBDWOA|Data-Warehousing-on-AWS|||
+|200|DEVOPS|DevOps-Engineering|||
+|200|DODEVA|Developing-on-AWS|||
 |100|BES|Business-Essential|||
 |100|BES|Business-Essential|||
 |100|BES|Business-Essential|||
@@ -43,16 +43,14 @@
 |100|BES|Business-Essential|||
 
 
-2022-03-21  오후 04:00    <DIR>          --
+
 2021-12-29  오전 11:34    <DIR>          --
-2022-01-04  오후 03:50    <DIR>          200-BSD-2X-KO-PPT-EV
-2021-12-29  오전 11:34    <DIR>          200-COREKS-Running-Containers-on-Amazon-Elastic-Kubernetes-Service
-2022-01-18  오전 11:14    <DIR>          200-CSAWAF-Well-Architected-Best-Practices
-2022-01-04  오후 03:49    <DIR>          200-DAREDS-Building-Data-Analytics-Solutions-Using-Amazon-Redshift
-2022-01-04  오후 03:50    <DIR>          200-DBDBAW-Planning-and-Designing-Databases-on-AWS
-2022-01-04  오후 03:50    <DIR>          200-DBDWOA-Data-Warehousing-on-AWS
-2022-02-21  오후 03:53    <DIR>          200-DEVOPS-DevOps-Engineering
-2022-03-24  오후 10:47    <DIR>          200-DODEVA-Developing-on-AWS
+2022-01-18  오전 11:14    <DIR>          --
+2022-01-04  오후 03:49    <DIR>          --
+2022-01-04  오후 03:50    <DIR>          --
+2022-01-04  오후 03:50    <DIR>          --
+2022-02-21  오후 03:53    <DIR>          --
+2022-03-24  오후 10:47    <DIR>          --
 2022-01-04  오후 03:49    <DIR>          200-MLDEEP-Deep-Learning-on-AWS
 2022-01-04  오후 03:49    <DIR>          200-MLDWTS-The-Machine-Learning-Pipeline-on-AWS
 2022-02-21  오후 03:53    <DIR>          200-MLPDSS-Practical-Data-Science-with-Amazon-SageMaker
