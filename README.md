@@ -20,7 +20,7 @@
 ### 
 
 |Level|Code|Title|Date|Check|
-|-----|-----|-----|
+|-----|-----|-----|-----|-----|
 |100|BES|Business-Essential|||
 |AWS Certified Big Data - Specialty|||
 |AWS Certified Cloud Practitioner|||
