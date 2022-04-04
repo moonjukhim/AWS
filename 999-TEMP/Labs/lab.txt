@@ -1,0 +1,10 @@
+### SISECO
+
+- 실습 1: 자격 증명 기반 정책 및 리소스 기반 정책 사용
+- 실습 2: AWS Systems Manager 및 Amazon Inspector 사용
+- 실습 3: AWS Config를 사용한 모니터링 및 대응
+- 실습 4: 웹 서버 로그 분석
+- 실습 5: AWS KMS 사용
+- 실습 6: AWS Service Catalog 사용
+- 실습 7: ADFS를 사용한 AWS 연동 인증
+
