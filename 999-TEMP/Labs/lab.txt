@@ -1,12 +1,18 @@
-### SISECO
-
-- 실습 1: 자격 증명 기반 정책 및 리소스 기반 정책 사용
-- 실습 2: AWS Systems Manager 및 Amazon Inspector 사용
-- 실습 3: AWS Config를 사용한 모니터링 및 대응
-- 실습 4: 웹 서버 로그 분석
-- 실습 5: AWS KMS 사용
-- 실습 6: AWS Service Catalog 사용
-- 실습 7: ADFS를 사용한 AWS 연동 인증
+### 200-SISECO
+- 1: 자격 증명 기반 정책 및 리소스 기반 정책 사용
+- 2: AWS Systems Manager 및 Amazon Inspector 사용
+- 3: AWS Config를 사용한 모니터링 및 대응
+- 4: 웹 서버 로그 분석
+- 5: AWS KMS 사용
+- 6: AWS Service Catalog 사용
+- 7: ADFS를 사용한 AWS 연동 인증
 
 ### 
+
+### 300-ADVARC
+- 1: Amazon S3 VPC 엔드포인트 통신 보안
+- 2: Transit Gateway 구성
+- 3: Amazon EKS on Fargate를 사용하여 애플리케이션 배포
+- 4: Lake Formation을 사용한 data lake 설정
+- 5: AWS DataSync 및 Storage Gateway를 사용하여 온프레미스 NFS Share 서버 마이그레이션
 
