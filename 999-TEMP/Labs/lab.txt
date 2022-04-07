@@ -1,3 +1,10 @@
+### 200-ANBDLK
+- 1: 간단한 데이터 레이크 설정
+- 2: AWS Lake Formation을 사용하여 데이터 레이크 구축
+- 3: AWS Lake Formation 블루프린트를 사용하여 데이터 레이크 생성 자동화
+- 4: Amazon QuickSight를 사용하여 데이터 시각화
+
+
 ### 200-SISECO
 - 1: 자격 증명 기반 정책 및 리소스 기반 정책 사용
 - 2: AWS Systems Manager 및 Amazon Inspector 사용
