@@ -4,6 +4,7 @@
 - 3: AWS Lake Formation 블루프린트를 사용하여 데이터 레이크 생성 자동화
 - 4: Amazon QuickSight를 사용하여 데이터 시각화
 
+### 200-DBDWOA
 
 ### 200-SISECO
 - 1: 자격 증명 기반 정책 및 리소스 기반 정책 사용
