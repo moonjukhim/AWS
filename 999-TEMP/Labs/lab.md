@@ -36,6 +36,8 @@
 ### 200-STSCTR
 
 ### 200-SVDVSS
+    - 1: 간단한 서버리스 애플리케이션 배포
+    - 2:
 
 ### 200-SYSOPS-4.0.11
     - 1: AWS Systems Manager 및 AWS Config를 사용하여 AWS 리소스 감사
