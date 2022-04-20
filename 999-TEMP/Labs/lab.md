@@ -31,11 +31,11 @@
     - 6: AWS Service Catalog 사용
     - 7: ADFS를 사용한 AWS 연동 인증
 
-200-SISGOV
+### 200-SISGOV
 
-200-STSCTR
+### 200-STSCTR
 
-200-SVDVSS
+### 200-SVDVSS
 
 ### 200-SYSOPS-4.0.11
     - 1: AWS Systems Manager 및 AWS Config를 사용하여 AWS 리소스 감사
@@ -53,7 +53,6 @@
     - 3: Amazon EKS on Fargate를 사용하여 애플리케이션 배포
     - 4: Lake Formation을 사용한 data lake 설정
     - 5: AWS DataSync 및 Storage Gateway를 사용하여 온프레미스 NFS Share 서버 마이그레이션
-
 
 ### 300-ADVDEV
     - 1: AWS Elastic Beanstalk를 사용하여 모놀리스 애플리케이션 배포
