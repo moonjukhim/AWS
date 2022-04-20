@@ -56,6 +56,11 @@
 
 
 ### 300-ADVDEV
+    - 1: AWS Elastic Beanstalk를 사용하여 모놀리스 애플리케이션 배포
+    - 2: AWS Lambda를 사용하여 마이크로서비스 개발
+    - 3: Cloud Development Kit 소개
+    - 4: AWS 메시징 옵션 탐색
+    - 5: AWS에서 마이크로서비스 개발
 
 ### 300-CORCEM
 
