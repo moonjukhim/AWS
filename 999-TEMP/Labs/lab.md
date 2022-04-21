@@ -35,9 +35,13 @@
 
 ### 200-STSCTR
 
-### 200-SVDVSS
+### 200-SVDVSS (Developing Serverless Solutions on AWS)
     - 1: 간단한 서버리스 애플리케이션 배포
-    - 2:
+    - 2: Amazon EventBridge를 사용한 메시지 팬아웃
+    - 3: AWS Step Functions를 사용한 워크플로 오케스트레이션
+    - 4: 관찰 가능성 및 모니터링
+    - 5: 서버리스 애플리케이션 보호
+    - 6: AWS에서의 서버리스 CI/CD
 
 ### 200-SYSOPS-4.0.11
     - 1: AWS Systems Manager 및 AWS Config를 사용하여 AWS 리소스 감사
@@ -49,7 +53,7 @@
 
 ### 300-ACARCH
 
-### 300-ADVARC
+### 300-ADVARC (Advanced Architecting on AWS)
     - 1: Amazon S3 VPC 엔드포인트 통신 보안
     - 2: Transit Gateway 구성
     - 3: Amazon EKS on Fargate를 사용하여 애플리케이션 배포
