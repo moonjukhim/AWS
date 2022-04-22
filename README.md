@@ -3,7 +3,7 @@
 |Title|Date|Check|
 |-----|-----|-----|
 |AWS Certified Alexa Skill Builder - Specialty    |||
-|AWS Certified Big Data - Specialty               ||O|
+|<b>AWS Certified Big Data - Specialty</b>               ||O|
 |AWS Certified Cloud Practitioner                 |||
 |AWS Certified Data Analytics - Specialty         |||
 |AWS Certified Database - Specialty               |||
