@@ -1,4 +1,4 @@
-![AWS Certtification](./999-TEMP/img/aws-certi.png)
+
 
 |Title|Date|Check|
 |-----|-----|-----|
