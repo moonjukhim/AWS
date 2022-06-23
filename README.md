@@ -1,6 +1,6 @@
-![AAI-champ](999-TEMP/Certifications/thumb-AAI-Champion.png) #
-# ![AAI](999-TEMP/Certifications/thumb-AAI.png)
-![SA](999-TEMP/Certifications/thumb-AWS-SolArchitect-Associate.png)
+![AAI-champ](999-TEMP/Certifications/thumb-AAI-Champion.png) 
+# ![SA](999-TEMP/Certifications/thumb-AWS-SolArchitect-Associate.png)
+![DEVA](999-TEMP/Certifications/thumb-AWS-Developer-Associate.png)
 
 ---
 
