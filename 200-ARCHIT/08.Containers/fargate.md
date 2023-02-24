@@ -49,3 +49,10 @@ kubectl get deployment
 ```bash
 kubectl delete deployment nginx
 ```
+
+8. Delete a EKS Cluster
+
+```bash
+eksctl delete cluster \
+--name fargate-tutorial-cluster 
+```
