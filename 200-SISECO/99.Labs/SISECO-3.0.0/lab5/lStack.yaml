@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  LabUserRoleName:
+    Type: String
+
+Resources:
+  AttachPolicies:
+    Type: Custom::AttachPolicies
+    Properties:
+      ServiceToken: !GetAtt AttachPoliciesFunction.Arn
+      DeleteFunctions:
+        - !Ref AttachPoliciesFunction
+      DeleteRoles:
+        - !Ref AttachPoliciesRole
+      PolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      RoleName: !Ref LabUserRoleName
+
+  AttachPoliciesFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 180
+      Role: !GetAtt AttachPoliciesRole.Arn
+      Runtime: python3.8
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import json
+
+          _iam = boto3.resource("iam")
+          _lambda = boto3.client("lambda")
+
+
+          def delete_resources(event):
+              for role_name in event.get("ResourceProperties").get("DeleteRoles"):
+                  role = _iam.Role(name=role_name)
+
+                  for role_policy in role.policies.all():
+                      role_policy.delete()
+
+                  role.delete()
+
+              for function_name in event.get("ResourceProperties").get("DeleteFunctions"):              
+                  _lambda.delete_function(FunctionName=function_name)
+
+
+          def handler(event, context):
+              try:
+                  # Only handle 'Create' requests.
+                  if event.get("RequestType") == "Create":
+                      role = _iam.Role(name=event.get("ResourceProperties").get("RoleName"))
+
+                      for policy_arn in event.get("ResourceProperties").get("PolicyArns"):
+                          role.attach_policy(PolicyArn=policy_arn)
+                    
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, reason="Policies Attached")
+                  else:
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, reason="No Action Performed")
+              except Exception as exception:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {}, reason=str(exception))
+              finally:
+                  delete_resources(event)
+
+  AttachPoliciesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: AttachPolicies
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - iam:AttachRolePolicy
+                Effect: Allow
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${LabUserRoleName}
+              - Action:
+                  - iam:DeleteRole
+                  - iam:DeleteRolePolicy
+                  - iam:ListRolePolicies
+                Effect: Allow
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/*-AttachPoliciesRole-*
+              - Action:
+                  - lambda:DeleteFunction
+                Effect: Allow
+                Resource:
+                  - !Sub arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:*-AttachPoliciesFunction-*
