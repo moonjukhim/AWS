@@ -1,3 +1,5 @@
+# 3.0.0
+
 1. Lab1-Using Identity and Resource-Based Policies
 2. Lab2-Managing Domain User Access with AWS Directory Service
 3. Lab3-Using AWS KMS to Encrypt Secrets Manager Secrets
