@@ -8,6 +8,7 @@
 
   NetworkAdmin 역할 생성
     - VPCFullAccess 정책을 부여
+      - (trusted entity 정의)
 
 ## Task2.사용자 생성
 
