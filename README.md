@@ -15,10 +15,10 @@
 | AWS Certified Data Analytics - Specialty         |      |       |     |
 | AWS Certified Database - Specialty               |      |       |     |
 | AWS Certified Developer Associate                |      | O     |     |
-| AWS Certified Machine Learning - Specialty       |      |       |     |
+| AWS Certified Machine Learning - Specialty       |      | O     |     |
 | AWS Certified Security - Specialty               |      |       | O   |
 | AWS Certified Solutions Architect - Associate    |      | O     |     |
-| AWS Certified Solutions Architect - Professional |      |       | O   |
+| AWS Certified Solutions Architect - Professional |      | O     | O   |
 | AWS Certified SysOps Administrator - Associate   |      |       |     |
 | AWS DevOps Engineer Professional                 |      | O     |     |
 
