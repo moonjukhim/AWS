@@ -1,8 +1,10 @@
 ![AAI-champ](999-TEMP/Certifications/thumb-AAI-Champion.png)
+![AAI](999-TEMP/Certifications/thumb-AAI.png)
 
+
+![DEVOPS](999-TEMP/Certifications/thumb-AWS-DevOpsEngineer-Professional.png)
 ![SA](999-TEMP/Certifications/thumb-AWS-SolArchitect-Associate.png)
 ![DEVA](999-TEMP/Certifications/thumb-AWS-Developer-Associate.png)
-![DEVOPS](999-TEMP/Certifications/thumb-AWS-DevOpsEngineer-Professional.png)
 ![BIGDAT](999-TEMP/Certifications/thumb-AWS-BigData-Specialty.png)
 
 ---
