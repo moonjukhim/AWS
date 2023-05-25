@@ -9,9 +9,7 @@
 
 ---
 
-```bash
-# | AWS Certified Alexa Skill Builder - Specialty    |      |       |     |
-```
+
 
 | Title                                            | Date | Check | V.R |
 | ------------------------------------------------ | ---- | ----- | --- |
@@ -26,6 +24,7 @@
 | AWS Certified Solutions Architect - Professional |      | O     | O   |
 | AWS Certified SysOps Administrator - Associate   |      |       |     |
 | AWS DevOps Engineer Professional                 |      | O     |     |
+| AWS Certified Alexa Skill Builder - Specialty    |      |       |     |
 
 ---
 
