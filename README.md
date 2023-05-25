@@ -9,9 +9,12 @@
 
 ---
 
+```bash
+# | AWS Certified Alexa Skill Builder - Specialty    |      |       |     |
+```
+
 | Title                                            | Date | Check | V.R |
 | ------------------------------------------------ | ---- | ----- | --- |
-| AWS Certified Alexa Skill Builder - Specialty    |      |       |     |
 | <b>AWS Certified Big Data - Specialty</b>        |      | O     |     |
 | AWS Certified Cloud Practitioner                 |      |       |     |
 | AWS Certified Data Analytics - Specialty         |      |       |     |
