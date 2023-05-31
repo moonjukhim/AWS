@@ -10,20 +10,20 @@
 
 ---
 
-| Title                                            | Date | Check | V.R |
-| ------------------------------------------------ | ---- | ----- | --- |
-| <b>AWS Certified Big Data - Specialty</b>        |      | O     |     |
-| AWS Certified Cloud Practitioner                 |      |       |     |
-| AWS Certified Data Analytics - Specialty         |      |       |     |
-| AWS Certified Database - Specialty               |      |       |     |
-| AWS Certified Developer Associate                |      | O     |     |
-| AWS Certified Machine Learning - Specialty       |      | O     |     |
-| AWS Certified Security - Specialty               |      |       | O   |
-| AWS Certified Solutions Architect - Associate    |      | O     |     |
-| AWS Certified Solutions Architect - Professional |      | O     | O   |
-| AWS Certified SysOps Administrator - Associate   |      |       |     |
-| AWS DevOps Engineer Professional                 |      | O     |     |
-| AWS Certified Alexa Skill Builder - Specialty    |      |       |     |
+| Title                                            | Date       | Check | V.R | Expire     |
+| ------------------------------------------------ | ---------- | ----- | --- | ---------- |
+| <b>AWS Certified Big Data - Specialty</b>        | 2020-05-15 | O     |     | 2023-05-15 |
+| AWS Certified Cloud Practitioner                 |            |       |     |            |
+| AWS Certified Data Analytics - Specialty         |            |       |     |            |
+| AWS Certified Database - Specialty               |            |       |     |            |
+| AWS Certified Developer Associate                | 2020-03-03 | O     |     | 2023-08-18 |
+| AWS Certified Machine Learning - Specialty       | 2023-02-28 | O     |     | 2026-02-28 |
+| AWS Certified Security - Specialty               |            |       | O   |            |
+| AWS Certified Solutions Architect - Associate    | 2019-10-29 | O     |     | 2025-09-03 |
+| AWS Certified Solutions Architect - Professional | 2023-09-03 | O     | O   | 2025-09-03 |
+| AWS Certified SysOps Administrator - Associate   |            |       |     |            |
+| AWS DevOps Engineer Professional                 | 2020-08-18 | O     |     | 2023-08-18 |
+| AWS Certified Alexa Skill Builder - Specialty    |            |       |     |            |
 
 ---
 
