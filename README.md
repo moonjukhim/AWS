@@ -29,30 +29,31 @@
 
 ###
 
-| Level | Code   | Title                                                   | Date | Check |
-| ----- | ------ | ------------------------------------------------------- | ---- | ----- |
-| 100   | BES    | Business-Essential                                      |      |       |
-| 100   | TECESS | Technical-Essential                                     |      |       |
-| 200   | ANBDLK | Building-Data-Lakes-on-AWS                              |      |       |
-| 200   | ARCHIT | Architecting-on-AWS                                     |      |       |
-| 200   | BIGDAT | Big-Data-on-AWS                                         |      |       |
-| 200   | COREKS | Running-Containers-on-Amazon-Elastic-Kubernetes-Service |      |       |
-| 200   | CSAWAF | Well-Architected-Best-Practices                         |      |       |
-| 200   | DAREDS | Building-Data-Analytics-Solutions-Using-Amazon-Redshift |      |       |
-| 200   | DBDBAW | Planning-and-Designing-Databases-on-AWS                 |      |       |
-| 200   | DBDWOA | Data-Warehousing-on-AWS                                 |      |       |
-| 200   | DEVOPS | DevOps-Engineering                                      |      |       |
-| 200   | DODEVA | Developing-on-AWS                                       |      |       |
-| 200   | MLDEEP | Deep-Learning-on-AWS                                    |      |       |
-| 200   | MLDWTS | The-Machine-Learning-Pipeline-on-AWS                    |      |       |
-| 200   | MLPDSS | Practical-Data-Science-with-Amazon-SageMaker            |      |       |
-| 200   | MLPOPS | MLOps-Engineering-on-AWS                                |      |       |
-| 200   | MSVSES | Video Streaming Essentials for-AWS Media Services       |      |       |
-| 200   | SISECO | Security-Engineering-on-AWS                             |      |       |
-| 200   | SISGOV | Security-Governance                                     |      |       |
-| 200   | SVDVSS | Developing-Serverless-Solutions-on-AWS                  |      |       |
-| 200   | SYSOPS | Systems-Operations-on-AWS                               |      |       |
-| 300   | ACARCH | Architecting-On-AWS-Accelerator                         |      |       |
-| 300   | ADVARC | Advanced-Architecting-on-AWS                            |      |       |
-| 300   | ADVDEV | Advanced-Developing-on-AWS                              |      |       |
-| 300   | CORCEM |                                                         |      |       |
+| Level | Code   | Title                                                   | Version | Ko.Ver | Check |
+| ----- | ------ | ------------------------------------------------------- | ------- | ------ | ----- |
+| 100   | BES    | Business-Essential                                      |         |        |       |
+| 100   | TECESS | Technical-Essential                                     |         |        |       |
+| 200   | ANBDLK | Building-Data-Lakes-on-AWS                              |         |        |       |
+| 200   | ARCHIT | Architecting-on-AWS                                     |         |        |       |
+| 200   | BIGDAT | Big-Data-on-AWS                                         |         |        |       |
+| 200   | COREKS | Running-Containers-on-Amazon-Elastic-Kubernetes-Service |         |        |       |
+| 200   | CSAWAF | Well-Architected-Best-Practices                         |         |        |       |
+| 200   | DAREDS | Building-Data-Analytics-Solutions-Using-Amazon-Redshift |         |        |       |
+| 200   | DBDBAW | Planning-and-Designing-Databases-on-AWS                 |         |        |       |
+| 200   | DBDWOA | Data-Warehousing-on-AWS                                 |         |        |       |
+| 200   | DEVOPS | DevOps-Engineering                                      |         |        |       |
+| 200   | DODEVA | Developing-on-AWS                                       |         |        |       |
+| 200   | MLDEEP | Deep-Learning-on-AWS                                    |         |        |       |
+| 200   | MLDWTS | The-Machine-Learning-Pipeline-on-AWS                    |         |        |       |
+| 200   | MLPDSS | Practical-Data-Science-with-Amazon-SageMaker            |         |        |       |
+| 200   | MLPOPS | MLOps-Engineering-on-AWS                                |         |        |       |
+| 200   | MSVSES | Video Streaming Essentials for-AWS Media Services       |         |        |       |
+| 200   | SISECO | Security-Engineering-on-AWS                             |         |        |       |
+| 200   | SISGOV | Security-Governance                                     |         |        |       |
+| 200   | SVDVSS | Developing-Serverless-Solutions-on-AWS                  |         |        |       |
+| 200   | SYSOPS | Systems-Operations-on-AWS                               |         |        |       |
+| 300   | ACARCH | Architecting-On-AWS-Accelerator                         |         |        |       |
+| 300   | ADVARC | Advanced-Architecting-on-AWS                            |         |        |       |
+| 300   | ADVDEV | Advanced-Developing-on-AWS                              |         |        |       |
+| 300   | CORCEM |                                                         |         |        |       |
+| 300   | DAQSAU | Authoring Visual Analytics Using Amazon QuickSight      | 1.3.2   | X      |       |
