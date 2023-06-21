@@ -6,6 +6,6 @@
 
 - Aurora
  
-[Building globally distributed MySQL applications using write forwarding in Amazon Aurora Global Database](https://aws.amazon.com/ko/blogs/database/building-globally-distributed-mysql-applications-using-write-forwarding-in-amazon-aurora-global-database/)
+    - [Building globally distributed MySQL applications using write forwarding in Amazon Aurora Global Database](https://aws.amazon.com/ko/blogs/database/building-globally-distributed-mysql-applications-using-write-forwarding-in-amazon-aurora-global-database/)
 
-[Introduction to Aurora PostgreSQL cluster cache management](https://aws.amazon.com/ko/blogs/database/introduction-to-aurora-postgresql-cluster-cache-management/)
+    - [Introduction to Aurora PostgreSQL cluster cache management](https://aws.amazon.com/ko/blogs/database/introduction-to-aurora-postgresql-cluster-cache-management/)
