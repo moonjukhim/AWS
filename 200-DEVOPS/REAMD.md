@@ -12,4 +12,7 @@
 
 ---
 
-[AWS CodePipeline을 사용하여 다중 지역 배포 수행](https://aws.amazon.com/ko/blogs/devops/using-aws-codepipeline-to-perform-multi-region-deployments/)
+[AWS CodePipeline을 사용하여 다중 지역 배포 수행](https://aws.amazon.com/ko/blogs/devops/using-aws-codepipeline-to-perform-multi-region-deployments/
+
+
+)
