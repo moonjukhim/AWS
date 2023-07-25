@@ -1,15 +1,17 @@
 ### Advanced Architecting on AWS
 
-1. Review Architecting Concept
-2. Single to Multiple Accounts
-3. Hybrid Connectivity
-4. Specialized Infrastructure
-5. Connecting Networks
-6. Containers
-7. CI/CD
-8. High Availability
-9. Data Security
-10. Large Scale Data Stores
-11. Migrating Workloads
-12. Optimizing Cost
-13. Architecting for the Edge
+| No  | Module                      |     | Relate Curriculum                            |
+| --- | --------------------------- | --- | -------------------------------------------- |
+| 1   | Review Architecting Concept | Pre |                                              |
+| 2   | Single to Multiple Accounts |     |                                              |
+| 3   | Hybrid Connectivity         |     |                                              |
+| 4   | Specialized Infrastructure  |     |                                              |
+| 5   | Connecting Networks         |     |                                              |
+| 6   | Containers                  | --> | 200-COREKS-Running-Containers-on-Amazon-EKS  |
+| 7   | CI/CD                       | --> | 200-DEVOPS-DevOps-Engineering                |
+| 8   | High Availability           |     |                                              |
+| 9   | Data Security               |     |                                              |
+| 10  | Large Scale Data Stores     | --> | 200-ANBDLK-Building-Data-Lakes-on-AWS        |
+| 11  | Migrating Workloads         | --> | 200-MTMAWS-Migrating-to-AWS                  |
+| 12  | Optimizing Cost             | --> | 200-CMCFTE-Financial-Management-for-Builders |
+| 13  | Architecting for the Edge   |     |                                              |
