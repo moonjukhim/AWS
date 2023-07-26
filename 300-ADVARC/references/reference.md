@@ -13,3 +13,15 @@
 
    - [vmc-on-aws-networking-security](https://docs.vmware.com/kr/VMware-Cloud-on-AWS/services/vmc-on-aws-networking-security.pdf)
    - [AWS Outposts: Ordering and Installation Overview](https://www.youtube.com/watch?v=2cQncaijRoY)
+
+5. Connecting Network
+
+6. Containers
+
+7. CI/CD
+
+8. High Availability
+
+9. Securing Data
+
+10.
