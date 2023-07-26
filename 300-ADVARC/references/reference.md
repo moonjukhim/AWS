@@ -28,8 +28,8 @@
 
 10. Large Scale Data Stores
 
-- [AWS Lake Formation: How it works](https://docs.aws.amazon.com/lake-formation/latest/dg/how-it-works.html)
-- []()
+    - [AWS Lake Formation: How it works](https://docs.aws.amazon.com/lake-formation/latest/dg/how-it-works.html)
+    - []()
 
 11. Migrating Workloads
 
