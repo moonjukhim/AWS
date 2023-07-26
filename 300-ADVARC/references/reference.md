@@ -23,4 +23,15 @@
 
 9. Securing Data
 
-10.
+   - [AWS CloudHSM을 사용한 SSL/TLS 오프로드](https://docs.aws.amazon.com/cloudhsm/latest/userguide/ssl-offload-overview.html)
+
+10. Large Scale Data Stores
+
+- [AWS Lake Formation: How it works](https://docs.aws.amazon.com/lake-formation/latest/dg/how-it-works.html)
+- []()
+
+11. Migrating Workloads
+
+12. Optimizing Cost
+
+13. Architecting For the Edge
