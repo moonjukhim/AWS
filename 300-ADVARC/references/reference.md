@@ -29,8 +29,8 @@
 9. Securing Data
 
    - [KMS] [KMS Envelope Encryption](https://docs.aws.amazon.com/ko_kr/kms/latest/developerguide/concepts.html#enveloping)
-   - (CloudHSM) [AWS CloudHSM을 사용한 SSL/TLS 오프로드](https://docs.aws.amazon.com/cloudhsm/latest/userguide/ssl-offload-overview.html)
-   - [AWS Secrets Manager를 사용하여 Lambda 함수에 데이터베이스 자격 증명을 안전하게 제공하는 방법](https://aws.amazon.com/ko/blogs/security/how-to-securely-provide-database-credentials-to-lambda-functions-by-using-aws-secrets-manager/)
+   - [CloudHSM] [AWS CloudHSM을 사용한 SSL/TLS 오프로드](https://docs.aws.amazon.com/cloudhsm/latest/userguide/ssl-offload-overview.html)
+   - [Secrets Manager] [AWS Secrets Manager를 사용하여 Lambda 함수에 데이터베이스 자격 증명을 안전하게 제공하는 방법](https://aws.amazon.com/ko/blogs/security/how-to-securely-provide-database-credentials-to-lambda-functions-by-using-aws-secrets-manager/)
 
 10. Large Scale Data Stores
 
