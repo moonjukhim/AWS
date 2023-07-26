@@ -1,5 +1,6 @@
 2. Single to Multiple Accounts(Control Tower)
 
+   - [IAM 역할을 사용한 AWS 계정 간 액세스 권한 위임](https://docs.aws.amazon.com/ko_kr/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html)
    - [AWS Architecture Blog : AWS Control Tower](https://aws.amazon.com/ko/blogs/architecture/category/management-tools/aws-control-tower/)
 
 3. Hybrid Connectivity
