@@ -39,7 +39,17 @@
 
 11. Migrating Workloads
 
+    - [Migration Hub]
+    - [AWS MGN]
+    - [AWS DMS]
+    - [VMware Cloud on AWS]
+    - [AWS DataSync]
+
 12. Optimizing Cost
+
+    - [클라우드 비용 관리]
+    - [비용 관리 도구]
+    - [비용 최적화]
 
 13. Architecting For the Edge
 
