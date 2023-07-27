@@ -42,3 +42,8 @@
 12. Optimizing Cost
 
 13. Architecting For the Edge
+
+    - [CloudFront]
+    - [Lambda@Edge] [Lambda@Edge를 사용하여 AWS CloudFront에서 A/B 테스트](https://medium.com/@lorenzo.nicora/a-b-testing-on-aws-cloudfront-with-lambda-edge-a22dd82e9d12)
+    - [CloudFront Function] [Amazon CloudFront Functions — 더 짧은 지연 시간으로 엣지에서 코드 실행을 위한 신규 기능](https://aws.amazon.com/ko/blogs/korea/introducing-cloudfront-functions-run-your-code-at-the-edge-with-low-latency-at-any-scale/)
+    - [Global Accelerator]
