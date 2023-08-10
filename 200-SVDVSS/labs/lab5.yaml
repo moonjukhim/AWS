@@ -1,0 +1,311 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Developing Serverless Solutions on AWS - Observability and Monitoring
+
+Parameters:
+  LabPoolId:
+    Type: String
+
+  LabUserRoleName:
+    Type: String
+
+Resources:
+  LabVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: Lab VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LabVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref LabVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Public Subnet
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: PublicSubnet
+    Properties:
+      VpcId: !Ref LabVPC
+      Tags:
+        - Key: Name
+          Value: Public Route Table
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  Cloud9Instance:
+    DependsOn: PublicSubnetRouteTableAssociation
+    Type: AWS::Cloud9::EnvironmentEC2
+    Properties:
+      InstanceType: 't3.medium'
+      OwnerArn:
+        Fn::Sub: arn:${AWS::Partition}:sts::${AWS::AccountId}:assumed-role/${LabUserRoleName}/${LabPoolId}
+      Description: IDE to handle all the project activities
+      SubnetId: !Ref PublicSubnet
+      AutomaticStopTimeMinutes: 450
+      Name: BookmarkAppDevEnv
+
+  PresignupLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: nodejs16.x
+      Role: !GetAtt RoleForPreSignUpLambda.Arn
+      Handler: index.handler
+      Timeout: 30
+      Code:
+        ZipFile: |
+          exports.handler = (event, context, callback) => {
+            // Confirm the user
+            event.response.autoConfirmUser = true;
+            // Set the email as verified if it is in the request
+            if (event.request.userAttributes.hasOwnProperty("email")) {
+              event.response.autoVerifyEmail = true;
+            }
+            // Set the phone number as verified if it is in the request
+            if (event.request.userAttributes.hasOwnProperty("phone_number")) {
+              event.response.autoVerifyPhone = true;
+            }
+            // Return to Amazon Cognito
+            callback(null, event);
+          }
+
+
+  RoleForPreSignUpLambda:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "RoleForPreSignUpLambda"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyName: AWSLambdaBasicExecutionRole
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+
+  CognitoPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt PresignupLambda.Arn
+      Principal: cognito-idp.amazonaws.com
+      Action: lambda:InvokeFunction
+      SourceArn: !GetAtt CognitoUserPool.Arn
+
+
+# IAM section
+  LambdaDeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "LambdaDeploymentRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyName: AWSXrayWriteOnlyAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "xray:PutTraceSegments"
+                  - "xray:PutTelemetryRecords"
+                  - "xray:GetSamplingRules"
+                  - "xray:GetSamplingTargets"
+                  - "xray:GetSamplingStatisticSummaries"
+                Resource: "*"
+        - PolicyName: AWSLambdaInvocationRole
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+        - PolicyName: AWSLambdaBasicExecutionRole
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+        - PolicyName: BookmarkRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "dynamodb:GetItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:UpdateItem"
+                  - "dynamodb:BatchWriteItem"
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:DescribeTable"
+                  - "dynamodb:ConditionCheckItem"
+                  - "dynamodb:DescribeStream"
+                  - "dynamodb:GetRecords"
+                  - "dynamodb:GetShardIterator"
+                  - "dynamodb:ListStreams"
+                  - "events:Put*"
+                  - "events:Describe*"
+                  - "events:List*"
+                  - "sns:Publish"
+                  - "states:SendTaskSuccess"
+                Resource: "*"
+
+  APIGatewayCLRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "APIGatewayCLRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+        Version: "2012-10-17"
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+
+
+  EventBridgeStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: "EventBridgeStateMachineRole"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "events.amazonaws.com"
+                - "states.amazonaws.com"
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyName: AWSLambdaInvocationRole
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+        - PolicyName: EventBridgeStateMachinePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "states:StartExecution"
+                  - "states:SendTaskSuccess"
+                  - "sns:Publish"
+                Resource: "*"
+
+# Cognito section
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AutoVerifiedAttributes:
+        - email
+      UsernameConfiguration:
+        CaseSensitive: false
+      UserPoolName: UserPool
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: false
+      LambdaConfig:
+        PreSignUp: !GetAtt PresignupLambda.Arn
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+
+  CognitoAppClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: AppClientForBookmarkUserPool
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      GenerateSecret: false
+      PreventUserExistenceErrors: ENABLED
+      UserPoolId: !Ref CognitoUserPool
+
+  samserverless:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+
+Outputs:
+  Region:
+    Value: !Ref 'AWS::Region'
+    Description: Region used for the lab
+  APIGatewayCLRole:
+    Value: !GetAtt APIGatewayCLRole.Arn
+    Description: Role for Event Bridge to access Step Functions
