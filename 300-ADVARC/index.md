@@ -5,8 +5,8 @@
 | 1   | Review Architecting Concept | Pre | 200-ARCHIT-Architecting-on-AWS               |
 | 2   | Single to Multiple Accounts |     |                                              |
 | 3   | Hybrid Connectivity         |     |                                              |
-| 4   | Specialized Infrastructure  |     |                                              |
-| 5   | Connecting Networks         | ==> | [VMware] VMware Cloud™ on AWS                |
+| 4   | Specialized Infrastructure  | ==> | [VMware] VMware Cloud™ on AWS                |
+| 5   | Connecting Networks         |     |                                              |
 | 6   | Containers                  | --> | 200-COREKS-Running-Containers-on-Amazon-EKS  |
 | 7   | CI/CD                       | --> | 200-DEVOPS-DevOps-Engineering                |
 | 8   | High Availability           | --> | 200-SISECO-Security-Engineering-on-AWS       |
