@@ -6,7 +6,7 @@
 | 2   | Single to Multiple Accounts |     |                                              |
 | 3   | Hybrid Connectivity         |     |                                              |
 | 4   | Specialized Infrastructure  |     |                                              |
-| 5   | Connecting Networks         |     |                                              |
+| 5   | Connecting Networks         | ==> | [VMware] VMware Cloud™ on AWS                |
 | 6   | Containers                  | --> | 200-COREKS-Running-Containers-on-Amazon-EKS  |
 | 7   | CI/CD                       | --> | 200-DEVOPS-DevOps-Engineering                |
 | 8   | High Availability           | --> | 200-SISECO-Security-Engineering-on-AWS       |
