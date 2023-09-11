@@ -1,3 +1,8 @@
+1. Review Architecting Concept
+
+   - [Well-Architect Framework]
+   - [Solution Library]
+
 2. Single to Multiple Accounts
 
    - [IAM] [IAM 역할을 사용한 AWS 계정 간 액세스 권한 위임](https://docs.aws.amazon.com/ko_kr/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html)
@@ -17,9 +22,20 @@
 
 5. Connecting Network
 
+   - [Transit Gateway]
+   - [Resource Access Manager]
+   - [PrivateLink]
+
 6. Containers
 
+   - [ECS]
+   - [EKS]
+
 7. CI/CD
+    
+    - [CI/CD]
+    - [Code* Service]
+    - [CloudFormation StackSets]
 
 8. High Availability
 
