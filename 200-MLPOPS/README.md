@@ -5,3 +5,8 @@
 3. MLOps_Deployment
 4. Model_Monitoring_and_Operations
 5. Wrap-up
+
+
+###
+
+- 2023-10-10
