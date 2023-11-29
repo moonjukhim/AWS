@@ -17,7 +17,7 @@
 | AWS Certified Data Analytics - Specialty         |            |       | O   |            |
 | AWS Certified Database - Specialty               |            |       |     |            |
 | AWS Certified Developer Associate                | 2020-03-03 | O     |     | 2023-08-18 |
-| AWS Certified Machine Learning - Specialty       | 2023-02-28 | O     |     | 2026-02-28 |
+| AWS Certified Machine Learning - Specialty       | 2023-02-28 | O     | O   | 2026-02-28 |
 | AWS Certified Security - Specialty               |            |       | O   |            |
 | AWS Certified Solutions Architect - Associate    | 2019-10-29 | O     |     | 2025-09-03 |
 | AWS Certified Solutions Architect - Professional | 2023-09-03 | O     | O   | 2025-09-03 |
