@@ -1,1 +1,2 @@
 [Policy-as-Code for Securing AWS and Third-Party Resource Types](https://aws.amazon.com/ko/blogs/mt/policy-as-code-for-securing-aws-and-third-party-resource-types/)
+
