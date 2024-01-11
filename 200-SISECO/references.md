@@ -18,4 +18,4 @@
 
 - [Use Amazon Inspector to manage your build and deploy pipelines for containerized applications](https://aws.amazon.com/ko/blogs/security/use-amazon-inspector-to-manage-your-build-and-deploy-pipelines-for-containerized-applications/)
 
-  ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2022/09/15/img1-2-1024x542.png){: width="100" height="100"}
+  ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2022/09/15/img1-2-1024x542.png){: width="50%" height="50%"}
