@@ -7,3 +7,6 @@
 [How you can use Amazon GuardDuty to detect suspicious activity within your AWS account](https://aws.amazon.com/blogs/security/how-you-can-use-amazon-guardduty-to-detect-suspicious-activity-within-your-aws-account/#:~:text=Start%20an%20investigation%20with%20Amazon%20Detective)
 
 [Correlate security findings with AWS Security Hub and Amazon EventBridge](https://aws.amazon.com/ko/blogs/security/correlate-security-findings-with-aws-security-hub-and-amazon-eventbridge/)
+
+[Using delegated admin for AWS Config operations and aggregation](https://aws.amazon.com/ko/blogs/mt/using-delegated-admin-for-aws-config-operations-and-aggregation/)
+[!](https://d2908q01vomqb2.cloudfront.net/972a67c48192728a34979d9a35164c1295401b71/2021/04/21/Fig1-1.png)
