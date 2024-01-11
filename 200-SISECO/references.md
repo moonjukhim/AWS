@@ -9,7 +9,9 @@
 [Correlate security findings with AWS Security Hub and Amazon EventBridge](https://aws.amazon.com/ko/blogs/security/correlate-security-findings-with-aws-security-hub-and-amazon-eventbridge/)
 
 - [Using delegated admin for AWS Config operations and aggregation](https://aws.amazon.com/ko/blogs/mt/using-delegated-admin-for-aws-config-operations-and-aggregation/)
+
   ![AWS Config operations and aggregation](https://d2908q01vomqb2.cloudfront.net/972a67c48192728a34979d9a35164c1295401b71/2021/04/21/Fig1-1.png)
 
 - [Simplify sharing your AWS Service Catalog portfolios in an AWS Organizations setup](https://aws.amazon.com/ko/blogs/mt/simplify-sharing-your-aws-service-catalog-portfolios-in-an-aws-organizations-setup/)
+
   ![](https://marketplace-sa-resources.s3.amazonaws.com/sc-org-sharing-blog-june20/sc-hub-setupv2.jpg)
