@@ -15,3 +15,7 @@
 - [Simplify sharing your AWS Service Catalog portfolios in an AWS Organizations setup](https://aws.amazon.com/ko/blogs/mt/simplify-sharing-your-aws-service-catalog-portfolios-in-an-aws-organizations-setup/)
 
   ![](https://marketplace-sa-resources.s3.amazonaws.com/sc-org-sharing-blog-june20/sc-hub-setupv2.jpg)
+
+- [Use Amazon Inspector to manage your build and deploy pipelines for containerized applications](https://aws.amazon.com/ko/blogs/security/use-amazon-inspector-to-manage-your-build-and-deploy-pipelines-for-containerized-applications/)
+
+  ![https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2022/09/15/img1-2-1024x542.png]
