@@ -2,7 +2,11 @@
 
 - [Policy-as-Code for Securing AWS and Third-Party Resource Types](https://aws.amazon.com/ko/blogs/mt/policy-as-code-for-securing-aws-and-third-party-resource-types/)
 
+---
+
 - [Visualizing Amazon GuardDuty findings](https://aws.amazon.com/ko/blogs/security/visualizing-amazon-guardduty-findings/)
+
+---
 
 - [Automatically block suspicious traffic with AWS Network Firewall and Amazon GuardDuty](https://aws.amazon.com/ko/blogs/security/automatically-block-suspicious-traffic-with-aws-network-firewall-and-amazon-guardduty/)
 
@@ -28,9 +32,13 @@
 
   ![](https://marketplace-sa-resources.s3.amazonaws.com/sc-org-sharing-blog-june20/sc-hub-setupv2.jpg)
 
+---
+
 - [Use Amazon Inspector to manage your build and deploy pipelines for containerized applications](https://aws.amazon.com/ko/blogs/security/use-amazon-inspector-to-manage-your-build-and-deploy-pipelines-for-containerized-applications/)
 
   ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2022/09/15/img1-2-1024x542.png)
+
+---
 
 - [Integrating AWS CloudFormation Guard into CI/CD pipelines](https://aws.amazon.com/ko/blogs/devops/integrating-aws-cloudformation-guard/)
 
