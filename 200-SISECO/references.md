@@ -21,3 +21,7 @@
 - [Use Amazon Inspector to manage your build and deploy pipelines for containerized applications](https://aws.amazon.com/ko/blogs/security/use-amazon-inspector-to-manage-your-build-and-deploy-pipelines-for-containerized-applications/)
 
   ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2022/09/15/img1-2-1024x542.png)
+
+- [Integrating AWS CloudFormation Guard into CI/CD pipelines](https://aws.amazon.com/ko/blogs/devops/integrating-aws-cloudformation-guard/)
+
+  ![](https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2020/10/14/Architecture-Diagram.jpg)
