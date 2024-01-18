@@ -8,7 +8,11 @@
 
   ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2021/03/07/GuardDuty-Network-Firewall-2021-2.png)
 
+---
+
 - [How you can use Amazon GuardDuty to detect suspicious activity within your AWS account](https://aws.amazon.com/blogs/security/how-you-can-use-amazon-guardduty-to-detect-suspicious-activity-within-your-aws-account/#:~:text=Start%20an%20investigation%20with%20Amazon%20Detective)
+
+---
 
 - [Correlate security findings with AWS Security Hub and Amazon EventBridge](https://aws.amazon.com/ko/blogs/security/correlate-security-findings-with-aws-security-hub-and-amazon-eventbridge/)
 
