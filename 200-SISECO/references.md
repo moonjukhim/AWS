@@ -6,6 +6,8 @@
 
 - [Automatically block suspicious traffic with AWS Network Firewall and Amazon GuardDuty](https://aws.amazon.com/ko/blogs/security/automatically-block-suspicious-traffic-with-aws-network-firewall-and-amazon-guardduty/)
 
+  ![](https://d2908q01vomqb2.cloudfront.net/22d200f8670dbdb3e253a90eee5098477c95c23d/2021/03/07/GuardDuty-Network-Firewall-2021-2.png)
+
 - [How you can use Amazon GuardDuty to detect suspicious activity within your AWS account](https://aws.amazon.com/blogs/security/how-you-can-use-amazon-guardduty-to-detect-suspicious-activity-within-your-aws-account/#:~:text=Start%20an%20investigation%20with%20Amazon%20Detective)
 
 - [Correlate security findings with AWS Security Hub and Amazon EventBridge](https://aws.amazon.com/ko/blogs/security/correlate-security-findings-with-aws-security-hub-and-amazon-eventbridge/)
@@ -25,3 +27,7 @@
 - [Integrating AWS CloudFormation Guard into CI/CD pipelines](https://aws.amazon.com/ko/blogs/devops/integrating-aws-cloudformation-guard/)
 
   ![](https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2020/10/14/Architecture-Diagram.jpg)
+
+- [AWS CloudFormation 실행 권한 이해](https://blog.awsfundamentals.com/aws-cloudformation-execution-permissions)
+
+  ![](https://cdn.hashnode.com/res/hashnode/image/upload/v1688795960036/2be981f3-bc48-4031-8966-1aeb8467bd8d.jpeg?auto=compress,format&format=webp)
