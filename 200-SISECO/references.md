@@ -36,7 +36,7 @@
 
   ![](https://d2908q01vomqb2.cloudfront.net/7719a1c782a1ba91c031a682a0a2f8658209adbf/2020/10/14/Architecture-Diagram.jpg)
 
---
+---
 
 - [AWS CloudFormation 실행 권한 이해](https://blog.awsfundamentals.com/aws-cloudformation-execution-permissions)
 
