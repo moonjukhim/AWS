@@ -7,6 +7,7 @@
 ![DEVA](999-TEMP/Certifications/thumb-AWS-Developer-Associate.png)
 ![ML](999-TEMP/Certifications/AWS-MachineLearning-Specialty-100.png)
 ![BIGDAT](999-TEMP/Certifications/thumb-AWS-BigData-Specialty.png)
+![SISECO](999-TEMP/Certifications/AWS-security.png)
 
 ---
 
