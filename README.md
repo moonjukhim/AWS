@@ -5,8 +5,8 @@
 ![DEVOPS](999-TEMP/Certifications/thumb-AWS-DevOpsEngineer-Professional.png)
 ![SA](999-TEMP/Certifications/thumb-AWS-SolArchitect-Associate.png)
 ![DEVA](999-TEMP/Certifications/thumb-AWS-Developer-Associate.png)
-![ML](999-TEMP/Certifications/AWS-MachineLearning-Specialty-100.png)
 ![BIGDAT](999-TEMP/Certifications/thumb-AWS-BigData-Specialty.png)
+![ML](999-TEMP/Certifications/AWS-MachineLearning-Specialty-100.png)
 ![SISECO](999-TEMP/Certifications/AWS-Security.png)
 
 ---
