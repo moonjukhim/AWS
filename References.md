@@ -16,3 +16,10 @@
 - Security
 
     - [How to visualize multi-account Amazon Inspector findings with Amazon Elasticsearch Service](https://docs.aws.amazon.com/inspector/latest/user/scanning-ec2.html)
+
+
+---
+
+- SaaS Intergration
+
+    - [Building Salesforce integrations with Amazon EventBridge and Amazon AppFlow](https://aws.amazon.com/ko/blogs/compute/building-salesforce-integrations-with-amazon-eventbridge/)
