@@ -24,7 +24,6 @@
 | AWS Certified Solutions Architect - Professional      | 2023-09-03 | O     | O   | 2025-09-03 |
 | AWS Certified SysOps Administrator - Associate        |            |       |     |            |
 | AWS DevOps Engineer Professional                      | 2020-08-18 | O     |     | 2023-08-18 |
-| AWS Certified Alexa Skill Builder - Specialty         |            |       |     |            |
 
 ---
 
