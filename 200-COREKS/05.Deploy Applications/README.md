@@ -32,11 +32,17 @@ aws ecr set-repository-policy \
 # Helm
 
 ```bash
+# Helm install
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 > get_helm.sh
+chmod 700 get_helm.sh
+./get_helm.sh
+
 # Chart 생성
 helm create helm-test
 
 # 패키지 설치
-helm install helm-test helm-test
+cd helm-test
+helm install helm-test .
 ```
 
 ```bash
