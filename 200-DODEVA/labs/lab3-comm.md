@@ -11,3 +11,26 @@ aws dynamodb wait table-exists --table-name Notes
 
 aws dynamodb describe-table --table-name Notes | findstr TableStatus
 ```
+
+```java
+//Create DynamoDB client
+        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+                .build();
+
+        //Use the DynamoDB document API wrapper
+        DynamoDB dynamoDB = new DynamoDB(client);
+```
+
+```java
+//TODO 1
+table.putItem(
+               new Item()
+               .withPrimaryKey("UserId", userId, "NoteId", noteId)
+               .withString("Note", note)
+                );
+```
+
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesLoadData"
+```
+
