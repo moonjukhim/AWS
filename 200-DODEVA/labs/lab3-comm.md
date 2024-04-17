@@ -77,3 +77,23 @@ Iterator<Item> item = page.iterator();
 ```bash
 mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesScan"
 ```
+
+---
+
+```java
+//TODO 7
+UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+.withPrimaryKey("UserId", userId, "NoteId", noteId)
+.withUpdateExpression("set #inc = :val1")
+.withNameMap(new NameMap()
+.with("#inc", "Is_Incomplete"))
+.withValueMap(new ValueMap()
+.withString(":val1", "Yes"))
+.withReturnValues(ReturnValue.ALL_NEW);
+```
+
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesUpdate"
+```
+
+
