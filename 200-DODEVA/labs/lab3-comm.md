@@ -37,3 +37,23 @@ mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesLoadData"
 
 ---
 
+```java
+//TODO 2
+QuerySpec spec = new QuerySpec()
+                .withProjectionExpression("NoteId, Note")
+                .withKeyConditionExpression("UserId = :v_Id")
+                .withValueMap(new ValueMap()
+                        .withString(":v_Id", userId));
+```
+
+---
+
+```java
+//TODO 3
+ItemCollection<QueryOutcome> items = table.query(spec);
+```
+
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesQuery"
+```
+
