@@ -127,3 +127,9 @@ catch (ConditionalCheckFailedException e) {
 ```bash
 mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesUpdate"
 ```
+
+---
+
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesCRUDmapper"
+```
