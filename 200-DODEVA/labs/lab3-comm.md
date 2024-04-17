@@ -96,4 +96,21 @@ UpdateItemSpec updateItemSpec = new UpdateItemSpec()
 mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesUpdate"
 ```
 
+---
 
+```txt
+Maximum item size in DynamoDB is 400 KB
+```
+
+```java
+.withConditionExpression("Is_Incomplete = :v_old")
+```
+
+```java
+// TODO 9
+catch (ConditionalCheckFailedException e) {
+            System.out.println("\nUPDATE#2 - REPEAT: Printing item after the conditional update for the item - \"" + userId + "\" and \"" + noteId + "\"  - FAILURE:");
+            System.out.println("UpdateItem failed on item due to unmatching condition!");
+            System.err.println(e.getMessage());
+        }
+```
