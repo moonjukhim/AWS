@@ -60,12 +60,20 @@ mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesQuery"
 ---
 
 ```java
-//TODO4
+//TODO 4
 ScanSpec scanSpec = new ScanSpec()
                 .withFilterExpression("contains (Note, :v_txt)")
                 .withValueMap(new ValueMap().withString(":v_txt", searchText))
                 .withProjectionExpression("UserId, NoteId, Note");
 ```
 
+---
 
+```java
+//TODO 6
+Iterator<Item> item = page.iterator();
+```
 
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesScan"
+```
