@@ -57,3 +57,15 @@ ItemCollection<QueryOutcome> items = table.query(spec);
 mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesQuery"
 ```
 
+---
+
+```java
+//TODO4
+ScanSpec scanSpec = new ScanSpec()
+                .withFilterExpression("contains (Note, :v_txt)")
+                .withValueMap(new ValueMap().withString(":v_txt", searchText))
+                .withProjectionExpression("UserId, NoteId, Note");
+```
+
+
+
