@@ -11,6 +11,7 @@ aws dynamodb wait table-exists --table-name Notes
 
 aws dynamodb describe-table --table-name Notes | findstr TableStatus
 ```
+---
 
 ```java
 //Create DynamoDB client
@@ -33,4 +34,6 @@ table.putItem(
 ```bash
 mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesLoadData"
 ```
+
+---
 
