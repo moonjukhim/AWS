@@ -114,3 +114,16 @@ catch (ConditionalCheckFailedException e) {
             System.err.println(e.getMessage());
         }
 ```
+
+```java
+// TODO 10
+//Allow update to the Notes item only if the note is incomplete - SUCCESS
+        updateExistingAttributeConditionally(table, qUserId, qNoteId, newNote);
+
+        //Allow update to the Notes item only if the note is incomplete - FAILURE
+        updateExistingAttributeConditionally(table, qUserId, qNoteId, newNote);
+```
+
+```bash
+mvn -q exec:java -Dexec.mainClass="dev.labs.dynamodb.notesUpdate"
+```
