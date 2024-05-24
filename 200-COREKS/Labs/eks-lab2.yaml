@@ -710,7 +710,7 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           yum update -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource BastionHost --configsets InstallTools,IncreaseSessionMgrTimeout,EksctlCreateCluster,ProcessDockerImage,CreateSampleFiles,CreateSsmUser,ChangeDirectoryOwner,ModifyInstancePermissions --region ${AWS::Region}
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource BastionHost --configsets InstallTools,IncreaseSessionMgrTimeout,EksctlCreateCluster,CreateSampleFiles,CreateSsmUser,ChangeDirectoryOwner,ModifyInstancePermissions --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource BastionHost --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
