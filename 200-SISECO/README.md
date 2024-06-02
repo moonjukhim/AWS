@@ -14,6 +14,8 @@
 
 ### SISECO-27
 
+애플리케이션 --> 하이브리드 아키텍처 --> 서버리스 아키텍처
+
 1. Security on AWS
 2. AWS Entry Points
 3. WebApp Architecture
