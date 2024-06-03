@@ -1,5 +1,9 @@
 ### Security Engineering References
 
+- [보안 원칙 - AWS Well-Architected Framework](https://docs.aws.amazon.com/ko_kr/wellarchitected/latest/security-pillar/welcome.html)
+
+---
+
 - [Policy-as-Code for Securing AWS and Third-Party Resource Types](https://aws.amazon.com/ko/blogs/mt/policy-as-code-for-securing-aws-and-third-party-resource-types/)
 
 ---
@@ -49,3 +53,7 @@
 - [AWS CloudFormation 실행 권한 이해](https://blog.awsfundamentals.com/aws-cloudformation-execution-permissions)
 
   ![](https://cdn.hashnode.com/res/hashnode/image/upload/v1688795960036/2be981f3-bc48-4031-8966-1aeb8467bd8d.jpeg?auto=compress,format&format=webp)
+
+---
+
+- [Open Web Application Security Project(OWASP) 애플리케이션 위협 모델링](https://owasp.org/www-community/Threat_Modeling)
