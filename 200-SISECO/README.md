@@ -1,14 +1,13 @@
-### SISECO-30
+### SISECO-33
 
 1. Security Overview
-2. IAM
-3. AccountManagement
-4. Secrets_management
-5. Data_Security
-6. Infra_Edge_Protection
-7. Logging_and_Monitoring
-8. Responding_to_Threats
-9. WrapUp
+2. Access and Authorizations on AWS (Lab1)
+3. Account Management and Provisioning on AWS (Lab2)
+4. Managing Keys and Secrets on AWS (Lab3)
+5. Data Security (Lab4)
+6. Infrastructure and Edge Protection (Lab5)
+7. Monitoring and Collecting Logs on AWS (Lab6)
+8. Responding to Threats (Lab7)
 
 ---
 
