@@ -21,7 +21,7 @@
 | AWS Certified Security - Specialty               | 2024-01-19 | Active  | O   | 2027-01-19 |
 | AWS Certified Solutions Architect - Associate    | 2019-10-29 | Active  |     | 2025-09-03 |
 | AWS Certified Solutions Architect - Professional | 2023-09-03 | Active  | O   | 2025-09-03 |
-| AWS Certified SysOps Administrator - Associate   |            |         |     |            |
+| AWS Certified SysOps Administrator - Associate   | 2020-08-18 | DevOps  |     |            |
 | AWS DevOps Engineer Professional                 | 2020-08-18 | Active  |     | 2023-08-18 |
 
 ---
