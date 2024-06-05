@@ -7,7 +7,7 @@
 ##### 접근통제의 종류
 
 - 물리적 통제
-- 관리적 통제
+- 관리적 통제(보안관리)
 - 기술적 통제(암호학, 통신)
 
 ##### 통제의 종류
@@ -27,3 +27,25 @@
   - BCP/DRP
   - 백업
   - "diminish"
+
+##### 접근통제 기술
+
+- Mandatory Access Control(MAC)
+  - Rule based
+  - Administratively
+  - CBP
+  - MLP
+- Discretionary(DAC)
+  - Identity
+  - User directed
+- Non-discretionary(NON DAC)
+  - Role based
+  - Task based
+  - Lattice based
+- Etc
+  - Content dependent
+  - Restricted Interface
+
+---
+
+### Security Management
