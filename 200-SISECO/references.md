@@ -57,3 +57,7 @@
 ---
 
 - [Open Web Application Security Project(OWASP) 애플리케이션 위협 모델링](https://owasp.org/www-community/Threat_Modeling)
+
+---
+
+- [Acquire Instance Memory](https://d1.awsstatic.com/events/aws-reinforce-2022/TDR401_Instance-memory-acquisition-techniques-for-effective-incident-response.pdf)
