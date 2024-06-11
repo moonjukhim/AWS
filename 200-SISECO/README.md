@@ -5,6 +5,14 @@
 3. Account Management and Provisioning on AWS (Lab2)
 4. Managing Keys and Secrets on AWS (Lab3)
 5. Data Security (Lab4)
+
+   - 데이터 보호 S3 1/6
+   - 데이터 보호 RDS 2/6
+   - 데이터 보호 DynamoDB 3/6
+   - 데이터 보호 EBS 4/6
+   - 데이터 보호 EFS 5/6
+   - 아카이브 데이터 보호 6/6
+
 6. Infrastructure and Edge Protection (Lab5)
 7. Monitoring and Collecting Logs on AWS (Lab6)
 8. Responding to Threats (Lab7)
