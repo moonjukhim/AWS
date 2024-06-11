@@ -58,7 +58,11 @@
 
 ---
 
+##### Incident Response
+
 - [Acquire Instance Memory](https://d1.awsstatic.com/events/aws-reinforce-2022/TDR401_Instance-memory-acquisition-techniques-for-effective-incident-response.pdf)
+
+- [Incident Response Playbook](https://github.com/aws-samples/aws-customer-playbook-framework/blob/main/docs/AWS_Help.md)
 
 ---
 
@@ -71,3 +75,5 @@
 ##### Security Hub
 
 - [Correlate security findings with AWS Security Hub and Amazon EventBridge](https://aws.amazon.com/ko/blogs/security/correlate-security-findings-with-aws-security-hub-and-amazon-eventbridge/)
+
+- [Automated Security Response on AWS](https://aws.amazon.com/ko/solutions/implementations/automated-security-response-on-aws/)
