@@ -8,9 +8,9 @@
 6. Infrastructure and Edge Protection (Lab5)
 7. Monitoring and Collecting Logs on AWS (Lab6)
 8. Responding to Threats (Lab7)
-   - 인시던트 대응
+   - 인시던트 대응 1/2
      - 정보 수집 및 우선 순위 지정
-   -
+   - 위협 탐지 2/2
 
 ---
 
