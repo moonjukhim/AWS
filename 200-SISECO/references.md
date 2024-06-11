@@ -58,6 +58,12 @@
 
 ---
 
+##### GuardDuty
+
+- [Amazon GuardDuty, Amazon ECS 및 AWS Fargate에서 런타임 보안 위협 탐지](https://aws.amazon.com/ko/blogs/korea/introducing-amazon-guardduty-ecs-runtime-monitoring-including-aws-fargate/)
+
+---
+
 ##### Incident Response
 
 - [Acquire Instance Memory](https://d1.awsstatic.com/events/aws-reinforce-2022/TDR401_Instance-memory-acquisition-techniques-for-effective-incident-response.pdf)
