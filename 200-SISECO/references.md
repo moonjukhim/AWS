@@ -1,5 +1,7 @@
 ### Security Engineering References
 
+##### Well-Architected Framework
+
 - [보안 원칙 - AWS Well-Architected Framework](https://docs.aws.amazon.com/ko_kr/wellarchitected/latest/security-pillar/welcome.html)
 
 ---
@@ -61,3 +63,9 @@
 ---
 
 - [Acquire Instance Memory](https://d1.awsstatic.com/events/aws-reinforce-2022/TDR401_Instance-memory-acquisition-techniques-for-effective-incident-response.pdf)
+
+---
+
+##### Macie
+
+[Amazon Macie를 활용한 민감 데이터 탐지 및 보호조치 자동화](https://aws.amazon.com/ko/blogs/tech/detect-and-protect-sensitive-data-with-amazon-macie/)
