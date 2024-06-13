@@ -22,3 +22,10 @@
   - Exercise: Select Risk Response Strategies
 - Section 4
   - Exercise: Assess the Usefulness of the Process
+
+
+---
+
+### threat-composer
+
+https://github.com/awslabs/threat-composer#readme
