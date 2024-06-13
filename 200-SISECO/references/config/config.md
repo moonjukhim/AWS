@@ -18,3 +18,9 @@ snsTopicARN=<ConfigSNSTopic>
 ```bash
 aws configservice start-configuration-recorder --configuration-recorder-name default
 ```
+
+---
+
+- [ISMS-P 를 위한 AWS Config 규정 준수 팩 사용하기](https://aws.amazon.com/ko/blogs/korea/aws-conformance-pack-for-k-isms-p-compliance/)
+
+- [AWS Config Conformance packs - KISMS](https://github.com/awslabs/aws-config-rules/blob/master/aws-config-conformance-packs/Operational-Best-Practices-for-KISMS.yaml)
