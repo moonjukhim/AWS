@@ -1,0 +1,277 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+ Base lab template to create a product and portfolio in the account, as well as
+ the IAM permsisions that will be needed by the user during a run
+Parameters:
+  S3PathPrefix:
+    Type: String
+    Description: "The path prefix where lab resources are stored"
+    Default: "courses/ILT-TF-200-SISECO/v2.7.5.prod-4a6f9c09/lab-6-servicecatalog"
+    # Default: "courses/ILT-TF-200-SISECO/v2.5.2/lab-7-servicecatalog"
+
+Resources:
+  # IAM
+  rIAMServiceCatalogGroup:
+    Type: 'AWS::IAM::Group'
+    Properties:
+      GroupName: ServiceCatalogAppCreation
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSServiceCatalogEndUserFullAccess
+
+  # Add a user to test with
+  rIAMServiceCatalogUser:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: 'ServiceCatalogUser'
+      Groups:
+        - !Ref rIAMServiceCatalogGroup
+      LoginProfile:
+        Password: SecurityRocks!
+        PasswordResetRequired: false
+  # Role that will be used to launch Applications from the service catalog
+  LaunchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LaunchRole
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: 'Allow'
+          Principal:
+            Service: ['servicecatalog.amazonaws.com']
+          Action: ['sts:AssumeRole']
+      Path: '/'
+      Policies:
+      - PolicyName: LaunchRolePolicy
+        PolicyDocument:
+          Statement:
+          - Effect: 'Allow'
+            Action: [ 'cloudformation:CreateStack',
+                      'cloudformation:DeleteStack',
+                      'cloudformation:DescribeStackEvents',
+                      'cloudformation:DescribeStacks',
+                      'cloudformation:GetTemplateSummary',
+                      'cloudformation:SetStackPolicy',
+                      'cloudformation:UpdateStack',
+                      'cloudformation:ValidateTemplate',
+                      'config:DescribeConfigurationRecorderStatus',
+                      'ds:DescribeDirectories',
+                      'ec2:AssociateRouteTable',
+                      'ec2:AttachInternetGateway',
+                      'ec2:AuthorizeSecurityGroupIngress',
+                      'ec2:CreateInternetGateway',
+                      'ec2:CreateRoute',
+                      'ec2:CreateRouteTable',
+                      'ec2:CreateSecurityGroup',
+                      'ec2:CreateSubnet',
+                      'ec2:CreateTags',
+                      'ec2:CreateVpc',
+                      'ec2:DeleteInternetGateway',
+                      'ec2:DeleteRoute',
+                      'ec2:DeleteRouteTable',
+                      'ec2:DeleteSecurityGroup',
+                      'ec2:DeleteSubnet',
+                      'ec2:DeleteTags',
+                      'ec2:DeleteVpc',
+                      'ec2:Describe*',
+                      'ec2:DetachInternetGateway',
+                      'ec2:DisassociateRouteTable',
+                      'ec2:ModifySubnetAttribute',
+                      'ec2:ModifyVpcAttribute',
+                      'iam:ListInstanceProfiles',
+                      'iam:PassRole',
+                      'lambda:CreateFunction',
+                      'lambda:DeleteFunction',
+                      'lambda:Get*',
+                      'lambda:InvokeFunction',
+                      'lambda:list*',
+                      'organizations:DescribeOrganization',
+                      's3:Get*',
+                      's3:List*',
+                      's3:Describe*',
+                      's3:CreateBucket',
+                      's3:DeleteBucket',
+                      's3:PutBucketWebsite',
+                      's3:PutObject',
+                      's3:PutBucketACL',
+                      's3:PutBucketPolicy',
+                      's3:PutObjectAcl',
+                      's3:PutBucketPublicAccessBlock',
+                      'servicecatalog:AcceptPortfolioShare',
+                      'servicecatalog:Associate*',
+                      'servicecatalog:Batch*',
+                      'servicecatalog:CopyProduct',
+                      'servicecatalog:Create*',
+                      'servicecatalog:Delete*',
+                      'servicecatalog:Describe*',
+                      'servicecatalog:DisableAWSOrganizationsAccess',
+                      'servicecatalog:Disassociate*',
+                      'servicecatalog:EnableAWSOrganizationsAccess',
+                      'servicecatalog:Execute*',
+                      'servicecatalog:GetAWSOrganizationsAccessStatus',
+                      'servicecatalog:List*',
+                      'servicecatalog:ProvisionProduct',
+                      'servicecatalog:RejectPortfolioShare',
+                      'servicecatalog:ScanProvisionedProducts',
+                      'servicecatalog:Search*',
+                      'servicecatalog:TerminateProvisionedProduct',
+                      'servicecatalog:Update*',
+                      'ssm:GetParameters' ]
+            Resource: '*'
+          - Effect: 'Deny'
+            Action: [ 'ec2:RunInstances' ]
+            Resource: 'arn:aws:ec2:*:*:instance/*'
+            Condition:
+              StringNotEquals:
+                ec2:InstanceType: "t3.micro"
+          - Effect: 'Deny'
+            Action: [ 'ec2:RunInstances' ]
+            Resource: 'arn:aws:ec2:*:*:image/*'
+            Condition:
+              StringNotEqualsIgnoreCase:
+                ec2:Owner: "amazon"
+
+  LambdaCopyFilesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaCopyFilesRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: customLambdaPol
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudwatch:describe*'
+                  - 'cloudwatch:Get*'
+                  - 'cloudwatch:List*'
+                  - 'cloudwatch:PutMetricData'
+                  - 'logs:CreateLogDelivery'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:Describe*'
+                  - 'logs:Get*'
+                  - 'logs:List*'
+                  - 'logs:PutLogEvents'
+                  - 's3:Get*'
+                  - 's3:List*'
+                  - 's3:DeleteObject'
+                  - 's3:DeleteObjectVersion'
+                  - 's3:PutObject'
+                Resource: '*'
+
+  # AppLoggingRole:
+  #     Type: AWS::IAM::Role
+  #     Properties:
+  #       AssumeRolePolicyDocument:
+  #         Statement:
+  #         - Effect: "Allow"
+  #           Principal:
+  #             Service: [ec2.amazonaws.com]
+  #           Action: ['sts:AssumeRole']
+  #       Path: /
+  #       Policies:
+  #       - PolicyName: CommandHost-Policy
+  #         PolicyDocument:
+  #           Statement:
+  #           - Effect: "Allow"
+  #             Action: [ 'logs:CreateLogGroup',
+  #                       'logs:CreateLogStream',
+  #                       'logs:PutLogEvents',
+  #                       'logs:DescribeLogStreams' ]
+  #             Resource: 'arn:aws:logs:*:*:*'
+  # AppLoggingInstProfile:
+  #   Type: AWS::IAM::InstanceProfile
+  #   Properties:
+  #     Path: /
+  #     Roles:
+  #       - !Ref AppLoggingRole
+  #     InstanceProfileName: AppLoggingInstanceProfile
+
+  # Service Catalog Setup the Portfolio for applications
+  AccountBasicPortfolio:
+    Type: "AWS::ServiceCatalog::Portfolio"
+    Properties:
+      ProviderName: 'InfoSec'
+      Description: 'Products that should be run after you receive your account. '
+      DisplayName: 'Network Provisioning'
+
+  # Grant the access to the IAM User Group to launch product from this portfolio
+  AccountPortfolioPrincipalAssociation:
+    Type: "AWS::ServiceCatalog::PortfolioPrincipalAssociation"
+    Properties:
+      PrincipalARN: !GetAtt rIAMServiceCatalogGroup.Arn
+      PortfolioId: !Ref AccountBasicPortfolio
+      PrincipalType: IAM
+
+  # Adding Networing Layer as a Product to the Portfolio
+  rNetworkingProduct:
+    Type: "AWS::ServiceCatalog::CloudFormationProduct"
+    Properties:
+      Owner: 'Information Security Department'
+      Distributor: 'InfoSec'
+      SupportDescription: 'For question/issue contact example at ext 000'
+      Description: 'Deploys a Networking layer, for the apps to be deployed'
+      SupportEmail: 'networking@example.com'
+      SupportUrl: 'https://nettech.exammple.internal'
+      Name: 'Base-Networking'
+      ProvisioningArtifactParameters:
+        - Name: 'Base-Networking-v1.0'
+          Description: 'A Description for the provisioning artifact'
+          Info:
+            LoadTemplateFromURL: !Sub https://${AWS::Region}-tcprod.s3.amazonaws.com/${S3PathPrefix}/scripts/NetworkingLayer.template
+
+  # Attach a Service Catelog Product to the Portfolio
+  AccountPortfolioAssociation:
+    Type: "AWS::ServiceCatalog::PortfolioProductAssociation"
+    Properties:
+      PortfolioId: !Ref AccountBasicPortfolio
+      ProductId: !Ref rNetworkingProduct
+
+  # Attache the correct LaunchRole to the Product Protfolio so Service Catalog is able to launch it
+  rConstraint:
+    Type: "AWS::ServiceCatalog::LaunchRoleConstraint"
+    DependsOn:
+      - AccountPortfolioAssociation
+      - AccountPortfolioPrincipalAssociation
+    Properties:
+      PortfolioId: !Ref AccountBasicPortfolio
+      ProductId: !Ref rNetworkingProduct
+      RoleArn: !GetAtt LaunchRole.Arn
+
+Outputs:
+  # AppLogingRole:
+  #   Value: !Ref AppLoggingInstProfile
+  #   Description: 'Name of the instant Profile to Assume for log shipping'
+  #   Export:
+  #     Name: AppLoggingInstProfile
+  LambdaRoleArn:
+    Value: !GetAtt LambdaCopyFilesRole.Arn
+    Description: 'ARN of the role for Lambda to assume via SC'
+  LaunchRoleArn:
+    Value: !GetAtt LaunchRole.Arn
+    Description: 'ARN of the role for App Deploy via SC'
+    Export:
+      Name: LaunchRole
+  EndUserName:
+    Value: !Ref rIAMServiceCatalogUser
+    Description: 'The enduser account name to browse the products in Service Catalog'
+  EndUserPassword:
+    Value: 'SecurityRocks!'
+    Description: 'Password for the account to browse the product in service catalog'
+  EndUserSignPage:
+    Value: !Sub 'https://${AWS::AccountId}.signin.aws.amazon.com/console'
+    Description: 'URL for the enduser account to log-in to.'
+  Region:
+    Description: The AWS region in which the lab is running
+    Value:
+      !Sub ${AWS::Region}
