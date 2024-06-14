@@ -74,7 +74,7 @@
 
 ##### Macie
 
-[Amazon Macie를 활용한 민감 데이터 탐지 및 보호조치 자동화](https://aws.amazon.com/ko/blogs/tech/detect-and-protect-sensitive-data-with-amazon-macie/)
+- [Amazon Macie를 활용한 민감 데이터 탐지 및 보호조치 자동화](https://aws.amazon.com/ko/blogs/tech/detect-and-protect-sensitive-data-with-amazon-macie/)
 
 ---
 
