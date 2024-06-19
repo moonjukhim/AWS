@@ -57,3 +57,4 @@
 | 300   | CORCEM |                                                         |         |        |       |
 | 300   | DAQSAU | Authoring Visual Analytics Using Amazon QuickSight      | 1.3.2   | X      |       |
 | 300   | MLASMS | Amazon SageMaker Studio for Data Scientists             |         |        |       |
+| 300   | MLDGAI | Developing Generative AI Applications on AWS            | 1.0.0   | O      |       |
