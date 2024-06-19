@@ -14,4 +14,3 @@
 12. Edge Services
 13. Backup and Recovery
 
-https://us-east-1.student.classrooms.aws.training/class/cXbhvJkjAkvink5x1DSGFW
