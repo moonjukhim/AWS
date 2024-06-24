@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "Lab2 WorkingStack Environment"
+
+Parameters:
+
+  AmazonLinuxAMIID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2
+
+Resources:
+#App Server Definitions
+  AppServer1:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Join
+              - ''
+              - - !Ref 'AWS::Region'
+                - a
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      SecurityGroupIds:
+        - 'Fn::ImportValue': 'AppSGOutput'
+      SubnetId:
+        'Fn::ImportValue': 'LabSubnetOutput'
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "AppServer1"
+
+  AppServer2:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Join
+              - ''
+              - - !Ref 'AWS::Region'
+                - a
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      SecurityGroupIds:
+        - 'Fn::ImportValue': 'AppSGOutput'
+      SubnetId:
+        'Fn::ImportValue': 'LabSubnetOutput'
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "AppServer2"
+
+
+#Web Server Definitions
+  WebServer1:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Join
+              - ''
+              - - !Ref 'AWS::Region'
+                - a
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      SecurityGroupIds:
+        - 'Fn::ImportValue': 'AppSGOutput'
+      SubnetId:
+        'Fn::ImportValue': 'LabSubnetOutput'
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "WebServer1"
+
+  WebServer2:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Join
+              - ''
+              - - !Ref 'AWS::Region'
+                - a
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      SecurityGroupIds:
+        - 'Fn::ImportValue': 'AppSGOutput'
+      SubnetId:
+        'Fn::ImportValue': 'LabSubnetOutput'
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "WebServer2"
