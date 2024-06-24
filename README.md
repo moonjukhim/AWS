@@ -14,10 +14,12 @@
 | ------------------------------------------------ | ---------- | ------- | --- | ---------- |
 | ~~AWS Certified Big Data - Specialty~~           | 2020-05-15 | Expired |     | 2023-05-15 |
 | AWS Certified Cloud Practitioner                 |            |         |     |            |
-| AWS Certified Data Analytics - Specialty         |            |         | O   |            |
-| AWS Certified Database - Specialty               |            |         |     |            |
+| ~~AWS Certified Data Analytics - Specialty~~     |            |         | O   |            |
+| AWS Certified Data Engineer - Associate          |            |         |     |            |
+| ~~AWS Certified Database - Specialty~~           |            |         |     |            |
 | AWS Certified Developer Associate                | 2020-03-03 | Active  |     | 2023-08-18 |
 | AWS Certified Machine Learning - Specialty       | 2023-02-28 | Active  | O   | 2026-02-28 |
+| AWS Certified Advanced Networking - Specialty    |            |         |     |            |
 | AWS Certified Security - Specialty               | 2024-01-19 | Active  | O   | 2027-01-19 |
 | AWS Certified Solutions Architect - Associate    | 2019-10-29 | Active  |     | 2025-09-03 |
 | AWS Certified Solutions Architect - Professional | 2023-09-03 | Active  | O   | 2025-09-03 |
