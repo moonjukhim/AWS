@@ -1,3 +1,9 @@
+## AWS Certification
+
+[AWS Certification](https://aws.amazon.com/ko/certification/?nc2=sb_ce_co)
+
+---
+
 - Aurora
 
   - [Building globally distributed MySQL applications using write forwarding in Amazon Aurora Global Database](https://aws.amazon.com/ko/blogs/database/building-globally-distributed-mysql-applications-using-write-forwarding-in-amazon-aurora-global-database/)
