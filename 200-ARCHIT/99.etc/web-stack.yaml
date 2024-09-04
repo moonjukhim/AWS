@@ -329,7 +329,9 @@ Resources:
       MinSize: '1'
       TargetGroupARNs:
         - !Ref EC2TargetGroup
-      VPCZoneIdentifier: !Ref Subnets
+      VPCZoneIdentifier: 
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
 
   ###########
   # DB Subnet Group
