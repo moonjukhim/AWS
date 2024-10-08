@@ -82,3 +82,9 @@
     kubectl scale deployment ecsdemo-crystal --replicas=2
     kubectl scale deployment ecsdemo-frontend --replicas=2
     ```
+
+---
+
+### References
+
+[find-creator-of-an-eks-cluste](https://www.javierinthecloud.com/find-creator-of-an-eks-cluster/)
