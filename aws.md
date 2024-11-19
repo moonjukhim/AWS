@@ -1,1 +1,1 @@
-https://us-east-1.student.classrooms.aws.training/class/kfRYisSSASNokeuGkgZg86
+https://us-east-1.student.classrooms.aws.training/class/7R1FshgnnY32cH6KoQg5Ri
