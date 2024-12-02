@@ -8,6 +8,7 @@
    - [IAM] [IAM 역할을 사용한 AWS 계정 간 액세스 권한 위임](https://docs.aws.amazon.com/ko_kr/IAM/latest/UserGuide/tutorial_cross-account-with-roles.html)
    - [Control Tower] [AWS Architecture Blog : AWS Control Tower](https://aws.amazon.com/ko/blogs/architecture/category/management-tools/aws-control-tower/)
    - [Control Tower] [Customizations for AWS Control Tower (CfCT) overview](https://docs.aws.amazon.com/controltower/latest/userguide/cfct-overview.html)
+   - [Control Tower] [aws-control-tower-account-factory](https://github.com/aws-samples/aws-control-tower-account-factory/blob/main/control-tower-account-factory-solution.yml)
 
 3. Hybrid Connectivity
 
