@@ -10,21 +10,21 @@
 
 ---
 
-| Title                                            | Date       | Status  | V.R | Expire     |
-| ------------------------------------------------ | ---------- | ------- | --- | ---------- |
-| ~~AWS Certified Big Data - Specialty~~           | 2020-05-15 | Expired |     | 2023-05-15 |
-| AWS Certified Cloud Practitioner                 |            |         |     |            |
-| ~~AWS Certified Data Analytics - Specialty~~     |            |         | O   |            |
-| AWS Certified Data Engineer - Associate          |            |         |     |            |
-| ~~AWS Certified Database - Specialty~~           |            |         |     |            |
-| AWS Certified Developer Associate                | 2020-03-03 | Active  |     | 2023-08-18 |
-| AWS Certified Machine Learning - Specialty       | 2023-02-28 | Active  | O   | 2026-02-28 |
-| AWS Certified Advanced Networking - Specialty    |            |         |     |            |
-| AWS Certified Security - Specialty               | 2024-01-19 | Active  | O   | 2027-01-19 |
-| AWS Certified Solutions Architect - Associate    | 2019-10-29 | Active  |     | 2025-09-03 |
-| AWS Certified Solutions Architect - Professional | 2023-09-03 | Active  | O   | 2025-09-03 |
-| AWS Certified SysOps Administrator - Associate   | 2020-08-18 | DevOps  |     |            |
-| AWS DevOps Engineer Professional                 | 2020-08-18 | Active  |     | 2023-08-18 |
+| Title                                            | Date          | Status  | V.R | Expire     |
+| ------------------------------------------------ | ------------- | ------- | --- | ---------- |
+| ~~AWS Certified Big Data - Specialty~~           | ~~2020-05-15~~| Expired |     | 2023-05-15 |
+| AWS Certified Cloud Practitioner                 |               |         |     |            |
+| ~~AWS Certified Data Analytics - Specialty~~     |               |         | O   |            |
+| AWS Certified Data Engineer - Associate          |               |         |     |            |
+| ~~AWS Certified Database - Specialty~~           |               |         |     |            |
+| AWS Certified Developer Associate                | 2020-03-03    | Active  |     | 2026-08-04 |
+| AWS Certified Machine Learning - Specialty       | 2023-02-28    | Active  | O   | 2026-02-28 |
+| AWS Certified Advanced Networking - Specialty    |               |         |     |            |
+| AWS Certified Security - Specialty               | 2024-01-19    | Active  | O   | 2027-01-19 |
+| AWS Certified Solutions Architect - Associate    | 2019-10-29    | Active  |     | 2025-09-03 |
+| AWS Certified Solutions Architect - Professional | 2023-09-03    | Active  | O   | 2025-09-03 |
+| AWS Certified SysOps Administrator - Associate   | 2020-08-18    | DevOps  |     |            |
+| AWS DevOps Engineer Professional                 | 2020-08-18    | Active  |     | 2026-08-04 |
 
 ---
 
@@ -60,3 +60,9 @@
 | 300   | DAQSAU | Authoring Visual Analytics Using Amazon QuickSight      | 1.3.2   | X      |       |
 | 300   | MLASMS | Amazon SageMaker Studio for Data Scientists             |         |        |       |
 | 300   | MLDGAI | Developing Generative AI Applications on AWS            | 1.0.0   | O      |       |
+
+---
+
+### AWS Certification Roadmap
+
+[AWS Certification Roadmap](999-TEMP/Certifications/AWS-Certification-new.png)
