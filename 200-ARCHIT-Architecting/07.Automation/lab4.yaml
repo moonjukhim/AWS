@@ -186,15 +186,17 @@ Resources:
       VersionDescription: "v1"
       LaunchTemplateData:
         InstanceType: "t3.micro"
-        ImageId: "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (use the latest one)
+        ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
         SecurityGroupIds:
           - !Ref AppSecurityGroup
-        UserData: |
-          #!/bin/bash
-          sudo yum update -y
-          sudo yum install -y httpd
-          sudo systemctl start httpd
-          sudo systemctl enable httpd
+        UserData: 
+          Fn::Base64: |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install -y httpd
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            echo "Hello World" >> /var/www/html/index.html​
 
   # Auto Scaling Group
   WebAppAutoScalingGroup:
@@ -207,7 +209,7 @@ Resources:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
       LaunchTemplate:
-        LaunchTemplateName: !Ref WebAppLaunchTemplate
+        LaunchTemplateId: !Ref WebAppLaunchTemplate
         Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
       HealthCheckType: EC2
       HealthCheckGracePeriod: 300
