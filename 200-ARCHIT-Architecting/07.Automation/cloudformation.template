@@ -90,12 +90,13 @@ Resources:
         ImageId: "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (use the latest one)
         SecurityGroupIds:
           - !Ref WebAppEC2SecurityGroup
-        UserData: |
-          #!/bin/bash
-          sudo yum update -y
-          sudo yum install -y httpd
-          sudo systemctl start httpd
-          sudo systemctl enable httpd
+        UserData: 
+          Fn::Base64: |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install -y httpd
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
         KeyName: "your-key-pair-name"  # Replace with your EC2 KeyPair name
 
   # Auto Scaling Group
