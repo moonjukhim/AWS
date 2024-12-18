@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "AWS CloudFormation template for scalable web application infrastructure using Launch Template for Auto Scaling"
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+    Description: EC2 instance type
+
+  DBInstanceClass:
+    Type: String
+    Default: db.t2.micro
+    AllowedValues:
+      - db.t2.micro
+      - db.t2.small
+      - db.t2.medium
+    Description: RDS instance type
+
+  DesiredCapacity:
+    Type: Number
+    Default: 2
+    Description: "Desired number of EC2 instances in Auto Scaling group"
+
+Resources:
+  # VPC
+  WebAppVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: "true"
+      EnableDnsHostnames: "true"
+      Tags:
+        - Key: Name
+          Value: WebAppVPC
+
+  # Subnet
+  WebAppSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref WebAppVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: WebAppSubnet
+
+  # Internet Gateway
+  WebAppInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: WebAppInternetGateway
+
+  # Attach Internet Gateway to VPC
+  WebAppInternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref WebAppVPC
+      InternetGatewayId: !Ref WebAppInternetGateway
+
+  # Security Group for EC2
+  WebAppEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow HTTP and SSH access"
+      VpcId: !Ref WebAppVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"  # SSH access (use a more restricted IP range in production)
+        - IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"  # HTTP access
+
+  # EC2 Launch Template
+  WebAppLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: WebAppLaunchTemplate
+      VersionDescription: "v1"
+      LaunchTemplateData:
+        InstanceType: !Ref InstanceType
+        ImageId: "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI (use the latest one)
+        SecurityGroupIds:
+          - !Ref WebAppEC2SecurityGroup
+        UserData: |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y httpd
+          sudo systemctl start httpd
+          sudo systemctl enable httpd
+        KeyName: "your-key-pair-name"  # Replace with your EC2 KeyPair name
+
+  # Auto Scaling Group
+  WebAppAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: "1"
+      MaxSize: "5"
+      DesiredCapacity: !Ref DesiredCapacity
+      VPCZoneIdentifier:
+        - !Ref WebAppSubnet
+      LaunchTemplate:
+        LaunchTemplateName: !Ref WebAppLaunchTemplate
+        Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 300
+      Tags:
+        - Key: Name
+          Value: WebAppAutoScalingInstance
+          PropagateAtLaunch: "true"
+
+  # Application Load Balancer
+  WebAppALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: WebAppALB
+      Subnets:
+        - !Ref WebAppSubnet
+      SecurityGroups:
+        - !Ref WebAppEC2SecurityGroup
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "60"
+      Scheme: internet-facing
+      Type: application
+
+  # ALB Target Group
+  WebAppALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref WebAppVPC
+      Protocol: HTTP
+      Port: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: 80
+      HealthCheckPath: "/"
+      Matcher:
+        HttpCode: "200"
+  
+  # ALB Listener
+  WebAppALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: fixed-response
+          FixedResponseConfig:
+            StatusCode: 200
+            ContentType: text/plain
+            MessageBody: "Web application is running"
+      LoadBalancerArn: !Ref WebAppALB
+      Port: 80
+      Protocol: HTTP
+
+  # RDS Database Instance
+  WebAppDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: "20"
+      DBInstanceIdentifier: WebAppDB
+      Engine: MySQL
+      EngineVersion: "8.0"
+      MasterUsername: admin
+      MasterUserPassword: "Password123!"  # Use Secrets Manager in real-world apps
+      DBName: WebAppDB
+      VPCSecurityGroups:
+        - !Ref WebAppEC2SecurityGroup
+      MultiAZ: "false"
+      PubliclyAccessible: "true"
+
+Outputs:
+  WebAppALBDNSName:
+    Description: "DNS Name of the Application Load Balancer"
+    Value: !GetAtt WebAppALB.DNSName
+
+  WebAppDBEndpoint:
+    Description: "Endpoint of the RDS Database"
+    Value: !GetAtt WebAppDBInstance.Endpoint.Address
