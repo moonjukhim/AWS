@@ -188,7 +188,7 @@ Resources:
         InstanceType: "t3.micro"
         ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
         SecurityGroupIds:
-          - !Ref AppSecurityGroup
+          - !Ref WebAppSecurityGroup
         UserData: 
           Fn::Base64: |
             #!/bin/bash
@@ -227,7 +227,7 @@ Resources:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
       SecurityGroups:
-        - !Ref AppSecurityGroup
+        - !Ref WebAppLBSecurityGroup
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: "60"
@@ -295,16 +295,43 @@ Resources:
   # App Security Group
   ###########
 
-  AppSecurityGroup:
+  WebAppLBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: Inventory-App
+      GroupName: WebAppLBSG
       GroupDescription: Enable access to App
       VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0  # Allow HTTP traffic from anywhere
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0  # Allow HTTPS traffic from anywhere
       Tags:
         - Key: Name
-          Value: Inventory-App
+          Value: WebAppLBSG
 
+  WebAppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebAppSG
+      GroupDescription: Enable access to App
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref WebAppLBSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref WebAppLBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: WebAppSG
   ###########
   # DB Subnet Group
   ###########
