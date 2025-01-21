@@ -189,6 +189,8 @@ Resources:
         ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
         SecurityGroupIds:
           - !Ref WebAppSecurityGroup
+        IamInstanceProfile:
+          Name: !Ref InstanceProfile
         UserData: 
           Fn::Base64: |
             #!/bin/bash
@@ -214,6 +216,8 @@ Resources:
         Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
       HealthCheckType: EC2
       HealthCheckGracePeriod: 300
+      TargetGroupARNs:
+        - !Ref WebAppALBTargetGroup
       Tags:
         - Key: Name
           Value: WebAppAutoScalingInstance
@@ -253,11 +257,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
-        - Type: fixed-response
-          FixedResponseConfig:
-            StatusCode: 200
-            ContentType: text/plain
-            MessageBody: "Web application is running"
+        - Type: forward
+          TargetGroupArn: !Ref WebAppALBTargetGroup
       LoadBalancerArn: !Ref WebAppALB
       Port: 80
       Protocol: HTTP
