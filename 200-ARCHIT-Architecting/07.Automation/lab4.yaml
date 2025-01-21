@@ -197,6 +197,7 @@ Resources:
             sudo systemctl start httpd
             sudo systemctl enable httpd
             echo "Hello World" >> /var/www/html/index.html​
+        KeyName: "aws-seoul-key"
 
   # Auto Scaling Group
   WebAppAutoScalingGroup:
