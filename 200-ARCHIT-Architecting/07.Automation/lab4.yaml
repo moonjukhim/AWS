@@ -371,23 +371,23 @@ Resources:
   # RDS Database
   ###########
 
-  RDSDatabase:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBName: inventory
-      DBInstanceIdentifier: inventory-db
-      AllocatedStorage: "5"
-      DBInstanceClass: db.t3.micro
-      Engine: MySQL
-      MasterUsername: dbadmin
-      MasterUserPassword: lab-password
-      MultiAZ: false
-      DBSubnetGroupName: !Ref DBSubnetGroup
-      VPCSecurityGroups:
-        - !Ref DBSecurityGroup
-      Tags:
-        - Key: Name
-          Value: inventory-db
+#  RDSDatabase:
+#    Type: AWS::RDS::DBInstance
+#    Properties:
+#      DBName: inventory
+#      DBInstanceIdentifier: inventory-db
+#      AllocatedStorage: "5"
+#      DBInstanceClass: db.t3.micro
+#      Engine: MySQL
+#      MasterUsername: dbadmin
+#      MasterUserPassword: lab-password
+#      MultiAZ: false
+#      DBSubnetGroupName: !Ref DBSubnetGroup
+#      VPCSecurityGroups:
+#        - !Ref DBSecurityGroup
+#      Tags:
+#        - Key: Name
+#          Value: inventory-db
 
   ###########
   # Lambda function to clear existing Parameter Store parameters
@@ -450,9 +450,9 @@ Resources:
 ###########
 
 Outputs:
-  Endpoint:
-    Value: !GetAtt RDSDatabase.Endpoint.Address
-    Description: Database endpoint
+#  Endpoint:
+#    Value: !GetAtt RDSDatabase.Endpoint.Address
+#    Description: Database endpoint
 
   PublicSubnet2:
     Value: !Ref PublicSubnet2
