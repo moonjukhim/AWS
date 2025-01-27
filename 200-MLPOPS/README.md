@@ -19,3 +19,11 @@
 ###
 
 - 2023-10-10
+
+---
+
+### References
+
+    - [Generative AI Stack](https://aws.amazon.com/ko/blogs/machine-learning/welcome-to-a-new-era-of-building-in-the-cloud-with-generative-ai-on-aws/)
+
+    - [FMOps/LLMOps](https://aws.amazon.com/ko/blogs/machine-learning/fmops-llmops-operationalize-generative-ai-and-differences-with-mlops/)
