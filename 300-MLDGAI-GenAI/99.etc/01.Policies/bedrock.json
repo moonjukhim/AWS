@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow|Deny",
+            "Action": [
+                "aws-marketplace:Subscribe",
+                "aws-marketplace:Unsubscribe",
+                "aws-marketplace:ViewSubscriptions"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "ForAnyValue:StringEquals": {
+                    "aws-marketplace:ProductId": [
+                        "model-product-id-1",
+                        "model-product-id-2"
+                    ]
+                }
+            }
+        }
+    ]
+}
