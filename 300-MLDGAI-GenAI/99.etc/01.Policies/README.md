@@ -12,5 +12,8 @@ sudo dnf install python3 -y
 
 sudo python3 -m ensurepip --upgrade
 pip3 install langchain langchain-community langchain-aws boto3
+sudo dnf install postgresql-devel
+pip3 install psycopg pgvector sqlalchemy
+
 
 ```
