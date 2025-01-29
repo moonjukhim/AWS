@@ -17,6 +17,11 @@
                     ]
                 }
             }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "bedrock:InvokeModel",
+            "Resource": "*"
         }
     ]
 }
