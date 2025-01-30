@@ -7,10 +7,12 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import PGVector
 
+# 두 개의 모델ID 관리
+# llm & embedding
 llm = ChatBedrockConverse(model="anthropic.claude-3-sonnet-20240229-v1:0")
 embeddings = BedrockEmbeddings(model_id="amazon.titan-embed-text-v2:0")
 
-loader = WebBaseLoader("https://aws.amazon.com/bedrock/titan/")
+loader = WebBaseLoader("https://aws.amazon.com/ko/bedrock/amazon-models/titan/")
 docs = loader.load()
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
