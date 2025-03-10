@@ -5,6 +5,7 @@ Description: Architecting on AWS - Lab 4 - Creating a Highly Available Environme
 # 1 x NAT Gateway (Student adds a second)
 # DB Subnet Group across the 2 private subnets
 # RDS in Private Subnet
+# last modified 2025/03/11
 
 Resources:
   ###########
@@ -199,7 +200,7 @@ Resources:
             sudo systemctl start httpd
             sudo systemctl enable httpd
             echo "Hello World" >> /var/www/html/index.html​
-        KeyName: "aws-seoul-key"
+        # KeyName: "aws-seoul-key"
 
   # Auto Scaling Group
   WebAppAutoScalingGroup:
