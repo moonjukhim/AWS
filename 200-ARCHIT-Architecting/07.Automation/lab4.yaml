@@ -5,8 +5,9 @@ Description: Architecting on AWS - Lab 4 - Creating a Highly Available Environme
 # 1 x NAT Gateway (Student adds a second)
 # DB Subnet Group across the 2 private subnets
 # RDS in Private Subnet
-# last modified 2025/03/11
 
+# last modified 2025-05-21
+ 
 Resources:
   ###########
   # VPC with Internet Gateway
