@@ -67,3 +67,7 @@
 ### AWS Certification Roadmap
 
 ![AWS Certification Roadmap](999-TEMP/Certifications/AWS-Certification-new.png)
+
+---
+
+[Link](https://us-east-1.instructor.classrooms.aws.training/classes)
