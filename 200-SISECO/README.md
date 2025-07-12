@@ -1,5 +1,7 @@
 ### SISECO-33
 
+##### Index
+
 1. Security Overview
 2. Access and Authorizations on AWS (Lab1)
 3. Account Management and Provisioning on AWS (Lab2)
@@ -51,4 +53,5 @@
 
 ---
 
+- 2025-07
 - 2024-06-14
