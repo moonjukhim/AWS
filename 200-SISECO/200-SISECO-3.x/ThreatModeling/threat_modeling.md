@@ -61,6 +61,14 @@ STRIDE : 여섯 가지 위협 범주로 구성된 약어. 유사한 위협들을
         - [GitHub repo:](https://github.com/awslabs/threat-composer)
     - [[S] Find spoofing threats to external entities](./imgs/1_spoofing.jpg)
     - [[T] Find tampering threats to data stores](./imgs/2_tampering.jpg)
+    - [[R] Find repudiation threats to external entities](./imgs/3_repudiation.jpg)
+    - [[I] Find information disclosure threats to processes](./imgs/4_info_disclosure.jpg)
+    - [[D] Find denial of service (DoS) threats to data stores](./imgs/5_dos.jpg)
+    - [[E] Find elevation of privilege (EoP) threats to processes](./imgs/6_eop.jpg)
+    - [우선순위 결정](./imgs/7_priorities.jpg)
+
+
+
 ---
 
 [위협 모델링에 접근하는 방법](https://aws.amazon.com/ko/blogs/security/how-to-approach-threat-modeling/)
