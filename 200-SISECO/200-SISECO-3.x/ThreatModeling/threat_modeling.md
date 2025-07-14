@@ -9,14 +9,18 @@ Exercises
 
 ## TODO
 
-1. draw.io에서 !["Vehicle Registraion"](./imgs/vehicle_registraion_module.png) 
+1. draw.io에서 ["Vehicle Registraion"](./imgs/vehicle_registraion_module.png) 
 2. 차량 등록 기능이 어떻게 작동하는지 몇 가지 가정을 작성합니다.
 
-| Label | Description |
-|-------|-------------|
+| Label         | Description                                                   |
+|---------------|---------------------------------------------------------------|
 |WWWO-Assume-1	| REST 기반 API는 AWS Lambda와 Amazon API Gateway에서 제공됩니다.   |
 |WWWO-Assume-2  | 모든 사용자가 모든 작업을 수행할 수 있습니다.                       |
 |WWWO-Assume-3  | GUID는 무작위적이고 비순차적입니다.                               |
+| ...           | ...                                                           |
+
+3. 시스템 요소 그리기/데이터 흐름 그리기
+
 
 ---
 
