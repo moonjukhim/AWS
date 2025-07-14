@@ -47,6 +47,16 @@ STRIDE : 여섯 가지 위협 범주로 구성된 약어. 유사한 위협들을
     ![STRIDE](./imgs/STRIDE.png)
     [STRIDE-per-element chart](./imgs/STRIDE-per-element%20chart_NOPROCESS_.png)
 
+2. Threat Grammar
+
+    [threat source] [prerequisites] can [threat action], which leads to [threat impact], negatively impacting [impacted assets].
+
+    [Sample statements](./static/threat_grammar_statements.xlsx)
+
+3. Find Threats
+
+    - [STRIDE-per-element 사용](./imgs/STRIDE-per-element%20chart_NOPROCESS_.png)
+    - [State of assumptions](./static/sheet1 - what are we working on.xlsx)
 ---
 
 [위협 모델링에 접근하는 방법](https://aws.amazon.com/ko/blogs/security/how-to-approach-threat-modeling/)
