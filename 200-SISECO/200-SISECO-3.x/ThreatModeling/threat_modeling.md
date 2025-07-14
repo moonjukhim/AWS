@@ -56,7 +56,11 @@ STRIDE : 여섯 가지 위협 범주로 구성된 약어. 유사한 위협들을
 3. Find Threats
 
     - [STRIDE-per-element 사용](./imgs/STRIDE-per-element%20chart_NOPROCESS_.png)
-    - [State of assumptions](./static/sheet1-what_are_we_working_on.xlsx)
+    - [State of assumptions xlsx](./static/sheet1-what_are_we_working_on.xlsx)
+    - [Threat composer tool](https://awslabs.github.io/threat-composer/?mode=ThreatsOnly)
+        - [GitHub repo:](https://github.com/awslabs/threat-composer)
+    - [[S] Find spoofing threats to external entities](./imgs/1_spoofing.jpg)
+    - [[T] Find tampering threats to data stores](./imgs/2_tampering.jpg)
 ---
 
 [위협 모델링에 접근하는 방법](https://aws.amazon.com/ko/blogs/security/how-to-approach-threat-modeling/)
