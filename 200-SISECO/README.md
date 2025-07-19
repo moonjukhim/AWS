@@ -53,11 +53,13 @@
 
 ---
 
-- 2025-07
+- 2025-07-22
 - 2024-06-14
 
 ---
 
-# Threat Modeling
+# Builder
 
-- Section 1 : 우리는 무엇을 하고 있나요?
+- Security Engineering on AWS - Supplemental Lab Playlist
+- Overview of Security and Risk Modeling
+- Threat Hunting with AWS Network Firewall Deployment
