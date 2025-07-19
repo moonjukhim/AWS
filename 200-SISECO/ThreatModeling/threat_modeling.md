@@ -1,6 +1,6 @@
 # 1. Introduction to Threat Modeling
 
-# 2. Threat Modeling at AWS
+### 2. Threat Modeling at AWS
 
 Exercises
 
@@ -23,7 +23,7 @@ Exercises
 
 ---
 
-### threat-composer
+##### threat-composer
 
 https://github.com/awslabs/threat-composer
 https://awslabs.github.io/threat-composer/workspaces/default/dashboard
