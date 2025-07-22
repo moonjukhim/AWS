@@ -22,5 +22,5 @@ Exercises
 
 ##### threat-composer
 
-https://github.com/awslabs/threat-composer
-https://awslabs.github.io/threat-composer/workspaces/default/dashboard
+  - https://github.com/awslabs/threat-composer
+  - https://awslabs.github.io/threat-composer/workspaces/default/dashboard
