@@ -58,6 +58,10 @@
 
 ---
 
+##### Dectective
+
+- [Improve your security investigations with Detective finding groups visualizations](https://aws.amazon.com/ko/blogs/security/improve-your-security-investigations-with-detective-finding-groups-visualizations/)
+
 ##### GuardDuty
 
 - [Amazon GuardDuty, Amazon ECS 및 AWS Fargate에서 런타임 보안 위협 탐지](https://aws.amazon.com/ko/blogs/korea/introducing-amazon-guardduty-ecs-runtime-monitoring-including-aws-fargate/)
