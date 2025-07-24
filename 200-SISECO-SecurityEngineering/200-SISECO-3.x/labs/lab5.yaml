@@ -1,0 +1,1275 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template for Security Engineering on AWS - Lab 5 - Using AWS WAF to Mitigate Malicious Traffic
+
+Parameters:
+  LabVpcCidr:
+    Type: String
+    Default: 10.10.0.0/16
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LabPublicSubnet1Cidr:
+    Type: String
+    Default: 10.10.1.0/24
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LabPublicSubnet2Cidr:
+    Type: String
+    Default: 10.10.2.0/24
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LabPrivateSubnet1Cidr:
+    Type: String
+    Default: 10.10.10.0/24
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LabPrivateSubnet2Cidr:
+    Type: String
+    Default: 10.10.20.0/24
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  AttackerVpcCidr:
+    Type: String
+    Default: 10.50.0.0/16
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  AttackerSubnetCidr:
+    Type: String
+    Default: 10.50.50.0/24
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LatestAL2AmiId: # Locate latest Amazon Linux 2 AMI from public parameter store
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+
+  S3PathPrefix:
+    Type: String
+    Description: 'The path prefix where lab resources are stored'
+    Default: 'courses/ILT-TF-200-SISECO/v3.3.3.prod-90a47705/lab-5'
+
+  S3ResourceBucket:
+    Type: String
+    Description: S3 Bucket suffix (e.g. us-west-2-tcprod) of where to pull lab resources from
+    Default: -tcprod
+
+  RdsDbName:
+    Type: String
+    Description: database name
+    Default: colorsdb
+
+  DbTableName:
+    Type: String
+    Description: table name
+    Default: colors
+
+  RdsUserName:
+    Type: String
+    Description: database username
+    Default: admin
+
+Resources:
+#################################################
+###  Start - Create lab networking resources  ###
+#################################################
+  LabVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref LabVpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: Lab VPC
+
+#-----Public subnet resources-----#
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Internet Gateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LabVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  LabPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref LabVpc
+      CidrBlock: !Ref LabPublicSubnet1Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Lab Public Subnet 1
+
+  LabPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref LabVpc
+      CidrBlock: !Ref LabPublicSubnet2Cidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Lab Public Subnet 2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn:
+      - LabPublicSubnet1
+      - LabPublicSubnet2
+    Properties:
+      VpcId: !Ref LabVpc
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  LabPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref LabPublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  LabPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref LabPublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+#-----Private subnet resources-----#
+  ElasticIpForNatGateway:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: LabPublicSubnet1RouteTableAssociation
+    Properties: 
+      AllocationId: !GetAtt ElasticIpForNatGateway.AllocationId
+      SubnetId: !Ref LabPublicSubnet1
+      Tags:
+        - Key: Name
+          Value: NAT Gateway
+ 
+  LabPrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: !Ref LabPrivateSubnet1Cidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Lab Private Subnet 1
+
+  LabPrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: !Ref LabPrivateSubnet2Cidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Lab Private Subnet 2
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn:
+      - LabPrivateSubnet1
+      - LabPrivateSubnet2
+    Properties:
+      VpcId: !Ref LabVpc
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  LabPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PrivateRoute
+    Properties:
+      SubnetId: !Ref LabPrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  LabPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PrivateRoute
+    Properties:
+      SubnetId: !Ref LabPrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+###############################################
+###  End - Create lab networking resources  ###
+###############################################
+
+#####################################################
+###  Start - Create application server resources  ###
+#####################################################
+#-----Create EC2 instance profile to allow the AppServer instance to access required services to build the lab-----#
+  AppServerProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: AppServerProfile
+      Roles:
+        - !Ref AppServerIamRole
+
+  AppServerIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AppServerIamRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Allows SSM connections to the instance.
+
+  AppServerBuildPolicy: # Permissions required to build the lab environment
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AppServerBuildPolicy
+      Roles:
+        - !Ref AppServerIamRole
+      PolicyDocument: # Permissions to modify the SSM connection settings and to delete this policy at the end of the build
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - iam:DeleteRolePolicy
+              - s3:GetObject
+              - s3:List*
+              - s3:PutObject
+            Resource: '*'
+
+#-----Create security group for AppServer-----#
+  AppServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: AppServerSG
+      GroupDescription: Network access rules for the Application Server instance
+      VpcId: !Ref LabVpc
+      Tags:
+        - Key: Name
+          Value: Application Server SG
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+#-----Create Application Server EC2 instance-----#
+  AppServer:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - LabPrivateSubnet1RouteTableAssociation
+    Properties:
+      ImageId: !Ref LatestAL2AmiId
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref AppServerProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            DeleteOnTermination: true
+            VolumeType: gp2
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref AppServerSecurityGroup
+          SubnetId: !Ref LabPrivateSubnet1
+      Tags:
+        - Key: Name
+          Value: Application Server
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            yum update -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AppServer --configsets InstallTools,ConfigureAwsCliParameters,InstallWebsiteComponents,RemoveBuildPolicy,CfnSignal --region ${AWS::Region}
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          InstallTools:
+            - "install-tools"
+          ConfigureAwsCliParameters:
+            - "configure-aws-cli-parameters"
+          InstallWebsiteComponents:
+            - "install-website-components"
+          RemoveBuildPolicy:
+            - "remove-lab-build-policy"
+          CfnSignal:
+            - "cfn-signal"
+        install-tools:
+          commands:
+            a-update-yum:
+              command: yum update -y
+            b-install-python3:
+              command: yum install -y python3
+            c-remove-aws-cli-v1:
+              command: rm -rf /usr/bin/aws
+            d-download-aws-cli-v2:
+              command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            e-unzip-package:
+              command: unzip awscliv2.zip
+            f-install-aws-cli-v2:
+              command: ./aws/install -b
+        configure-aws-cli-parameters:
+          commands:
+            a-aws-cli-parameters-for-ec2user:
+              command: !Sub mkdir /home/ec2-user/.aws && echo "[default]" > /home/ec2-user/.aws/config && echo "region = ${AWS::Region}" >> /home/ec2-user/.aws/config
+            b-aws-cli-parameters-for-ssmuser:
+              command: !Sub mkdir -p /home/ssm-user/.aws && echo "[default]" > /home/ssm-user/.aws/config && echo "region = ${AWS::Region}" >> /home/ssm-user/.aws/config
+        install-website-components:
+          commands:
+            a-install-applications:
+              command: yum install -y httpd php git java-openjdk
+            b-copy-website-files:
+              command: !Sub curl -o /home/ec2-user/website.zip https://${AWS::Region}-tcprod.s3.amazonaws.com/${S3PathPrefix}/scripts/website.zip
+            c-unzip-files:
+              command: unzip /home/ec2-user/website.zip -d /var/www/html
+            d-enable-services:
+              command: systemctl enable httpd.service && systemctl start httpd.service
+            e-set-directory-permissions:
+              command: chown -R ec2-user:ec2-user /home/ec2-user/
+        remove-lab-build-policy:
+          commands:
+            remove-lab-build-policy:
+              command: !Sub aws iam delete-role-policy --role-name ${AppServerIamRole} --policy-name AppServerBuildPolicy
+        cfn-signal:
+          commands:
+            cfn-signal:
+              command: !Sub /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource AppServer --region ${AWS::Region}
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT5M
+###################################################
+###  End - Create application server resources  ###
+###################################################
+
+############################################################
+###  Start - Create application load balancer resources  ###
+############################################################
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: AlbSG
+      GroupDescription: Network access rules applied to the application load balancer
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref LabPrivateSubnet1Cidr
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref LabVpc
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Name: web-server-alb
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+      Subnets:
+        - !Ref LabPublicSubnet1
+        - !Ref LabPublicSubnet2
+
+  AlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: AppServerTG
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      Targets:
+        - Id: !Ref AppServer
+          Port: 80
+      VpcId: !Ref LabVpc
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AlbTargetGroup
+##########################################################
+###  End - Create application load balancer resources  ###
+##########################################################
+
+#####################################################
+###  Start - Create "attacker" network resources  ###
+#####################################################
+  AttackerVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref AttackerVpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: Attacker VPC
+
+#-----Public subnet resources-----#
+  AttackerInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Attacker Internet Gateway
+
+  AttachAttackerGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref AttackerVpc
+      InternetGatewayId: !Ref AttackerInternetGateway
+
+  AttackerSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachAttackerGateway
+    Properties:
+      VpcId: !Ref AttackerVpc
+      CidrBlock: !Ref AttackerSubnetCidr
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select
+        - 2
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Attacker Subnet
+
+  AttackerRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: AttackerSubnet
+    Properties:
+      VpcId: !Ref AttackerVpc
+
+  AttackerRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachAttackerGateway
+    Properties:
+      RouteTableId: !Ref AttackerRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref AttackerInternetGateway
+
+  AttackerSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: AttackerRoute
+    Properties:
+      SubnetId: !Ref AttackerSubnet
+      RouteTableId: !Ref AttackerRouteTable
+###################################################
+###  End - Create "attacker" network resources  ###
+###################################################
+
+###########################################################################################
+###  Start - Create the AttackerInstance EC2 instance and related resources  ###
+###########################################################################################
+
+#-----EC2 instance profile to allow the AttackerInstance
+#-----instance to access required services to build the lab-----#
+  AttackerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: AttackerInstanceProfile
+      Roles:
+        - !Ref AttackerInstanceIamRole
+
+  AttackerInstanceIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AttackerInstanceIamRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore # Allows SSM connections to the instance.
+
+#-----Security group for AttackerInstance-----#
+  AttackerInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: AttackerInstanceSG
+      GroupDescription: Network access rules for the Attacker Instance instance
+      VpcId: !Ref AttackerVpc
+      Tags:
+        - Key: Name
+          Value: Attacker Instance SG
+      SecurityGroupEgress:
+        - IpProtocol: TCP
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: TCP
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+#-----Attacker Instance EC2 instance-----#
+  AttackerInstance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - AttackerSubnetRouteTableAssociation
+    Properties:
+      ImageId: !Ref LatestAL2AmiId
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref AttackerInstanceProfile
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 8
+            DeleteOnTermination: true
+            VolumeType: gp2
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref AttackerInstanceSecurityGroup
+          SubnetId: !Ref AttackerSubnet
+      Tags:
+        - Key: Name
+          Value: Attacker Instance
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            yum update -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource AttackerInstance --configsets InstallTools --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource AttackerInstance --region ${AWS::Region}
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          InstallTools:
+            - "install-tools"
+        install-tools:
+          commands:
+            a-update-yum:
+              command: yum update -y
+            b-install-python3:
+              command: yum install -y python3
+            c-remove-aws-cli-v1:
+              command: rm -rf /usr/bin/aws
+            d-download-aws-cli-v2:
+              command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            e-unzip-package:
+              command: unzip awscliv2.zip
+            f-install-aws-cli-v2:
+              command: ./aws/install -b
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT3M
+#########################################################################################
+###  End - Create the AttackerInstance EC2 instance and related resources  ###
+#########################################################################################
+
+########################################################
+###  Start - Create/modify Systems Manager document  ###
+###  to manage settings related to SSM sessions      ###
+########################################################
+  SsmRunShellConfig:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: SSM-SessionManagerRunShell
+      DocumentType: Session
+      DocumentFormat: YAML
+      Content: !Sub |
+        schemaVersion: "1.0"
+        description: Document to modify Session Manager idle timeout and runas user.
+        sessionType: Standard_Stream
+        inputs:
+          s3BucketName: ""
+          s3KeyPrefix: ""
+          s3EncryptionEnabled: true
+          cloudWatchLogGroupName: ""
+          cloudWatchEncryptionEnabled: true
+          idleSessionTimeout: "60"
+          cloudWatchStreamingEnabled: true
+          kmsKeyId: ""
+          runAsEnabled: true
+          runAsDefaultUser: ec2-user
+          shellProfile: #---Enter commands to run when connecting to the instance via SSM---#
+            linux: cd $HOME; pwd; AlbUrl="http://${ApplicationLoadBalancer.DNSName}"
+######################################################
+###  End - Create/modify Systems Manager document  ###
+###  to manage settings related to SSM sessions    ###
+######################################################
+
+###########################################################################
+###  Start - Create RDS and API Gateway resources                       ###
+###  Based on resource from re:Inforce 2022 bootcamp                    ###
+###  "Security Engineers, Protect Your Serverless applications!" lab 4  ###
+###########################################################################
+
+#-----Create security groups-----#
+  # Only allow Lambda security group
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SQL access from lambda subnets
+      VpcId:
+        Ref: LabVpc
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        SourceSecurityGroupId : !Ref LambdaSecurityGroup
+      Tags:
+      - Key: Name
+        Value: RdsSecurityGroup
+
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Lambda ENIs
+      VpcId:
+        Ref: LabVpc
+      Tags:
+      - Key: Name
+        Value: LambdaSecurityGroup
+
+  # Create Db subnet groups for RDS instance
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: 'RDS subnets'
+      SubnetIds:
+        - !Ref LabPrivateSubnet1
+        - !Ref LabPrivateSubnet2
+      Tags:
+        -
+          Key: Name
+          Value: DbSubnetGroup
+
+  # Will be assumed by RDSLambdaCFNInit Lambda function
+  RdsLambdaCfnInitRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: 'Allow'
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        -
+          PolicyName: root
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+                - Effect: Allow
+                  Action: 's3:GetObject'
+                  Resource: '*'
+        -
+          PolicyName: 'AllowSM'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: 'Allow'
+                Action: 'secretsmanager:*'
+                Resource: '*'
+        -
+          PolicyName: 'AllowS3'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: 'Allow'
+                Action: 's3:GetObject'
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  # Will be assumed by LambdaRdsTest and LambdaRdsTestHarness Lambda functions
+  RdsLambdaTestRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          -
+            Effect: 'Allow'
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        -
+          PolicyName: 'AllowS3'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: 'Allow'
+                Action: 's3:*'
+                Resource: '*'
+        -
+          PolicyName: 'AllowSM'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              -
+                Effect: 'Allow'
+                Action: 'secretsmanager:*'
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  LambdaRdsTest:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Description: 'Test Lambda function to access a RDS Database and read sample data'
+      Runtime: python3.9
+      Code:
+        S3Bucket: !Sub ${AWS::Region}${S3ResourceBucket}
+        S3Key: !Sub ${S3PathPrefix}/scripts/rds-query.zip
+      Role: !GetAtt RdsLambdaCfnInitRole.Arn
+      MemorySize: 128
+      Timeout: 60
+      VpcConfig: # For accessing RDS instance
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref LabPrivateSubnet1
+          - !Ref LabPrivateSubnet2
+      Environment:
+        Variables:
+          RDS_HOST: !GetAtt DbInstance.Endpoint.Address
+          RDS_USERNAME: !Ref RdsUserName
+          SECRET_NAME: !Ref RdsInstanceRotationSecret
+          RDS_DB_NAME: !Ref RdsDbName
+          RDS_Table_NAME: !Ref DbTableName
+
+  apiGateway:
+    Type: 'AWS::ApiGateway::RestApi'
+    DependsOn: apiCWLRoleArn
+    Properties:
+      Name: 'lab-rds-api'
+      Description: 'Lab API Gateway'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Tags:
+      - Key: Name
+        Value: apiGateway
+
+  apiCWLRoleArn:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  # IAM Role for API GW + CWL
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs'
+
+  apiGatewayRootMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      AuthorizationType: 'NONE'
+      HttpMethod: 'GET'
+      ResourceId: !GetAtt 'apiGateway.RootResourceId'
+      RestApiId: !Ref 'apiGateway'
+      RequestValidatorId: !Ref apiRequestValidator
+      MethodResponses:
+      - StatusCode: '200'
+        ResponseModels:
+          application/json: Empty
+        ResponseParameters:
+          method.response.header.Content-Type: true
+          method.response.header.Content-Length: true
+      RequestParameters:
+        method.request.querystring.id: true
+      Integration:
+        IntegrationHttpMethod: 'POST'  # https://aws.amazon.com/premiumsupport/knowledge-center/api-gateway-lambda-template-invoke-error/
+        Type: 'AWS'
+        Uri: !Sub
+          - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations'
+          - lambdaArn: !GetAtt 'LambdaRdsTest.Arn'
+        IntegrationResponses:
+        - StatusCode: '200'
+          ResponseParameters:
+            method.response.header.Content-Type: integration.response.body.headers.Content-Type
+            method.response.header.Content-Length: integration.response.body.headers.Content-Length
+          ResponseTemplates:
+            application/json: $input.path('$')
+        PassthroughBehavior: WHEN_NO_TEMPLATES
+        RequestTemplates: #Accept Query String
+          application/json: !Join
+            - ''
+            - -  "{\n \"id\": \"$input.params('id')\"  \n}"
+
+  # add request validator in console
+  apiRequestValidator:
+    Type: AWS::ApiGateway::RequestValidator
+    Properties:
+      RestApiId: !Ref apiGateway
+      ValidateRequestParameters: true
+
+  apiGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn:
+      - 'apiGatewayRootMethod'
+    Properties:
+      RestApiId: !Ref 'apiGateway'
+
+  apiGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: Dev
+      Description: Dev Stage
+      RestApiId: !Ref apiGateway
+      DeploymentId: !Ref apiGatewayDeployment
+      MethodSettings:
+        - ResourcePath: /
+          HttpMethod: GET
+          MetricsEnabled: true
+          DataTraceEnabled: true
+          LoggingLevel: 'INFO'
+
+  # Allow API Gateway to invoke LambdaRdsTest
+  LambdaApiGatewayInvoke:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !GetAtt 'LambdaRdsTest.Arn'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${apiGateway}/*/GET/'
+
+  LambdaRDSCreateTable:
+    DependsOn:
+      - ElasticIpForNatGateway # for deletion, this lambda function requires access to S3 bucket, hence this dependency. (chained to NAT and internet gateway)
+      - LabPublicSubnet1RouteTableAssociation
+      - LabPublicSubnet2RouteTableAssociation
+      - LabPrivateSubnet1RouteTableAssociation
+      - LabPrivateSubnet2RouteTableAssociation
+      - RdsSecurityGroup
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: index.lambda_handler
+      Code:
+        ZipFile:  |
+          import logging
+          import os
+          import pymysql
+          import boto3
+          import json
+          import requests
+          import cfnresponse
+
+          rds_host = os.environ['RDS_HOST']
+          name = os.environ['RDS_USERNAME']
+          secret_name = os.environ['SECRET_NAME']
+          db_name = os.environ['RDS_DB_NAME']
+          table_name = os.environ['RDS_Table_NAME']
+
+          my_session = boto3.session.Session()
+          region_name = my_session.region_name
+          conn = None
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+
+          def openConnection():
+              global conn
+              password = "None"
+              session = boto3.session.Session()
+              client = session.client(service_name='secretsmanager',region_name=region_name)
+
+              try:
+                  get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+              except ClientError as e:
+                  print(e)
+                  if e.response['Error']['Code'] == 'DecryptionFailureException':
+                      raise e
+                  elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+                      raise e
+                  elif e.response['Error']['Code'] == 'InvalidParameterException':
+                      raise e
+                  elif e.response['Error']['Code'] == 'InvalidRequestException':
+                      raise e
+                  elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+                      raise e
+              else:
+                  if 'SecretString' in get_secret_value_response:
+                      secret = get_secret_value_response['SecretString']
+                      j = json.loads(secret)
+                      password = j['password']
+                  else:
+                      decoded_binary_secret = base64.b64decode(get_secret_value_response['SecretBinary'])
+                      print("password binary:" + decoded_binary_secret)
+                      password = decoded_binary_secret.password
+
+              try:
+                  if(conn is None):
+                      conn = pymysql.connect(host=rds_host, user=name, passwd=password, db=db_name, connect_timeout=5)
+                  elif (not conn.open):
+                      conn = pymysql.connect(host=rds_host, user=name, passwd=password, db=db_name, connect_timeout=5)
+              except Exception as e:
+                  raise e
+
+          def lambda_handler(event, context):
+              responseData = {}
+              responseStatus = 'SUCCESS'
+              if event['RequestType'] == 'Delete':
+                  sendResponse(event, context, responseStatus, responseData, None)
+                  return True
+
+              try:
+                  openConnection()
+                  item_count = 0
+
+                  with conn.cursor() as cur:
+                      cur.execute('use '+ db_name)
+                      create_table_sql = 'create table ' + table_name +  '( id  int NOT NULL, Name varchar(255) NOT NULL, PRIMARY KEY (id))'
+                      cur.execute(create_table_sql)
+                      cur.execute('insert into ' + table_name + ' (id, Name) values(1, "Orange")')
+                      cur.execute('insert into ' + table_name + ' (id, Name) values(2, "Blue")')
+                      cur.execute('insert into ' + table_name + ' (id, Name) values(3, "Pink")')
+                      conn.commit()
+                      cur.execute('select * from ' + table_name)
+                      for row in cur:
+                          item_count += 1
+                          logger.info(row)
+
+              except Exception as e:
+                  responseStatus = 'FAILED'
+              finally:
+                  if(conn is not None and conn.open):
+                      conn.close()
+              responseData['Data'] = responseStatus
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "LambdaRDSCreateTable")
+      Layers:
+        - Ref: requestsLayer
+      Description: 'Lambda function which will execute when this CFN template is created, updated or deleted'
+      Runtime: python3.9
+      Role: !GetAtt RdsLambdaCfnInitRole.Arn
+      MemorySize: 128
+      Timeout: 60
+      VpcConfig: # For accessing RDS instance
+        SecurityGroupIds:
+          - !Ref LambdaSecurityGroup
+        SubnetIds:
+          - !Ref LabPrivateSubnet1
+          - !Ref LabPrivateSubnet2
+      Environment:
+        Variables:
+          RDS_HOST: !GetAtt DbInstance.Endpoint.Address
+          RDS_USERNAME: !Ref RdsUserName
+          SECRET_NAME: !Ref RdsInstanceRotationSecret
+          RDS_DB_NAME: !Ref RdsDbName
+          RDS_Table_NAME: !Ref DbTableName
+
+  requestsLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket: !Sub ${AWS::Region}${S3ResourceBucket}
+        S3Key: !Sub ${S3PathPrefix}/scripts/python-requests-lambda-layer.zip
+      CompatibleRuntimes:
+        - python3.9
+      Description: A layer for python requests functions
+      LicenseInfo: Apache-2.0
+
+  secretsLayeraccountgrant:
+    Type: AWS::Lambda::LayerVersionPermission
+    Properties:
+      Action: lambda:GetLayerVersion
+      LayerVersionArn:
+        Ref: requestsLayer
+      Principal:
+        Ref: AWS::AccountId
+
+  # Grant access to CloudFormation-specific S3 buckets for resources in a VPC that must respond to a custom resource request or a wait condition.
+  CloudFormationEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    DependsOn:
+      - AppServer
+      - AttackerInstance
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref LambdaSecurityGroup
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.cloudformation"
+      SubnetIds:
+        - !Ref LabPrivateSubnet1
+        - !Ref LabPrivateSubnet2
+      VpcEndpointType: 'Interface'
+      VpcId: !Ref LabVpc
+
+  # This is a Secret resource with a randomly generated password in its SecretString JSON.
+  RdsInstanceRotationSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: 'RDS MySQL password'
+      GenerateSecretString:
+        #SecretStringTemplate: !Sub '{"username": "admin"}'
+        SecretStringTemplate: !Sub '{"username": "${RdsUserName}"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+      Tags:
+        -
+          Key: Name
+          Value: RDSPassword
+
+  # This is an RDS instance resource. Its master username and password use dynamic references to resolve values from SecretsManager.
+  # The dynamic reference guarantees that CloudFormation will not log or persist the resolved value
+  # We use a ref to the Secret resource logical id in order to construct the dynamic reference, since the Secret name is being
+  # generated by CloudFormation
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t3.micro
+      DBName: !Ref RdsDbName
+      Engine: mysql
+      MasterUsername: !Ref RdsUserName
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref RdsInstanceRotationSecret, ':SecretString:password}}' ]]
+      MultiAZ: False
+      PubliclyAccessible: False
+      StorageType: gp2
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RdsSecurityGroup
+      BackupRetentionPeriod: 0
+      DBInstanceIdentifier: 'challenge-lab-mysql-RDS'
+      Tags:
+      - Key: Name
+        Value: DbInstance
+
+  # This is a SecretTargetAttachment resource which updates the referenced Secret resource with properties about
+  # the referenced RDS instance
+  SecretRdsInstanceAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref RdsInstanceRotationSecret
+      TargetId: !Ref DbInstance
+      TargetType: AWS::RDS::DBInstance
+
+  ServerlessRestApiProdStage:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId: !Ref ServerlessRestApiDeployment3752873ab0
+      RestApiId: !Ref ServerlessRestApi
+      StageName: Prod
+
+  ServerlessRestApiDeployment3752873ab0:
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties:
+      RestApiId: !Ref ServerlessRestApi
+      Description: 'RestApi deployment id: 3752873ab0879b2d251db1b424fbafb09ec74da8'
+      StageName: Stage
+
+  LambdaRdsTestGetEventPermissionProd:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      Principal: apigateway.amazonaws.com
+      FunctionName: !Ref LambdaRdsTest
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessRestApi}/*/GET/
+        # - >-
+        #   arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${__ApiId__}/${__Stage__}/GET/
+        # - __Stage__: '*'
+        #   __ApiId__: !Ref ServerlessRestApi
+
+  ServerlessRestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Body:
+        info:
+          version: '1.0'
+          title: !Sub ServerlessRestApi-${AWS::Region}
+        paths:
+          /:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaRdsTest.Arn}/invocations
+              responses: {}
+        swagger: '2.0'
+
+  InvokeLambdaRdsCreateTable:
+    Type: "AWS::CloudFormation::CustomResource"
+    DependsOn:
+      - RdsLambdaCfnInitRole
+    Properties:
+      ServiceToken: !GetAtt LambdaRDSCreateTable.Arn
+      S3Bucket: !Sub ${AWS::Region}${S3ResourceBucket}
+      S3Key: !Sub ${S3PathPrefix}/scripts/rds-query.zip'
+      Region: !Ref AWS::Region
+
+###########################################################################
+###  Start - Create RDS and API Gateway resources                       ###
+###  Based on resource from re:Inforce 2022 bootcamp                    ###
+###  "Security Engineers, Protect Your Serverless applications!" lab 4  ###
+###########################################################################
+
+######################################################################
+###  Start - Deploy WAF Automation on AWS CloudFormation template  ###
+######################################################################
+  WafAutomation:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${AWS::Region}${S3ResourceBucket}.s3.amazonaws.com/courses/ILT-TF-200-SISECO/v3.3.3.prod-90a47705/lab-5/scripts/aws-waf-security-automations.template
+      Parameters:
+        ActivateAWSManagedRulesParam: 'yes'
+        ActivateSqlInjectionProtectionParam: 'yes'
+        ActivateCrossSiteScriptingProtectionParam: 'no'
+        ActivateHttpFloodProtectionParam: 'yes - AWS WAF rate based rule'
+        ActivateScannersProbesProtectionParam: 'no'
+        ActivateReputationListsProtectionParam: 'yes'
+        ActivateBadBotProtectionParam: 'yes'
+        EndpointType: 'ALB'
+####################################################################
+###  End - Deploy WAF Automation on AWS CloudFormation template  ###
+####################################################################
+
+Outputs:
+  AwsRegionCode:
+    Description: The AWS Region code that the lab is provisioned in
+    Value: !Sub ${AWS::Region}
+
+  AwsRegionName:
+    Description: The AWS Region name that the lab is provisioned in
+    Value: !FindInMap [RegionNamesAndCodes, !Ref AWS::Region, RegionName]
+
+  ApiGatewayInvokeUrl:
+    Description: The invoke URL for the API gateway Dev stage
+    Value: !Sub https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/Dev
+
+  InstanceSessionUrl:
+    Description: AWS Systems Manager Session Manager (SSM) terminal connection to the Command Host EC2 instance
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${AttackerInstance}
+
+  LoadBalancerUrl:
+    Description: URL to connect to the sample website through the application load balancer
+    Value: !Sub http://${ApplicationLoadBalancer.DNSName}
+    
+###########################################################################
+###  Mappings to display the AWS Region name in addition to the Region  ###
+###  code to create a straightforward reference for the learner.        ###
+###########################################################################
+Mappings:
+  RegionNamesAndCodes:
+    us-east-1:
+      RegionName: N. Virginia
+    us-east-2:
+      RegionName: Ohio
+    us-west-1:
+      RegionName: N. California
+    us-west-2:
+      RegionName: Oregon
+    af-south-1:
+      RegionName: Cape Town
+    ap-east-1:
+      RegionName: Hong Kong
+    ap-southeast-3:
+      RegionName: Jakarta
+    ap-south-1:
+      RegionName: Mumbai
+    ap-northeast-3:
+      RegionName: Osaka
+    ap-northeast-2:
+      RegionName: Seoul
+    ap-southeast-1:
+      RegionName: Singapore
+    ap-southeast-2:
+      RegionName: Sydney
+    ap-northeast-1:
+      RegionName: Tokyo
+    ca-central-1:
+      RegionName: Central
+    eu-central-1:
+      RegionName: Frankfurt
+    eu-west-1:
+      RegionName: Ireland
+    eu-west-2:
+      RegionName: London
+    eu-south-1:
+      RegionName: Milan
+    eu-west-3:
+      RegionName: Paris
+    eu-north-1:
+      RegionName: Stockholm
+    me-south-1:
+      RegionName: Bahrain
+    sa-east-1:
+      RegionName: Sao Paulo
