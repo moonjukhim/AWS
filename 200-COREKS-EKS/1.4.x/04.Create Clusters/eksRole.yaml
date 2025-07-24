@@ -1,0 +1,122 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::895333228020:role/BastionHostIamRole"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "StringNotEquals": {
+                    "aws:username": "awsstudent",
+                    "aws:ResourceTag/iam": "restricted"
+                }
+            },
+            "Action": [
+                "autoscaling:AttachInstances",
+                "autoscaling:AttachLoadBalancerTargetGroups",
+                "autoscaling:AttachLoadBalancers",
+                "autoscaling:CreateAutoScalingGroup",
+                "autoscaling:CreateLaunchConfiguration",
+                "autoscaling:CreateOrUpdateTags",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:UpdateAutoScalingGroup",
+                "cloudformation:CreateStack",
+                "ec2:AllocateAddress",
+                "ec2:AssociateRouteTable",
+                "ec2:AttachInternetGateway",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:CreateLaunchTemplate",
+                "ec2:CreateInternetGateway",
+                "ec2:CreateNatGateway",
+                "ec2:CreateRoute",
+                "ec2:CreateRouteTable",
+                "ec2:CreateSecurityGroup",
+                "ec2:CreateSubnet",
+                "ec2:CreateTags",
+                "ec2:CreateVpc",
+                "ec2:ModifySubnetAttribute",
+                "ec2:ModifyVpcAttribute",
+                "eks:CreateCluster",
+                "eks:CreateNodegroup",
+                "eks:TagResource",
+                "eks:UpdateClusterConfig",
+                "eks:UpdateNodegroupConfig",
+                "iam:CreateServiceLinkedRole",
+                "iam:DeleteRolePolicy",
+                "iam:AddRoleToInstanceProfile",
+                "ssm:GetParameter"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "ArnLike": {
+                    "iam:PolicyARN": [
+                        "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+                        "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController",
+                        "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+                        "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+                        "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+                        "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+                        "arn:aws:iam::aws:policy/eksctl-dev-cluster-cluster-PolicyCloudWatchMetrics",
+                        "arn:aws:iam::aws:policy/eksctl-dev-cluster-cluster-PolicyELBPermissions"
+                    ]
+                }
+            },
+            "Action": [
+                "iam:AttachRolePolicy"
+            ],
+            "Resource": [
+                "arn:aws:iam::895333228020:role/eksctl-dev-cluster-cluster-ServiceRole*",
+                "arn:aws:iam::895333228020:role/eksctl-dev-cluster-nodegroup-dev-NodeInstanceRole*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "ec2:RunInstances"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "iam:CreateRole",
+                "iam:PutRolePolicy",
+                "iam:PassRole"
+            ],
+            "Resource": "arn:aws:iam::895333228020:role/eksctl-dev-cluster*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "ssm:UpdateDocument*",
+                "ssm:CreateDocument*",
+                "ssm:DeleteDocument*"
+            ],
+            "Resource": "arn:aws:ssm:ap-southeast-2:895333228020:document/SSM-SessionManagerRunShell",
+            "Effect": "Allow"
+        },
+        {
+            "Condition": {
+                "ForAnyValue:StringNotLike": {
+                    "ec2:InstanceType": [
+                        "t3.medium"
+                    ]
+                }
+            },
+            "Action": "ec2:RunInstances",
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Effect": "Deny",
+            "Sid": "limitedSize"
+        }
+    ]
+}
