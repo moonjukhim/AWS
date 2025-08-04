@@ -24,3 +24,37 @@
 | **All processes CPU/memory/network I/O** | 전체 프로세스 단위의 자원 사용률     |
 | **Network I/O pressure**          | 수신/송신 네트워크 트래픽 시각화              |
 | **Used / Total 메모리/CPU**       | 현재 사용량과 총량 비교용 Stat 패널            |
+
+##### Kubernetes에서 Prometheus 구성 요소
+
+| 구성 요소                  | 역할                                                                 |
+|---------------------------|----------------------------------------------------------------------|
+| **Prometheus Server**     | 지표를 수집(scrape)하고 로컬 DB에 저장                               |
+| **Node Exporter**         | 노드의 CPU, 메모리, 디스크 등 **시스템 지표 제공**                   |
+| **Push Gateway**          | short-lived job들이 **지표를 push**할 수 있도록 중간 게이트웨이 역할 |
+| **Alert Manager**         | 조건 충족 시 **알람 발송**, 슬랙/이메일 연동 가능                     |
+| **kube-state-metrics**    | Deployment, ReplicaSet 등의 **상태 정보 지표** 제공 (Kubernetes 상태 중심) |
+
+
+##### delivery-stream.json
+
+```json
+{
+  "DeliveryStreamName": "eks-stream",
+  "DeliveryStreamType": "DirectPut",
+  "AmazonopensearchserviceDestinationConfiguration": {
+  "RoleARN": "${STREAM_BUCKET_ARN}",
+  "DomainARN": "arn:aws:es:${AWS_REGION}:${ACCOUNT_ID}:domain/eks-domain",
+  "IndexName": "access-logs",
+  "S3Configuration": {
+        "RoleARN": "${FIREHOSE_ROLE_ARN}",
+        "BucketARN": "arn:aws:s3:::labstack-2ff18e01-e448-468f-bff5-9d-firehosebucket-zucgqya2sjrx"
+    }
+  }
+}
+```
+
+```bash
+aws firehose create-delivery-stream --cli-input-json file:///home/ssm-user/delivery-stream.json
+```
+
