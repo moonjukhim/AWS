@@ -53,6 +53,21 @@ server:
     - job_name: "external-cluster-node"
       static_configs:
         - targets: ["1.2.3.4:9100", "5.6.7.8:9100"]
+# extraScrapeConfigs: ""
+# - job_name: 'prometheus-blackbox-exporter'
+#   metrics_path: /probe
+#   params:
+#     module: [http_2xx]
+#   static_configs:
+#     - targets:
+#       - https://example.com
+#   relabel_configs:
+#     - source_labels: [__address__]
+#       target_label: __param_target
+#     - source_labels: [__param_target]
+#       target_label: instance
+#     - target_label: __address__
+#       replacement: prometheus-blackbox-exporter:9115
 ```
 
 ##### delivery-stream.json
