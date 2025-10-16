@@ -14,3 +14,11 @@
 12. Edge Services
 13. Backup and Recovery
 
+---
+
+### References
+
+##### Solution Libraries
+
+- [aws-solutions-library-samples](https://github.com/aws-solutions-library-samples)
+- [AWS Solutions Library](https://aws.amazon.com/solutions/)
