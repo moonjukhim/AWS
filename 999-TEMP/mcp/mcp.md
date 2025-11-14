@@ -1,0 +1,2 @@
+- Build AWS architecture diagrams using Amazon Q CLI and MCP
+- Lab Tutorial: Build Lambda-Powered MCP Tools for AI Agents (BETA)
