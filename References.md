@@ -27,3 +27,12 @@
 - DevOps
 
   - [How-to debug and trace problems in AWS CodeBuild](https://www.element7.io/2022/11/how-to-debug-and-trace-problems-in-aws-codebuild/)
+
+
+---
+
+### SKill Builder
+
+- [Build an AWS Multi-Tier Architecture](https://lab.builder-labs.skillbuilder.aws/sa/lab/arn%3Aaws%3Alearningcontent%3Aus-east-1%3A470679935125%3Ablueprintversion%2FILT-TF-200-ARCHIT-7%2Flab-7-capstone%3A7.10.1-a5cc34c1/en-US)
+
+- []()
