@@ -1,0 +1,1 @@
+- [Customizing and Evaluating LLMs Using Amazon SageMaker JumpStart](https://skillbuilder.aws/learn/AHQWYUJG45/customizing-and-evaluating-llms-using-amazon-sagemaker-jumpstart/R9QGHERD1P)
