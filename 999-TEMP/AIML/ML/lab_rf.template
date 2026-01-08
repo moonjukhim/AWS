@@ -1,0 +1,1444 @@
+Metadata:
+  AwsLabsManagedResource:
+    - GblLabMonitoring:19
+  GblIamSecurity: 1.0.0
+Resources:
+  LabVPC841D92ED:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.10.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: LabVPC
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/Resource
+  LabVPCPublicSubnet1SubnetBCAB3ED6:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: 10.10.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet1
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/Subnet
+  LabVPCPublicSubnet1RouteTable360E4B6D:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet1
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/RouteTable
+  LabVPCPublicSubnet1RouteTableAssociation2C3A7C1E:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: LabVPCPublicSubnet1RouteTable360E4B6D
+      SubnetId:
+        Ref: LabVPCPublicSubnet1SubnetBCAB3ED6
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/RouteTableAssociation
+  LabVPCPublicSubnet1DefaultRouteEE48B8FD:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: LabVPCIGW420A2B26
+      RouteTableId:
+        Ref: LabVPCPublicSubnet1RouteTable360E4B6D
+    DependsOn:
+      - LabVPCVPCGW4296DBEB
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/DefaultRoute
+  LabVPCPublicSubnet1EIPA9B2E87B:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet1
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/EIP
+  LabVPCPublicSubnet1NATGateway3C919689:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - LabVPCPublicSubnet1EIPA9B2E87B
+          - AllocationId
+      SubnetId:
+        Ref: LabVPCPublicSubnet1SubnetBCAB3ED6
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet1
+    DependsOn:
+      - LabVPCPublicSubnet1DefaultRouteEE48B8FD
+      - LabVPCPublicSubnet1RouteTableAssociation2C3A7C1E
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet1/NATGateway
+  LabVPCPublicSubnet2SubnetA11FC6CE:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: 10.10.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Public
+        - Key: aws-cdk:subnet-type
+          Value: Public
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet2
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet2/Subnet
+  LabVPCPublicSubnet2RouteTableB4BFC9CA:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PublicSubnet2
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet2/RouteTable
+  LabVPCPublicSubnet2RouteTableAssociation3CAF6A09:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: LabVPCPublicSubnet2RouteTableB4BFC9CA
+      SubnetId:
+        Ref: LabVPCPublicSubnet2SubnetA11FC6CE
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet2/RouteTableAssociation
+  LabVPCPublicSubnet2DefaultRoute5AAE36F4:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: LabVPCIGW420A2B26
+      RouteTableId:
+        Ref: LabVPCPublicSubnet2RouteTableB4BFC9CA
+    DependsOn:
+      - LabVPCVPCGW4296DBEB
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PublicSubnet2/DefaultRoute
+  LabVPCPrivateSubnet1SubnetB84D4287:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 0
+          - Fn::GetAZs: ""
+      CidrBlock: 10.10.2.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PrivateSubnet1
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet1/Subnet
+  LabVPCPrivateSubnet1RouteTable201EE843:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PrivateSubnet1
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet1/RouteTable
+  LabVPCPrivateSubnet1RouteTableAssociation4B5A8B1F:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: LabVPCPrivateSubnet1RouteTable201EE843
+      SubnetId:
+        Ref: LabVPCPrivateSubnet1SubnetB84D4287
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet1/RouteTableAssociation
+  LabVPCPrivateSubnet1DefaultRouteCCA162C3:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: LabVPCPublicSubnet1NATGateway3C919689
+      RouteTableId:
+        Ref: LabVPCPrivateSubnet1RouteTable201EE843
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet1/DefaultRoute
+  LabVPCPrivateSubnet2SubnetB590D751:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+          - 1
+          - Fn::GetAZs: ""
+      CidrBlock: 10.10.3.0/24
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: aws-cdk:subnet-name
+          Value: Private
+        - Key: aws-cdk:subnet-type
+          Value: Private
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PrivateSubnet2
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet2/Subnet
+  LabVPCPrivateSubnet2RouteTableE61174E0:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Reinforcement-Learning/LabVPC/PrivateSubnet2
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet2/RouteTable
+  LabVPCPrivateSubnet2RouteTableAssociation07BF6B1F:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId:
+        Ref: LabVPCPrivateSubnet2RouteTableE61174E0
+      SubnetId:
+        Ref: LabVPCPrivateSubnet2SubnetB590D751
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet2/RouteTableAssociation
+  LabVPCPrivateSubnet2DefaultRouteE52311A6:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: LabVPCPublicSubnet1NATGateway3C919689
+      RouteTableId:
+        Ref: LabVPCPrivateSubnet2RouteTableE61174E0
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/PrivateSubnet2/DefaultRoute
+  LabVPCIGW420A2B26:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: LabVPC
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/IGW
+  LabVPCVPCGW4296DBEB:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId:
+        Ref: LabVPCIGW420A2B26
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/LabVPC/VPCGW
+  LabDataBucket4A5CE636:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName:
+        Fn::Join:
+          - ""
+          - - lab-data-bucket-
+            - Ref: AWS::AccountId
+            - "-"
+            - Fn::Select:
+                - 0
+                - Fn::Split:
+                    - "-"
+                    - Fn::Select:
+                        - 2
+                        - Fn::Split:
+                            - /
+                            - Ref: AWS::StackId
+      Tags:
+        - Key: GblBucket
+          Value: 1.0.0
+        - Key: GblCustomComponent
+          Value: "True"
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/Lab_Data_Bucket/Resource
+  notebookAccessRoleFF9FFE8C:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+        Version: "2012-10-17"
+      RoleName: sagemaker_studio_role
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/notebookAccessRole/Resource
+  notebookAccessRoleDefaultPolicy39DB76DE:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: "*"
+            Effect: Deny
+            Resource:
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringrole5A68A849
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleec2474DBA6D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleglueA0F10C68
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulelambda105995BB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulequicksight42CF344D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+                  - Arn
+          - Action: lambda:PutProvisionedConcurrencyConfig
+            Effect: Deny
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: notebookAccessRoleDefaultPolicy39DB76DE
+      Roles:
+        - Ref: notebookAccessRoleFF9FFE8C
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/notebookAccessRole/DefaultPolicy/Resource
+  notebookAccessPolicyFF100858:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - iam:GetRole
+              - iam:PassRole
+            Effect: Allow
+            Resource: arn:aws:iam::*:role/sagemaker_studio_role
+            Sid: IAM1
+          - Action: iam:ListRoles
+            Effect: Allow
+            Resource: "*"
+            Sid: IAM2
+          - Action:
+              - ec2:CreateNetworkInterface
+              - logs:*
+              - sagemaker:AddTags
+              - sagemaker:CreateAppImageConfig
+              - sagemaker:CreateArtifact
+              - sagemaker:CreateCodeRepository
+              - sagemaker:CreateEndpoint
+              - sagemaker:CreateImage
+              - sagemaker:CreateImageVersion
+              - sagemaker:CreateModel
+              - sagemaker:CreateModelPackage
+              - sagemaker:CreatePresignedDomainUrl
+              - sagemaker:Delete*
+              - sagemaker:Describe*
+              - sagemaker:InvokeEndpoint
+              - sagemaker:InvokeEndpointAsync
+              - sagemaker:List*
+              - sagemaker:StopTrainingJob
+              - sagemaker:UpdateEndpoint
+            Effect: Allow
+            Resource: "*"
+            Sid: Sagemaker1
+          - Action:
+              - sagemaker:CreateApp
+              - sagemaker:CreateDataQualityJobDefinition
+              - sagemaker:CreateEndpointConfig
+              - sagemaker:CreateTrainingJob
+              - sagemaker:UpdateTrainingJob
+            Condition:
+              ForAllValues:StringLike:
+                sagemaker:InstanceTypes:
+                  - ml.m5.large
+                  - ml.m4.xlarge
+                  - ml.m5.xlarge
+                  - ml.t3.large
+            Effect: Allow
+            Resource: "*"
+            Sid: sagemaker2
+          - Action:
+              - cloudwatch:PutMetricData
+              - ecr:*
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:DeleteLogGroup
+              - logs:DeleteLogStream
+              - logs:Describe*
+              - logs:Get*
+              - logs:PutLogEvents
+              - s3:AbortMultipartUpload
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:List*
+              - s3:PutObject
+            Effect: Allow
+            Resource: "*"
+            Sid: other
+          - Action: s3:CreateBucket
+            Effect: Allow
+            Resource: arn:aws:s3:::sagemaker-*
+            Sid: createbucket
+        Version: "2012-10-17"
+      PolicyName: notebookAccessPolicy
+      Roles:
+        - Ref: notebookAccessRoleFF9FFE8C
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/notebookAccessPolicy/Resource
+  RLlabSageMakerStudioDomain2D2AFBB1:
+    Type: AWS::SageMaker::Domain
+    Properties:
+      AuthMode: IAM
+      DefaultUserSettings:
+        ExecutionRole:
+          Fn::GetAtt:
+            - notebookAccessRoleFF9FFE8C
+            - Arn
+        SecurityGroups:
+          - Fn::GetAtt:
+              - LabVPC841D92ED
+              - DefaultSecurityGroup
+      DomainName:
+        Fn::Join:
+          - ""
+          - - SageMaker-Studio-
+            - Fn::Select:
+                - 0
+                - Fn::Split:
+                    - "-"
+                    - Fn::Select:
+                        - 2
+                        - Fn::Split:
+                            - /
+                            - Ref: AWS::StackId
+      SubnetIds:
+        - Ref: LabVPCPublicSubnet1SubnetBCAB3ED6
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblSGStudioTemplate
+          Value: 1.0.0
+      VpcId:
+        Ref: LabVPC841D92ED
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/SageMakerStudioDomain
+  RLlabUserProfile62F1C467:
+    Type: AWS::SageMaker::UserProfile
+    Properties:
+      DomainId:
+        Fn::GetAtt:
+          - RLlabSageMakerStudioDomain2D2AFBB1
+          - DomainId
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblSGStudioTemplate
+          Value: 1.0.0
+      UserProfileName:
+        Fn::Join:
+          - ""
+          - - default-
+            - Fn::Select:
+                - 0
+                - Fn::Split:
+                    - "-"
+                    - Fn::Select:
+                        - 2
+                        - Fn::Split:
+                            - /
+                            - Ref: AWS::StackId
+      UserSettings:
+        ExecutionRole:
+          Fn::GetAtt:
+            - notebookAccessRoleFF9FFE8C
+            - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/UserProfile
+  RLlabSagemakerSpaceB4EEF2E6:
+    Type: AWS::SageMaker::Space
+    Properties:
+      DomainId:
+        Fn::GetAtt:
+          - RLlabSageMakerStudioDomain2D2AFBB1
+          - DomainId
+      OwnershipSettings:
+        OwnerUserProfileName:
+          Fn::Join:
+            - ""
+            - - default-
+              - Fn::Select:
+                  - 0
+                  - Fn::Split:
+                      - "-"
+                      - Fn::Select:
+                          - 2
+                          - Fn::Split:
+                              - /
+                              - Ref: AWS::StackId
+      SpaceName: JupyterLab
+      SpaceSettings:
+        AppType: JupyterLab
+        JupyterLabAppSettings:
+          DefaultResourceSpec:
+            InstanceType: ml.t3.large
+            SageMakerImageArn: arn:aws:sagemaker:us-east-1:885854791233:image/sagemaker-distribution-cpu
+        SpaceStorageSettings:
+          EbsStorageSettings:
+            EbsVolumeSizeInGb: 25
+      SpaceSharingSettings:
+        SharingType: Private
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblSGStudioTemplate
+          Value: 1.0.0
+    DependsOn:
+      - RLlabUserProfile62F1C467
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/SagemakerSpace
+  RLlabLifeCycleRole23CCF8BA:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/AmazonSageMakerFullAccess
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName:
+        Fn::Join:
+          - ""
+          - - lambda_lifecycle_role_
+            - Fn::Select:
+                - 0
+                - Fn::Split:
+                    - "-"
+                    - Fn::Select:
+                        - 2
+                        - Fn::Split:
+                            - /
+                            - Ref: AWS::StackId
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblSGStudioTemplate
+          Value: 1.0.0
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/LifeCycleRole/Resource
+  RLlabLifeCycleRoleDefaultPolicy0A160CF6:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - sagemaker:DeleteDomain
+              - sagemaker:DeleteSpace
+              - sagemaker:DeleteStudioLifecycleConfig
+              - sagemaker:DeleteUserProfile
+              - sagemaker:UpdateDomain
+              - sagemaker:UpdateSpace
+              - sagemaker:UpdateUserProfile
+            Effect: Allow
+            Resource: "*"
+          - Action: "*"
+            Effect: Deny
+            Resource:
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringrole5A68A849
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleec2474DBA6D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleglueA0F10C68
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulelambda105995BB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulequicksight42CF344D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+                  - Arn
+          - Action: lambda:PutProvisionedConcurrencyConfig
+            Effect: Deny
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: RLlabLifeCycleRoleDefaultPolicy0A160CF6
+      Roles:
+        - Ref: RLlabLifeCycleRole23CCF8BA
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/LifeCycleRole/DefaultPolicy/Resource
+  RLlabattachlifecycleconfigurationfunctionA9CF6063:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import base64
+          import json
+          import logging
+          import os
+
+          import boto3
+          import urllib3
+
+          http = urllib3.PoolManager()
+          SUCCESS = "SUCCESS"
+          FAILED = "FAILED"
+
+          # Set up logging
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          client = boto3.client("sagemaker")
+          s3_client = boto3.client("s3")
+          domain_id = os.environ["DOMAIN_ID"]
+          bucket_name = os.environ["S3_BUCKET_NAME"]
+          key_name = os.environ["S3_LCC_KEY_NAME"]
+
+
+          def lambda_handler(event, context):
+              logger.info(f"Received event: {json.dumps(event)}")
+              request_type = event["RequestType"].lower()
+              responseData = {"status": "NONE"}
+              try:
+                  request_type_map = {"create": on_create, "update": on_update, "delete": on_delete}
+
+                  if request_type in request_type_map:
+                      physical_id = request_type_map[request_type](event)
+                      responseData["status"] = f"Operation successful for: {physical_id}"
+                      send(event, context, SUCCESS, responseData, physicalResourceId=event["LogicalResourceId"])
+                  else:
+                      raise Exception(f"Invalid request type: {request_type}")
+
+              except Exception as e:
+                  logger.error(f"Error processing request: {e}")
+                  responseData["status"] = f"FAILED OPERATION. ERROR {e}"
+                  send(event, context, FAILED, responseData, physicalResourceId=event["LogicalResourceId"])
+
+
+          def encode_file_from_s3(bucketName, keyName):
+              response = s3_client.get_object(Bucket=bucketName, Key=keyName)
+              data = response["Body"].read()
+              base64_bytes = base64.b64encode(data).decode("ascii")
+              return base64_bytes
+
+
+          def on_create(event):
+              props = event["ResourceProperties"]
+              logger.info(f"Creating new resource with properties: {props}")
+
+              # Create the config
+              response = client.create_studio_lifecycle_config(
+                  StudioLifecycleConfigName=f"jplab-lifecycle-configuration-{domain_id}",
+                  StudioLifecycleConfigContent=encode_file_from_s3(bucket_name, key_name),
+                  StudioLifecycleConfigAppType="JupyterLab",
+              )
+              physical_id = response["StudioLifecycleConfigArn"]
+
+              # Update the domain and attach the script
+              client.update_domain(
+                  DomainId=domain_id,
+                  DefaultUserSettings={
+                      "JupyterLabAppSettings": {
+                          "DefaultResourceSpec": {"LifecycleConfigArn": physical_id},
+                          "LifecycleConfigArns": [physical_id],
+                      }
+                  },
+              )
+
+              update_user_profiles(domain_id, physical_id)
+
+              return {"PhysicalResourceId": physical_id}
+
+
+          def on_update(event):
+              props = event["ResourceProperties"]
+              logger.info(f"Updating resource with properties: {props}")
+
+              # Delete the existing script
+              client.delete_studio_lifecycle_config(
+                  StudioLifecycleConfigName=f"jplab-lifecycle-configuration-{domain_id}",
+              )
+
+              # Create the new config
+              create_response = client.create_studio_lifecycle_config(
+                  StudioLifecycleConfigName=f"jplab-lifecycle-configuration-{domain_id}",
+                  StudioLifecycleConfigContent=encode_file_from_s3(bucket_name, key_name),
+                  StudioLifecycleConfigAppType="JupyterLab",
+              )
+              physical_id = create_response["StudioLifecycleConfigArn"]
+
+              # Update the domain
+              client.update_domain(
+                  DomainId=props["domain_id"],
+                  DefaultUserSettings={
+                      "JupyterLabAppSettings": {
+                          "DefaultResourceSpec": {"LifecycleConfigArn": physical_id},
+                          "LifecycleConfigArns": [physical_id],
+                      }
+                  },
+              )
+
+              update_user_profiles(props["domain_id"], physical_id)
+
+              return {"PhysicalResourceId": physical_id}
+
+
+          def get_users(domainId):
+              response = client.list_user_profiles(DomainIdEquals=domainId)
+              users = response["UserProfiles"]
+              while "NextToken" in response:
+                  response = client.list_user_profiles(DomainIdEquals=domainId, NextToken=response["NextToken"])
+                  users.extend(response["UserProfiles"])
+
+              return users
+
+
+          def on_delete(event):
+              props = event["ResourceProperties"]
+              logger.info(f"Deleting resource with properties: {props}")
+
+              client.delete_studio_lifecycle_config(
+                  StudioLifecycleConfigName=f"jplab-lifecycle-configuration-{domain_id}",
+              )
+
+              return {"PhysicalResourceId": None}
+
+
+          def update_user_profiles(domainId, physical_id):
+              users = get_users(domainId)
+              for user in users:
+                  client.update_user_profile(
+                      DomainId=domainId,
+                      UserProfileName=user["UserProfileName"],
+                      UserSettings={
+                          "JupyterLabAppSettings": {
+                              "DefaultResourceSpec": {"LifecycleConfigArn": physical_id},
+                              "LifecycleConfigArns": [physical_id],
+                          }
+                      },
+                  )
+                  logger.info(f"Updated user profile: {user['UserProfileName']} with new lifecycle config")
+
+
+          def send(event, context, responseStatus, responseData, physicalResourceId=None, noEcho=False, error=None):
+              responseUrl = event["ResponseURL"]
+
+              logger.info(responseUrl)
+
+              responseBody = {}
+              responseBody["Status"] = responseStatus
+              if error is None:
+                  responseBody["Reason"] = (
+                      "See the details in CloudWatch Log Stream: "
+                      + context.log_stream_name
+                      + " LogGroup: "
+                      + context.log_group_name
+                  )
+              else:
+                  responseBody["Reason"] = error
+              responseBody["PhysicalResourceId"] = physicalResourceId or context.log_stream_name
+              responseBody["StackId"] = event["StackId"]
+              responseBody["RequestId"] = event["RequestId"]
+              responseBody["LogicalResourceId"] = event["LogicalResourceId"]
+              responseBody["NoEcho"] = noEcho
+              responseBody["Data"] = responseData
+
+              json_responseBody = json.dumps(responseBody)
+
+              print("Response body:\n" + json_responseBody)
+
+              headers = {"content-type": "", "content-length": str(len(json_responseBody))}
+              try:
+                  response = http.request("PUT", responseUrl, body=json_responseBody.encode("utf-8"), headers=headers)
+                  print("Status code: " + response.reason)
+              except Exception as e:
+                  print("send(..) failed executing requests.put(..): " + str(e))
+      Environment:
+        Variables:
+          DOMAIN_ID:
+            Fn::GetAtt:
+              - RLlabSageMakerStudioDomain2D2AFBB1
+              - DomainId
+          S3_BUCKET_NAME: pu-base-buckets-v1-provision-lab
+          S3_LCC_KEY_NAME: 3993e267-85f0-4d69-b6d0-78c4723a7f1e/lcc.sh
+      FunctionName: attach-lifecycle-configuration-function
+      Handler: index.lambda_handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - RLlabLifeCycleRole23CCF8BA
+          - Arn
+      Runtime: python3.11
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblSGStudioTemplate
+          Value: 1.0.0
+      Timeout: 300
+    DependsOn:
+      - RLlabLifeCycleRoleDefaultPolicy0A160CF6
+      - RLlabLifeCycleRole23CCF8BA
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/attach-lifecycle-configuration-function/Resource
+  RLlablifeCycleFunction21BE11F7:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - RLlabattachlifecycleconfigurationfunctionA9CF6063
+          - Arn
+    DependsOn:
+      - RLlabSagemakerSpaceB4EEF2E6
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/RL-lab/lifeCycleFunction
+  GblLabMonitoringgbllabmonitoringrole5A68A849:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblLabMonitoring
+          Value: 1.0.0
+        - Key: labs:permission-scope
+          Value: protected
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_lab_monitoring_role/Resource
+  GblLabMonitoringgbllabmonitoringroleDefaultPolicy5F9121AB:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - ds:DeleteDirectory
+              - ds:DescribeDirectories
+              - ds:UnauthorizeApplication
+              - ec2:Delete*
+              - ec2:Describe*
+              - ec2:Disable
+              - ec2:Get*
+              - ec2:List*
+              - ec2:Revoke*
+              - ec2:Stop*
+              - ec2:Terminate*
+              - ec2:Update*
+              - glue:DeleteJob
+              - glue:GetJobs
+              - lambda:Delete*
+              - lambda:Get*
+              - lambda:List*
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - quicksight:Delete*
+              - quicksight:Describe*
+              - quicksight:Disable*
+              - quicksight:Get*
+              - quicksight:List*
+              - quicksight:Stop*
+              - quicksight:Update*
+              - sagemaker:Delete*
+              - sagemaker:Describe*
+              - sagemaker:Disable*
+              - sagemaker:Get*
+              - sagemaker:List*
+              - sagemaker:Stop*
+            Condition:
+              StringEquals:
+                aws:RequestedRegion:
+                  Ref: AWS::Region
+            Effect: Allow
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: GblLabMonitoringgbllabmonitoringroleDefaultPolicy5F9121AB
+      Roles:
+        - Ref: GblLabMonitoringgbllabmonitoringrole5A68A849
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_lab_monitoring_role/DefaultPolicy/Resource
+  GblLabMonitoringgbllabmonitoringfunctionEFA91CEB:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: LabResourcesBucket
+        S3Key:
+          Fn::Join:
+            - ""
+            - - Ref: LabResourcesBucketKeyPrefix
+              - GblLabMonitoring:19
+      Environment:
+        Variables:
+          glue_max_allocated_capacity: "10"
+          glue_max_allocated_concurrency: "2"
+          glue_max_number_of_workers: "10"
+          glue_valid_worker_types: Standard,G.1X,G.2X,G.025X
+          glue_max_number_of_jobs: "10"
+          sage_maker_allowed_instance_count: "2"
+          sage_maker_allowed_endpoint: "3"
+          sage_maker_serverless_max_memory: "1024"
+          sage_maker_serverless_allowed_max_concurrency: "4"
+          lambda_monitoring_function: gbl_lab_monitoring
+          lambda_max_memory: "512"
+          lambda_max_storage: "1024"
+          lambda_max_timeout: "600"
+          lambda_max_provisioned_concurrency: "1"
+          ec2_max_allowed_instances: "5"
+          lab_pool_id:
+            Ref: LabPoolId
+          dry_run: "False"
+          lab_regions:
+            Ref: LabRegions
+      FunctionName: gbl_lab_monitoring
+      Handler: gbl_lab_monitoring.monitor_lab.lambda_handler
+      MemorySize: 512
+      Role:
+        Fn::GetAtt:
+          - GblLabMonitoringgbllabmonitoringrole5A68A849
+          - Arn
+      Runtime: python3.11
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblLabMonitoring
+          Value: 1.0.0
+        - Key: labs:permission-scope
+          Value: protected
+      Timeout: 300
+    DependsOn:
+      - GblLabMonitoringgbllabmonitoringroleDefaultPolicy5F9121AB
+      - GblLabMonitoringgbllabmonitoringrole5A68A849
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_lab_monitoring_function/Resource
+  GblLabMonitoringmonitoringruleglueA0F10C68:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.glue
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+            - glue.amazonaws.com
+          eventName:
+            - StartJobRun
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+              - Arn
+          Id: lab_monitoring_function
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/monitoring_rule_glue
+  GblLabMonitoringcallfromeventmonitoringglue3795E4E2:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GblLabMonitoringmonitoringruleglueA0F10C68
+          - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/call_from_event_monitoring_glue
+  GblLabMonitoringmonitoringrulesagemaker1C170BB5:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.sagemaker
+        detail-type:
+          - SageMaker Endpoint State Change
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+              - Arn
+          Id: lab_monitoring_function
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/monitoring_rule_sagemaker
+  GblLabMonitoringcallfromeventmonitoringsagemakerBE2DFCD7:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+          - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/call_from_event_monitoring_sagemaker
+  GblLabMonitoringmonitoringrulequicksight42CF344D:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.quicksight
+        detail-type:
+          - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+            - quicksight.amazonaws.com
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+              - Arn
+          Id: lab_monitoring_function
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/monitoring_rule_quicksight
+  GblLabMonitoringcallfromeventmonitoringquicksight7C07E430:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GblLabMonitoringmonitoringrulequicksight42CF344D
+          - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/call_from_event_monitoring_quicksight
+  GblLabMonitoringmonitoringrulelambda105995BB:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.lambda
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+              - Arn
+          Id: lab_monitoring_function
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/monitoring_rule_lambda
+  GblLabMonitoringcallfromeventmonitoringlambda57283035:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GblLabMonitoringmonitoringrulelambda105995BB
+          - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/call_from_event_monitoring_lambda
+  GblLabMonitoringmonitoringruleec2474DBA6D:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - aws.ec2
+        detail-type:
+          - EC2 Instance State-change Notification
+        detail:
+          state:
+            - pending
+            - running
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+              - Arn
+          Id: lab_monitoring_function
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/monitoring_rule_ec2
+  GblLabMonitoringcallfromeventmonitoringec291CF56B0:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Ref: GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - GblLabMonitoringmonitoringruleec2474DBA6D
+          - Arn
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/call_from_event_monitoring_ec2
+  GblLabMonitoringmanagedattachrolepolicy1699DB39:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: ""
+      Path: /
+      PolicyDocument:
+        Statement:
+          - Action: "*"
+            Effect: Deny
+            Resource:
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringfunctionEFA91CEB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringgbllabmonitoringrole5A68A849
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleec2474DBA6D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleglueA0F10C68
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulelambda105995BB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulequicksight42CF344D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+                  - Arn
+          - Action: lambda:PutProvisionedConcurrencyConfig
+            Effect: Deny
+            Resource: "*"
+        Version: "2012-10-17"
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/managed_attach_role_policy/Resource
+  GblLabMonitoringgblprotecttagsgbltageventbridgerulesrole8B5B0EDC:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblLabMonitoring
+          Value: 1.0.0
+        - Key: labs:permission-scope
+          Value: protected
+    DependsOn:
+      - GblLabMonitoringmonitoringruleec2474DBA6D
+      - GblLabMonitoringmonitoringruleglueA0F10C68
+      - GblLabMonitoringmonitoringrulelambda105995BB
+      - GblLabMonitoringmonitoringrulequicksight42CF344D
+      - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_protect_tags/gbl_tag_event_bridge_rules_role/Resource
+  GblLabMonitoringgblprotecttagsgbltageventbridgerulesroleDefaultPolicy59F445FB:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: events:TagResource
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleec2474DBA6D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringruleglueA0F10C68
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulelambda105995BB
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulequicksight42CF344D
+                  - Arn
+              - Fn::GetAtt:
+                  - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+                  - Arn
+        Version: "2012-10-17"
+      PolicyName: GblLabMonitoringgblprotecttagsgbltageventbridgerulesroleDefaultPolicy59F445FB
+      Roles:
+        - Ref: GblLabMonitoringgblprotecttagsgbltageventbridgerulesrole8B5B0EDC
+    DependsOn:
+      - GblLabMonitoringmonitoringruleec2474DBA6D
+      - GblLabMonitoringmonitoringruleglueA0F10C68
+      - GblLabMonitoringmonitoringrulelambda105995BB
+      - GblLabMonitoringmonitoringrulequicksight42CF344D
+      - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_protect_tags/gbl_tag_event_bridge_rules_role/DefaultPolicy/Resource
+  GblLabMonitoringgblprotecttagsgbltageventbridgerulesfunctionAB945ECE:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          
+          import boto3
+          import cfnresponse
+
+          def lambda_handler(event, context):
+              try:
+                  event_bridge = boto3.client("events")
+                  tags = [{"Key": event["ResourceProperties"]["TagKey"], "Value": event["ResourceProperties"]["TagValue"]}]
+                  response_data = {}
+
+                  if event["RequestType"] == "Create":
+                      for rule_arn in event["ResourceProperties"]["EventBridgeRules"]:
+                          event_bridge.tag_resource(ResourceARN=rule_arn, Tags=tags)
+                          response_data[rule_arn] = "Tagged"
+
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {}, reason=str(e))
+      Handler: index.lambda_handler
+      Role:
+        Fn::GetAtt:
+          - GblLabMonitoringgblprotecttagsgbltageventbridgerulesrole8B5B0EDC
+          - Arn
+      Runtime: python3.11
+      Tags:
+        - Key: GblCustomComponent
+          Value: "True"
+        - Key: GblLabMonitoring
+          Value: 1.0.0
+        - Key: labs:permission-scope
+          Value: protected
+      Timeout: 60
+    DependsOn:
+      - GblLabMonitoringgblprotecttagsgbltageventbridgerulesroleDefaultPolicy59F445FB
+      - GblLabMonitoringgblprotecttagsgbltageventbridgerulesrole8B5B0EDC
+      - GblLabMonitoringmonitoringruleec2474DBA6D
+      - GblLabMonitoringmonitoringruleglueA0F10C68
+      - GblLabMonitoringmonitoringrulelambda105995BB
+      - GblLabMonitoringmonitoringrulequicksight42CF344D
+      - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_protect_tags/gbl_tag_event_bridge_rules_function/Resource
+  GblLabMonitoringgblprotecttagsgbltageventbridgerulescustomresource57EE2A8B:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken:
+        Fn::GetAtt:
+          - GblLabMonitoringgblprotecttagsgbltageventbridgerulesfunctionAB945ECE
+          - Arn
+      EventBridgeRules:
+        - Fn::GetAtt:
+            - GblLabMonitoringmonitoringruleglueA0F10C68
+            - Arn
+        - Fn::GetAtt:
+            - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+            - Arn
+        - Fn::GetAtt:
+            - GblLabMonitoringmonitoringrulequicksight42CF344D
+            - Arn
+        - Fn::GetAtt:
+            - GblLabMonitoringmonitoringrulelambda105995BB
+            - Arn
+        - Fn::GetAtt:
+            - GblLabMonitoringmonitoringruleec2474DBA6D
+            - Arn
+      TagKey: labs:permission-scope
+      TagValue: protected
+    DependsOn:
+      - GblLabMonitoringmonitoringruleec2474DBA6D
+      - GblLabMonitoringmonitoringruleglueA0F10C68
+      - GblLabMonitoringmonitoringrulelambda105995BB
+      - GblLabMonitoringmonitoringrulequicksight42CF344D
+      - GblLabMonitoringmonitoringrulesagemaker1C170BB5
+    UpdateReplacePolicy: Delete
+    DeletionPolicy: Delete
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/GblLabMonitoring/gbl_protect_tags/gbl_tag_event_bridge_rules_custom_resource/Default
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/2WPS2/CMBCEfwt34xaoKvUI6UMc2lqh5VptnA1sE9vIXoNQlP9e5VFC1dN8Hq/Hs3M5u7uXtxM4hanOy2lFmaw3DLoUcApfNeq5rLcHLZLCblUiVMwq0puYWeTWGyl1kfEDsgpHf/SWIThNwOTsZbiFp7Vq5Q34BRhPcBbK0xEYx+C1ZfQWLwN9k+G0ZAa9N2i5EWEh61XUZf9soF5WELARBEbWqesbdqpcRbqLHOgVLOwwH/0/RiMC7NBAiV7WSWEfnQHqFvoM6JV3BQ3rH0BjIyowWQ6yfo5W/65+zQq9oRDI2UbgES0H2TaLFTYixeCi111cEgM7c+28Rz5EFv8vrlmBB4OMvstwNifuvlJn3jt7s5CzmXyYfAeiqY+WyaBMe/0Bz6WdXRcCAAA=
+    Metadata:
+      aws:cdk:path: Reinforcement-Learning/CDKMetadata/Default
+    Condition: CDKMetadataAvailable
+Outputs:
+  SageMakerStudioURL:
+    Value:
+      Fn::Join:
+        - ""
+        - - https://
+          - Ref: AWS::Region
+          - .console.aws.amazon.com/sagemaker/home?region=
+          - Ref: AWS::Region
+          - "#/studio/open/"
+          - Fn::GetAtt:
+              - RLlabSageMakerStudioDomain2D2AFBB1
+              - DomainId
+          - /default-
+          - Fn::Select:
+              - 0
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - /
+                          - Ref: AWS::StackId
+  labDataBucket:
+    Value:
+      Ref: LabDataBucket4A5CE636
+Parameters:
+  LabResourcesBucket:
+    Type: String
+  LabResourcesBucketKeyPrefix:
+    Type: String
+  LabPoolId:
+    Type: String
+  LabRegions:
+    Type: String
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - il-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+
