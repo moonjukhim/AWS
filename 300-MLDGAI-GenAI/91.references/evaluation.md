@@ -1,4 +1,41 @@
 
+1. "모델이 질문에 대해 얼마나 정확하고, 문맥에 충실하며, 근거를 잘 사용해 답했는가?”를 정량적으로 평가한 결과"
+2. 핵심 RAG/LLM 품질 지표
+    - Faithfulness 계열 (근거 충실도)
+        - faithfulness : 답변이 contexts에 근거해서만 작성되었는가
+        - context_precision : 사용한 문서가 불필요한 내용 없이 정확했는가
+        - context_recall : 정답에 필요한 문서를 빠뜨리지 않고 가져왔는가
+        - context_entity_recall : 중요한 **개체(숫자, 회사, 연도 등)**를 잘 포함했는가
+    - Answer 품질 계열
+        - answer_relevancy : 질문에 직접적으로 답했는가
+        - answer_similarity : 정답(ground_truth)과 의미적으로 얼마나 유사한가
+        - answer_correctness : 사실적으로 맞는 답인가
+    - 안전성 / 표현 품질
+        - harmfulness : 유해한 내용 여부
+        - maliciousness	: 악의적 의도 여부
+        - coherence	: 문장이 논리적으로 자연스러운가
+        - correctness : 전체적인 정합성
+        - conciseness :	불필요하게 장황하지 않은가
+3. 표의 핵심 인사이트
+    - “모델이 못해서”가 아니라 “문서를 못 써서” 틀린 경우가 많다
+        - answer_relevancy = 0
+        - context_recall = 0
+            - Retriever 문제
+    - Faithfulness는 높지만 정답은 아닌 경우
+        - Hallucination은 없음
+        - 하지만 질문에 답을 안 함
+            - 보수적인 LLM 응답 패턴
+    - RAG 품질은 단일 점수가 아니라 “조합”으로 봐야 한다
+        - 좋은 답 :
+            - context_recall ↑
+            - answer_relevancy ↑
+            - answer_correctness ↑
+        - 위험한 답:
+            - answer_similarity ↑
+            - faithfulness ↓ (→ 환각 가능성)
+
+4. LLM 개선 포인트가 ‘모델’, ‘프롬프트’, ‘리트리버’, ‘문서 품질’ 중 어디인지 판단할 수 있음
+
 | idx | question | ground_truth | answer | faithfulness | answer_relevancy | context_precision | context_recall | context_entity_recall | answer_similarity | answer_correctness | harmfulness | maliciousness | coherence | correctness | conciseness |
 |-----|----------|--------------|--------|--------------|------------------|-------------------|----------------|-----------------------|-------------------|--------------------|-------------|---------------|-----------|-------------|-------------|
 | 0 |  |  | | 0.5 | 0 | 0 | 0 | 0.25 | 0.5588 | 0.1397 | 0 | 0 | 1 | 1 | 1 |
