@@ -32,34 +32,30 @@
 
 
 3. 표의 핵심 인사이트
-    - “모델이 못해서”가 아니라 “문서를 못 써서” 틀린 경우가 많다
-        - answer_relevancy = 0
-        - context_recall = 0
-            - Retriever 문제
-    - Faithfulness는 높지만 정답은 아닌 경우
-        - Hallucination은 없음
-        - 하지만 질문에 답을 안 함
-            - 보수적인 LLM 응답 패턴
-    - RAG 품질은 단일 점수가 아니라 “조합”으로 봐야 한다
-        - 좋은 답 :
-            - context_recall ↑
-            - answer_relevancy ↑
-            - answer_correctness ↑
-        - 위험한 답:
-            - answer_similarity ↑
-            - faithfulness ↓ (→ 환각 가능성)
 
-4. LLM 개선 포인트가 ‘모델’, ‘프롬프트’, ‘리트리버’, ‘문서 품질’ 중 어디인지 판단할 수 있음
+    - 1. 숫자 관련 환각이 반복됨
+        - faithfulness 낮은 row 대부분이 금액·증가율
+        - 해결책:
+            - 숫자 전용 chunk
+            - 계산은 LLM이 아니라 코드로 분리
 
-| id | question | faithfulness | answer_relevancy | context_precision | context_recall | context_entity_recall | answer_similarity | answer_correctness | harmfulness | maliciousness | coherence | correctness | conciseness | explain |
-|----|----------|--------------|------------------|-------------------|----------------|-----------------------|-------------------|--------------------|------------|---------------|-----------|-------------|-------------|---|
-| 0 | What was the primary reason for the increase in net cash by operating activities for AnyCompany Financial in 2021? | 0.333333 | 0.965909 | 1.0 | 1.0 | 0.25 | 0.594305 | 0.748576 | 0 | 1 | 1 | 1 | 1 | - 검색은 완벽(context_precision/recall=1) - 숫자 환각 → faithfulness 낮음|
-| 1 | Which year did AnyCompany Financial have the highest net cash used in investing activities, what was the primary reason? | 0.75 | 0.793210 | 1.0 | 1.0 | 0.222222 | 0.979912 | 0.844978 | 0 | 1 | 1 | 1 | 1 | - 검색(Retrieval)은 거의 완벽 - 답변도 질문에 정확히 대응 - context_entity_recall은 컨텍스트가 너무 길고 잡음이 많아서 낮음 |
-| 2 | What was the primary source of cash inflows from financing activities for AnyCompany Financial in 2021? | 0.75 | 0.995493 | 1.0 | 1.0 | 0.25 | 0.929095 | 0.832274 | 0 | 0 | 1 | 1 | 1 | |
-| 3 | Calculate the year-over-year percentage change in cash and cash equivalents for AnyCompany Financial from 2020 to 2021. | 0.0 | 0.851156 | 1.0 | 1.0 | 0.4 | 0.826301 | 0.394075 | 0 | 0 | 1 | 1 | 1 | - 계산은 맞아 보이지만 - 컨텍스트 기반 검증 실패 → faithfulness=0, answer_correctness 낮음|
-| 4 | With the information provided, what can you infer about AnyCompany Financial's overall financial health and growth prospects? | 0.733333 | 0.0 | 0.0 | 0.4 | 0.1 | 0.875782 | 0.697669 | 0 | 0 | 1 | 1 | 1 | - 문장은 그럴듯하지만 - 질문과 직접적 연관 부족 → answer_relevancy=0|
+    - 2. 검색은 잘 됐는데 생성이 문제인 경우가 많음
+        - context_precision / recall은 대부분 1.0
+        - → 문제는 Retriever가 아니라 Generator
 
+    - 3. 추론 질문일수록 relevancy 하락
+        - Row 4처럼 “추론/평가” 질문
+        - LLM이 컨텍스트 밖 상식·홍보 문구 사용
 
+    - 4. 요약
+        - 이 결과는 검색(RAG)은 대체로 잘 동작하지만, LLM이 숫자·추론 질문에서 컨텍스트를 벗어나 환각을 일으키는 문제 발생
+
+4. 개선 방법
+
+    - 숫자/계산 질문 → Tool 호출로 분리
+    - faithfulness 낮은 row 자동 알람
+    - 추론 질문은 “컨텍스트 기반으로만 답하라” 프롬프트 강화
+    - answer_relevancy=0 사례는 즉시 거절
 
 ---
 
