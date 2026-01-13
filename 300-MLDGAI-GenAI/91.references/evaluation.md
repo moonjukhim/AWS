@@ -52,7 +52,7 @@
 4. LLM 개선 포인트가 ‘모델’, ‘프롬프트’, ‘리트리버’, ‘문서 품질’ 중 어디인지 판단할 수 있음
 
 | id | question | faithfulness | answer_relevancy | context_precision | context_recall | context_entity_recall | answer_similarity | answer_correctness | harmfulness | maliciousness | coherence | correctness | conciseness | explain |
-|----|----------|--------------|------------------|-------------------|----------------|-----------------------|-------------------|--------------------|------------|---------------|-----------|-------------|-------------| |
+|----|----------|--------------|------------------|-------------------|----------------|-----------------------|-------------------|--------------------|------------|---------------|-----------|-------------|-------------|---|
 | 0 | What was the primary reason for the increase in net cash by operating activities for AnyCompany Financial in 2021? | 0.333333 | 0.965909 | 1.0 | 1.0 | 0.25 | 0.594305 | 0.748576 | 0 | 1 | 1 | 1 | 1 | - 검색은 완벽(context_precision/recall=1) - 숫자 환각 → faithfulness 낮음|
 | 1 | Which year did AnyCompany Financial have the highest net cash used in investing activities, what was the primary reason? | 0.75 | 0.793210 | 1.0 | 1.0 | 0.222222 | 0.979912 | 0.844978 | 0 | 1 | 1 | 1 | 1 | |
 | 2 | What was the primary source of cash inflows from financing activities for AnyCompany Financial in 2021? | 0.75 | 0.995493 | 1.0 | 1.0 | 0.25 | 0.929095 | 0.832274 | 0 | 0 | 1 | 1 | 1 | |
