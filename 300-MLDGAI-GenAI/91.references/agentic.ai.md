@@ -21,9 +21,9 @@ AWS Services / RAG
 
 🟢 적합한 사례
 
-    - 고객 지원 Agent
-    - 사내 Q&A / 정책 상담
-    - 표준 업무 자동화 (IT Helpdesk)
+- 고객 지원 Agent
+- 사내 Q&A / 정책 상담
+- 표준 업무 자동화 (IT Helpdesk)
 
 ##### 오픈소스 Agent 프레임워크 (LangGraph / CrewAI)
 
@@ -39,8 +39,8 @@ AWS SDK / Bedrock / OpenSearch
 
 🟢 적합한 사례
 
-    - AIOps (원인 분석 → 대응)
-    - 리서치/분석 에이전트
-    - 자율 의사결정 시스템
+- AIOps (원인 분석 → 대응)
+- 리서치/분석 에이전트
+- 자율 의사결정 시스템
 
 ##### 
