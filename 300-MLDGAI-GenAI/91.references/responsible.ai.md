@@ -55,13 +55,13 @@
 
 사실에 맞는가?
 
-    - ① Fact Accuracy (사실 정확도) : 모델 응답에 포함된 사실 주장(factual claims) 중, 실제로 옳은 비율
+- ① Fact Accuracy(사실 정확도) : 모델 응답에 포함된 사실 주장(factual claims) 중, 실제로 옳은 비율
 
         ```text
         Fact Accuracy = (검증된 사실 주장 수) / (전체 사실 주장 수)
         ```
 
-    - ② Claim Correction Rate (오류 수정률) : 자동 추론 검사 후 잘못된 주장을 올바르게 수정한 비율
+- ② Claim Correction Rate (오류 수정률) : 자동 추론 검사 후 잘못된 주장을 올바르게 수정한 비율
 
         ```text
         Correction Rate = (수정 성공한 오류 수) / (발견된 오류 수)
