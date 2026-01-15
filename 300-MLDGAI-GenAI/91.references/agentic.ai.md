@@ -25,7 +25,7 @@ AWS Services / RAG
 - 사내 Q&A / 정책 상담
 - 표준 업무 자동화 (IT Helpdesk)
 
-##### 오픈소스 Agent 프레임워크 (LangGraph / CrewAI)
+##### ② 오픈소스 Agent 프레임워크 (LangGraph / CrewAI)
 
 ```text
 User / Event
@@ -43,4 +43,52 @@ AWS SDK / Bedrock / OpenSearch
 - 리서치/분석 에이전트
 - 자율 의사결정 시스템
 
-##### 
+##### ③ AWS Step Functions 기반 (Pseudo-Agent)
+
+```text
+Event
+ ↓
+Step Functions
+ ↓
+(LLM 판단 → Lambda → 승인 → 실행)
+```
+
+🟢 적합한 사례
+
+- 금융/공공 자동화
+- 승인 기반 운영
+- 규정 엄격한 환경
+
+##### ④ 하이브리드 (Agent + 브라우저/UI 자동화)
+
+```text
+Agent (Bedrock / LangGraph)
+ ↓
+Action Plan
+ ↓
+UI Executor (Browser Automation)
+```
+
+🟢 적합한 사례
+
+- 레거시 운영 자동화
+- SaaS 콘솔 조작
+- 구매·리서치 Agent
+
+---
+
+# AIOps
+
+```text
+[ Observability ]
+CloudWatch / OpenSearch
+        ↓
+[ Reasoning ]
+LangGraph Agent (Bedrock LLM)
+        ↓
+[ Control Layer ]
+Step Functions (중요 액션)
+        ↓
+[ Action ]
+API 호출 + UI 자동화
+```
