@@ -71,44 +71,44 @@
 
 “논리적으로 일관되고 재현 가능한가?”
 
-    - ① Logical Consistency Score (논리 일관성) : 응답 내에서 논리적 모순이 없는 비율
+- ① Logical Consistency Score (논리 일관성) : 응답 내에서 논리적 모순이 없는 비율
 
-        ```text
-        Logical Consistency = 1 - (모순 문장 수 / 전체 논리 문장 수)
-        ```
+    ```text
+    Logical Consistency = 1 - (모순 문장 수 / 전체 논리 문장 수)
+    ```
 
-    - ② Reproducibility Score (재현성) : 같은 질문을 여러 번 했을 때 결론이 유지되는 정도
+- ② Reproducibility Score (재현성) : 같은 질문을 여러 번 했을 때 결론이 유지되는 정도
 
-        ```text
-        Reproducibility = (동일 결론 횟수) / (전체 반복 횟수)
-        ```
-    
-    - ③ Confidence Calibration Error : 모델의 자신감 표현과 실제 정확도의 차이
+    ```text
+    Reproducibility = (동일 결론 횟수) / (전체 반복 횟수)
+    ```
 
-        ```text
-        Calibration Error = |평균 자신감 - 실제 정확도|
-        ```
+- ③ Confidence Calibration Error : 모델의 자신감 표현과 실제 정확도의 차이
+
+    ```text
+    Calibration Error = |평균 자신감 - 실제 정확도|
+    ```
 
 3. 투명성(Transparency) 지표 계산법
 
 "왜 이런 답을 했는가를 설명하는가?"
 
-    - ① Explanation Coverage (설명 포함률) : 결론에 대해 이유/근거가 함께 제공된 비율
+- ① Explanation Coverage (설명 포함률) : 결론에 대해 이유/근거가 함께 제공된 비율
+
+```text
+Explanation Coverage = (설명이 포함된 응답 수) / (전체 응답 수)
+```
+
+- ② Reasoning Trace Completeness (추론 완전성) : 결론에 도달하기까지의 추론 단계가 빠짐없이 제시되었는지
 
     ```text
-    Explanation Coverage = (설명이 포함된 응답 수) / (전체 응답 수)
+    Trace Completeness = (필수 추론 단계 수 충족 여부 평균)
     ```
-
-    - ② Reasoning Trace Completeness (추론 완전성) : 결론에 도달하기까지의 추론 단계가 빠짐없이 제시되었는지
-
-        ```text
-        Trace Completeness = (필수 추론 단계 수 충족 여부 평균)
-        ```
     
-    - ③ Grounded Explanation Score (근거 연결 점수) : 설명이 **실제 근거(문서·데이터)**와 연결되어 있는 정도
+- ③ Grounded Explanation Score (근거 연결 점수) : 설명이 **실제 근거(문서·데이터)**와 연결되어 있는 정도
 
-        ```text
-        Grounded Score = (근거가 명확히 연결된 설명 수) / (전체 설명 수)
+    ```text
+    Grounded Score = (근거가 명확히 연결된 설명 수) / (전체 설명 수)
         ```
 
 4. 종합 점수 계산 예시
