@@ -95,9 +95,9 @@
 
     - ① Explanation Coverage (설명 포함률) : 결론에 대해 이유/근거가 함께 제공된 비율
 
-        ```text
-        Explanation Coverage = (설명이 포함된 응답 수) / (전체 응답 수)
-        ```
+    ```text
+    Explanation Coverage = (설명이 포함된 응답 수) / (전체 응답 수)
+    ```
 
     - ② Reasoning Trace Completeness (추론 완전성) : 결론에 도달하기까지의 추론 단계가 빠짐없이 제시되었는지
 
