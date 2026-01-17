@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    sam-app
+
+    Sample SAM Template for sam-app
+    
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+
+
+Resources:
+
+    Lab4Function:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: lab-app/
+            Handler: app.lambdaHandler
+            Runtime: nodejs12.x
+            AutoPublishAlias: live
+            DeploymentPreference:
+              Type: Linear10PercentEvery1Minute
+            Events:
+                WebPage:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /hello
+                        Method: get
+# Deployment preference types at https://github.com/awslabs/serverless-application-model/blob/master/docs/safe_lambda_deployments.rst
+Outputs:
+
+    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+    # Find out more about other implicit resources you can reference within SAM
+    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+    Lab4Api:
+      Description: "API Gateway endpoint URL for Prod stage for Lab4 function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+
+    Lab4Function:
+      Description: "Lab4 Function ARN"
+      Value: !GetAtt Lab4Function.Arn
+
+    Lab4FunctionIamRole:
+      Description: "Implicit IAM Role created for Lab4 function"
+      Value: !GetAtt Lab4FunctionRole.Arn
+    
+    Lab4LatestVersion:
+      Description: "Checking the version ID of the new version"
+      Value: !GetAtt Lab4Function.Version.Version
