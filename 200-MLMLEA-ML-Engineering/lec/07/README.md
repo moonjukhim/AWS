@@ -49,3 +49,21 @@
             - 적절한 인스턴스 타입 선택
 
 - 주제 C. 하이퍼파라미터 튜닝 기법
+
+
+---
+
+| 목적                 | 서비스                           |
+| -------------------- | ----------------------------- |
+| 초대형 LLM 학습        | **SageMaker HyperPod**        |
+| 완전 커스텀 대규모 GPU | EKS + GPU                     |
+| HPC 스타일 연산       | EC2 + Slurm / ParallelCluster |
+| 대규모 데이터 처리     | EMR / Glue                    |
+| 대규모 배치          | AWS Batch                     |
+| 대규모 추론          | SageMaker Inference / EKS     |
+
+- LLM 프리트레이닝 → HyperPod
+- 연구/커스텀 분산 학습 → EKS GPU
+- 데이터 수집·전처치 → EMR / Glue
+- 수천 개 작업 병렬 → AWS Batch
+- 대규모 실시간 서비스 → EKS / SageMaker Endpoint
