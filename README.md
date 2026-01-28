@@ -70,4 +70,11 @@
 
 ---
 
+### Digital Instuctor Enablement
+
+|Title | |
+|---|---|
+
+---
+
 [Link](https://us-east-1.instructor.classrooms.aws.training/classes)
