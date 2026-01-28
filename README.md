@@ -72,8 +72,9 @@
 
 ### Digital Instuctor Enablement
 
-|Title | |
-|---|---|
+|Title                                             |   |
+|--------------------------------------------------|---|
+|Building Agentic AI with Amazon Bedrock AgentCore |   |
 
 ---
 
