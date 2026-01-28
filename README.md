@@ -66,7 +66,7 @@
 
 ### AWS Certification Roadmap
 
-![AWS Certification Roadmap](999-TEMP/Certifications/aws-certi.png)
+![AWS Certification Roadmap](999-TEMP/Certifications/aws_roadmap.png)
 
 ---
 
