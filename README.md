@@ -42,9 +42,9 @@
 | 200   | ANBDLK | Building-Data-Lakes-on-AWS                              |         |        |       |
 | 200   | ARCHIT | Architecting-on-AWS                                     |         |        |       |
 | 200   | BIGDAT | Big-Data-on-AWS                                         |         |        |       |
-| 200   | COREKS | Running-Containers-on-Amazon-Elastic-Kubernetes-Service |         |        |       |
+| 200   | COREKS | Running-Containers-on-Elastic-Kubernetes-Service        |         |        |       |
 | 200   | CSAWAF | Well-Architected-Best-Practices                         |         |        |       |
-| 200   | DAREDS | Building-Data-Analytics-Solutions-Using-Amazon-Redshift |         |        |       |
+| 200   | DAREDS | Building-Data-Analytics-Solutions-Amazon-Redshift       |         |        |       |
 | 200   | DBDBAW | Planning-and-Designing-Databases-on-AWS                 |         |        |       |
 | 200   | DBDWOA | Data-Warehousing-on-AWS                                 |         |        |       |
 | 200   | DEVOPS | DevOps-Engineering                                      |         |        |       |
