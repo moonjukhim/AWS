@@ -35,6 +35,8 @@
 | ----- | ------ | ------------------------------------------------------- | ------- | ------ | ----- |
 | 100   |**초급** | =======================================                 |         |        |       |
 | 100   | BES    | Business-Essential                                      |         |        |       |
+| 100   | MLAGAF | Agentic AI Foundation                                   |         |        |       |
+| 100   | MLGAIE | Generative AI Essentials                                |         |        |       |
 | 100   | TECESS | Technical-Essential                                     |         |        |       |
 | 200   |**중급** | =======================================                 |====     |====    |====   |
 | 200   | ANBDLK | Building-Data-Lakes-on-AWS                              |         |        |       |
