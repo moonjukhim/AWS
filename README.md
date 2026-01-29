@@ -36,7 +36,7 @@
 | 100   |**초급** | =======================================                 |         |        |       |
 | 100   | BES    | Business-Essential                                      |         |        |       |
 | 100   | TECESS | Technical-Essential                                     |         |        |       |
-| 200   |**중급** | =======================================                 |         |        |       |
+| 200   |**중급** | =======================================                 |====     |====    |====   |
 | 200   | ANBDLK | Building-Data-Lakes-on-AWS                              |         |        |       |
 | 200   | ARCHIT | Architecting-on-AWS                                     |         |        |       |
 | 200   | BIGDAT | Big-Data-on-AWS                                         |         |        |       |
@@ -56,7 +56,7 @@
 | 200   | SISGOV | Security-Governance                                     |         |        |       |
 | 200   | SVDVSS | Developing-Serverless-Solutions-on-AWS                  |         |        |       |
 | 200   | SYSOPS | Systems-Operations-on-AWS                               |         |        |       |
-| 300   |**고급** | =======================================                 |         |        |       |
+| 300   |**고급** | =======================================                 |====     |====    |====   |
 | 300   | ACARCH | Architecting-On-AWS-Accelerator                         |         |        |       |
 | 300   | ADVARC | Advanced-Architecting-on-AWS                            |         |        |       |
 | 300   | ADVDEV | Advanced-Developing-on-AWS                              |         |        |       |
