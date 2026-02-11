@@ -1,5 +1,5 @@
 # 중요! : 꼭 접속 URL을 기억해주세요.
 
-https://us-east-1.student.classrooms.aws.training/class/4EhhDuqPgYgPFzi9Rx2ypZ
+https://us-east-1.student.classrooms.aws.training/class/vTgrZ3pjDsnwMRZF8hSiUq
 
 ---
