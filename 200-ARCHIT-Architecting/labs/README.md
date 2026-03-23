@@ -9,3 +9,10 @@
     - 64 : Use an existing role -> Use another role 로 변경되었음
 
 
+### 6. Amazon S3 오리진으로 Amazon CloudFront 배포 구성
+
+    - 랩을 진행할 때 반드시 경로를 잘 확인해야 합니다.
+    
+    - 36 bucket poliy에 변경해줘야 하는 ARN이 한 개 입니다.
+        - 뒤에 **/\*** 가 붙어 있어야 합니다.
+
