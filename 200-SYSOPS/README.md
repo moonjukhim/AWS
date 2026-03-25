@@ -76,6 +76,7 @@
      - Auto Healing 구성 여부 (예: ASG, Kubernetes)
      - 헬스 체크 및 장애 조치 정책 구성
 
+Q1 : AWS에서 SLI/SLO/SLA를 설정할 수 있는 도구와 방법은?
 ---
 
 - 2024-06-22 200-SYSOPS-54
