@@ -45,7 +45,7 @@
   │   ├── dataflowDescription.tc.json      # 데이터 흐름 설명
   │   ├── dataflowDiagram.svg              # 데이터 흐름 다이어그램
   │   ├── threats.tc.json                  # 위협 목록 (STRIDE)
-  │   └── mitigations.tc.json             # 완화 전략
+  │   └── mitigations.tc.json              # 완화 전략
   ├── threatmodel.tc.json                  # 최종 통합 위협 모델
   └── logs/
 
