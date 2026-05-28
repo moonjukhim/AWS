@@ -10,11 +10,12 @@
 
 ---
 
-| Title                                            | Date          | Status  | V.R | Expire     |
-| ------------------------------------------------ | ------------- | ------- | --- | ---------- |
-| AWS Certified Cloud Practitioner                 |               |         |     |            |
-| AWS Certified Data Engineer - Associate          |               |         |     |            |
-| AWS Certified Developer Associate                | 2020-03-03    | Active  |     | 2026-08-04 |
+| Title                                                | Date          | Status  | V.R | Expire     |
+| ---------------------------------------------------- | ------------- | ------- | --- | ---------- |
+| AWS Certified Cloud Practitioner                     |               |         |     |            |
+| AWS Certified Data Engineer - Associate              |               |         |     |            |
+| AWS Certified Developer Associate                    | 2020-03-03    | Active  |     | 2026-08-04 |
+| AWS Certified Generative AI Developer - Professional | 2026-05-28    | Active  |     |            |
 | AWS Certified Machine Engineer - Associate       |               |         |     |            |
 | AWS Certified Machine Learning - Specialty       | 2023-02-28    | Active  | O   | 2026-02-28 |
 | AWS Certified Advanced Networking - Specialty    |               |         |     |            |
