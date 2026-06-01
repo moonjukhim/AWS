@@ -7,3 +7,11 @@
 5. 에이전틱 메모리 구현
 6. 프로덕션 모니터링 및 관찰성
 7. 과정 마무리
+
+---
+
+### Prerequisite
+
+- Agentic AI Foundations
+
+
