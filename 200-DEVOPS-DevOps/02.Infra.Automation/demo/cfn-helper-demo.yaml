@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  CloudFormation 헬퍼 스크립트 데모 (Amazon Linux 2023, 단일 EC2).
+  cfn-init   : AWS::CloudFormation::Init 메타데이터를 읽어 패키지/파일/서비스 구성
+  cfn-signal : CreationPolicy 와 연동해 부트스트랩 완료 신호 전송
+  cfn-hup    : 스택 업데이트 시 메타데이터 변경을 감지해 자동으로 cfn-init 재실행
+  배포 후 웹 페이지의 "버전" 문자열을 스택 업데이트로 바꿔보면 cfn-hup 동작을 눈으로 확인할 수 있습니다.
+
+# ---------------------------------------------------------------------------
+# Parameters : 템플릿 입력값 (cfn-hup 데모용 SiteVersion 포함)
+# ---------------------------------------------------------------------------
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: 데모용 EC2 인스턴스 유형
+
+  LatestAmiId:
+    # SSM 퍼블릭 파라미터로 항상 최신 AL2023 AMI 를 자동 조회 (AMI ID 하드코딩 불필요)
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: 최신 Amazon Linux 2023 AMI (수정 불필요)
+
+  SiteVersion:
+    Type: String
+    Default: "v1"
+    Description: >
+      웹 페이지에 표시될 버전 문자열. 스택을 업데이트하며 이 값을 바꾸면
+      cfn-hup 이 메타데이터 변경을 감지하고 cfn-init 을 다시 실행합니다.
+
+  SSHLocation:
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})"
+    Description: SSH(22) 접속을 허용할 CIDR. 실제 사용 시 본인 IP/32 로 제한 권장
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+Resources:
+
+  # 데모 단순화를 위해 기본 VPC를 사용하는 보안 그룹 (HTTP + SSH 허용)
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: cfn-helper-demo web server SG (HTTP, SSH)
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+          Description: SSH
+
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+
+    # -----------------------------------------------------------------------
+    # (1) cfn-init 이 읽는 메타데이터.
+    #     configSets 로 실행 순서를 정의하고, 각 config 블록에서
+    #     packages / files / commands / services 를 선언적으로 구성합니다.
+    # -----------------------------------------------------------------------
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          # 최초 부팅: 모든 단계 실행
+          default:
+            - install
+            - configure
+          # cfn-hup 이 업데이트 시 호출하는 configset: 웹 콘텐츠만 다시 렌더링
+          update:
+            - configure
+
+        # --- 1단계: 패키지 설치 + cfn-hup 데몬 구성 ---------------------------
+        install:
+          packages:
+            # cfn-init 의 packages 는 yum 키를 사용합니다.
+            # AL2023 에서도 cfn-init 이 내부적으로 dnf 로 처리합니다.
+            yum:
+              httpd: []
+          files:
+            # cfn-hup 메인 설정: 어떤 스택/리전을 폴링할지 지정
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+                interval=1
+                verbose=true
+              mode: "000400"
+              owner: root
+              group: root
+
+            # cfn-hup 훅: WebServerInstance 메타데이터가 바뀌면
+            # update configset 으로 cfn-init 을 재실행하도록 트리거
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource WebServerInstance --configsets update --region ${AWS::Region}
+                runas=root
+              mode: "000400"
+              owner: root
+              group: root
+
+            # cfn-hup 을 systemd 서비스로 등록 (AL2023 권장 방식)
+            /etc/systemd/system/cfn-hup.service:
+              content: |
+                [Unit]
+                Description=cfn-hup daemon
+                After=network-online.target
+                Wants=network-online.target
+
+                [Service]
+                Type=simple
+                ExecStart=/opt/aws/bin/cfn-hup
+                Restart=always
+
+                [Install]
+                WantedBy=multi-user.target
+              mode: "000400"
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              httpd:
+                enabled: true
+                ensureRunning: true
+              cfn-hup:
+                enabled: true
+                ensureRunning: true
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+
+        # --- 2단계: 웹 콘텐츠 렌더링 (cfn-hup 이 반복 실행하는 부분) ----------
+        configure:
+          files:
+            /var/www/html/index.html:
+              # SiteVersion 파라미터 값이 페이지에 박힘 -> 업데이트 시 변화 확인
+              content: !Sub |
+                <!doctype html>
+                <html lang="ko">
+                  <head><meta charset="utf-8"><title>cfn helper demo</title></head>
+                  <body style="font-family:sans-serif;text-align:center;margin-top:8%">
+                    <h1>CloudFormation 헬퍼 스크립트 데모</h1>
+                    <h2>현재 버전: ${SiteVersion}</h2>
+                    <p>이 줄은 cfn-init 이 렌더링했습니다.</p>
+                    <p>스택을 업데이트해 SiteVersion 을 바꾸면 cfn-hup 이 자동으로 갱신합니다.</p>
+                  </body>
+                </html>
+              mode: "000644"
+              owner: root
+              group: root
+          commands:
+            reload_httpd:
+              command: systemctl reload httpd || true
+
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      SecurityGroupIds:
+        - !GetAtt WebServerSecurityGroup.GroupId
+
+      # ---------------------------------------------------------------------
+      # UserData : 부팅 시 cfn-init -> (성공/실패) cfn-signal 순서로 실행
+      # ---------------------------------------------------------------------
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          # 헬퍼 스크립트(aws-cfn-bootstrap)는 AL2023 에 dnf 로 설치
+          dnf install -y aws-cfn-bootstrap
+
+          # (2) cfn-init: default configset 실행 (패키지 설치 + 콘텐츠 구성)
+          /opt/aws/bin/cfn-init -v \
+            --stack ${AWS::StackName} \
+            --resource WebServerInstance \
+            --configsets default \
+            --region ${AWS::Region}
+
+          # (3) cfn-signal: cfn-init 종료 코드($?)를 CreationPolicy 로 전송
+          #     성공(0)이면 스택이 CREATE_COMPLETE, 실패면 롤백
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack ${AWS::StackName} \
+            --resource WebServerInstance \
+            --region ${AWS::Region}
+
+      Tags:
+        - Key: Name
+          Value: cfn-helper-demo
+
+    # -----------------------------------------------------------------------
+    # CreationPolicy : cfn-signal 이 보낼 신호를 기다리는 waiter.
+    #   Count:1  -> 신호 1개를 받아야 리소스 생성 완료로 간주
+    #   Timeout  -> 10분 내 신호 없으면 생성 실패 처리
+    # -----------------------------------------------------------------------
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT10M
+
+# ---------------------------------------------------------------------------
+# Outputs
+# ---------------------------------------------------------------------------
+Outputs:
+  WebsiteURL:
+    Description: 데모 웹 페이지 URL (배포 후 브라우저로 접속)
+    Value: !Sub "http://${WebServerInstance.PublicDnsName}"
+  InstanceId:
+    Description: EC2 인스턴스 ID
+    Value: !Ref WebServerInstance
+  CurrentVersion:
+    Description: 현재 배포된 SiteVersion
+    Value: !Ref SiteVersion
