@@ -34,11 +34,7 @@ Amazon Linux 2023 EC2 인스턴스 한 대를 띄워 Apache 웹 서버를 구성
 ## 1. 배포 (스택 생성)
 
 ```bash
-aws cloudformation create-stack \
-  --stack-name cfn-helper-demo \
-  --template-body file://cfn-helper-demo.yaml \
-  --parameters ParameterKey=SiteVersion,ParameterValue=v1 \
-  --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --stack-name cfn-helper-demo --template-body file://cfn-helper-demo.yaml --parameters ParameterKey=SiteVersion,ParameterValue=v1 --capabilities CAPABILITY_IAM
 
 # 완료 대기 (cfn-signal 신호를 받아야 COMPLETE)
 aws cloudformation wait stack-create-complete --stack-name cfn-helper-demo
@@ -46,8 +42,7 @@ aws cloudformation wait stack-create-complete --stack-name cfn-helper-demo
 
 생성된 웹 URL 확인:
 ```bash
-aws cloudformation describe-stacks --stack-name cfn-helper-demo \
-  --query "Stacks[0].Outputs" --output table
+aws cloudformation describe-stacks --stack-name cfn-helper-demo --query "Stacks[0].Outputs" --output table
 ```
 출력된 `WebsiteURL`을 브라우저로 열면 **현재 버전: v1** 페이지가 보입니다.
 → 여기까지가 **cfn-init**(콘텐츠 구성)과 **cfn-signal**(생성 완료 신호)의 결과입니다.
@@ -57,11 +52,7 @@ aws cloudformation describe-stacks --stack-name cfn-helper-demo \
 웹 콘텐츠를 직접 SSH로 바꾸지 않고 **스택 파라미터만** 변경합니다.
 
 ```bash
-aws cloudformation update-stack \
-  --stack-name cfn-helper-demo \
-  --use-previous-template \
-  --parameters ParameterKey=SiteVersion,ParameterValue=v2 \
-  --capabilities CAPABILITY_IAM
+aws cloudformation update-stack --stack-name cfn-helper-demo --use-previous-template --parameters ParameterKey=SiteVersion,ParameterValue=v2 --capabilities CAPABILITY_IAM
 
 aws cloudformation wait stack-update-complete --stack-name cfn-helper-demo
 ```
