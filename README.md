@@ -15,7 +15,7 @@
 | AWS Certified Cloud Practitioner                     |                |         |     |            |
 | AWS Certified Data Engineer - Associate              |                |         |     |            |
 | AWS Certified Developer Associate                    | 2020-03-03     | Active  |     | 2026-08-04 |
-| AWS Certified Generative AI Developer - Professional | 2026-05-28     | Active  |     |            |
+| AWS Certified Generative AI Developer - Professional | 2026-05-28     | Active  |     | 2029-05-28 |
 | AWS Certified Machine Learning Engineer - Associate  |                |         |     |            |
 | AWS Certified Machine Learning - Specialty           | 2023-02-28     | Active  | O   | 2029-02-28 |
 | AWS Certified Advanced Networking - Specialty        |                |         |     |            |
