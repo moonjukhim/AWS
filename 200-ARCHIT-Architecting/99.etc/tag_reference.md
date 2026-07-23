@@ -1,4 +1,3 @@
-````markdown
 # AWS Tag & Billing Tag 설정 가이드
 
 ## 1. 목적
@@ -24,11 +23,11 @@ Key = Value
 
 예시
 
-| Key | Value |
-|------|--------|
-| Environment | Production |
-| Project | ShoppingMall |
-| Owner | Platform-Team |
+| Key         | Value         |
+| ----------- | ------------- |
+| Environment | Production    |
+| Project     | ShoppingMall  |
+| Owner       | Platform-Team |
 
 AWS 리소스 하나당 최대 **50개의 Tag**를 지정할 수 있다.
 
@@ -55,11 +54,11 @@ AWS 리소스 하나당 최대 **50개의 Tag**를 지정할 수 있다.
 
 예시
 
-| Key | Value |
-|------|--------|
-| Owner | Platform-Team |
-| Environment | Dev |
-| Application | Payment |
+| Key         | Value         |
+| ----------- | ------------- |
+| Owner       | Platform-Team |
+| Environment | Dev           |
+| Application | Payment       |
 
 ---
 
@@ -69,10 +68,10 @@ AWS Billing에서 비용 분석을 위해 사용하는 태그
 
 예시
 
-| Key | Value |
-|------|--------|
-| CostCenter | CC-1001 |
-| Project | AI-Agent |
+| Key        | Value    |
+| ---------- | -------- |
+| CostCenter | CC-1001  |
+| Project    | AI-Agent |
 | Department | Platform |
 
 > **중요**
@@ -137,34 +136,34 @@ CostCenter
 
 # 5. 권장 필수(Tag Mandatory)
 
-| Key | 설명 | 예시 |
-|------|------|------|
-| Name | 리소스 이름 | web-prod-01 |
-| Environment | 운영 환경 | Dev / Test / Stage / Prod |
-| Project | 프로젝트 | AI-Platform |
-| Application | 서비스명 | Payment |
-| Owner | 담당 조직 | Platform-Team |
-| CostCenter | 비용센터 | CC1001 |
-| Department | 부서 | Engineering |
-| ManagedBy | 관리도구 | Terraform |
-| CreatedBy | 생성도구 | CloudFormation |
+| Key             | 설명        | 예시                             |
+| --------------- | ----------- | -------------------------------- |
+| Name            | 리소스 이름 | web-prod-01                      |
+| Environment     | 운영 환경   | Dev / Test / Stage / Prod        |
+| Project         | 프로젝트    | AI-Platform                      |
+| Application     | 서비스명    | Payment                          |
+| Owner           | 담당 조직   | Platform-Team                    |
+| CostCenter      | 비용센터    | CC1001                           |
+| Department      | 부서        | Engineering                      |
+| ManagedBy       | 관리도구    | Terraform                        |
+| CreatedBy       | 생성도구    | CloudFormation                   |
 | Confidentiality | 데이터 등급 | Public / Internal / Confidential |
 
 ---
 
 # 6. Billing Tag 권장 항목
 
-| Key | 목적 |
-|------|------|
-| CostCenter | 비용센터별 분석 |
-| Department | 부서별 비용 |
-| Project | 프로젝트별 비용 |
-| Application | 서비스별 비용 |
-| Environment | 운영/개발 비용 비교 |
-| BusinessUnit | 사업부별 비용 |
-| Team | 팀별 비용 |
-| Customer | 고객별 비용 |
-| Product | 제품별 비용 |
+| Key          | 목적                |
+| ------------ | ------------------- |
+| CostCenter   | 비용센터별 분석     |
+| Department   | 부서별 비용         |
+| Project      | 프로젝트별 비용     |
+| Application  | 서비스별 비용       |
+| Environment  | 운영/개발 비용 비교 |
+| BusinessUnit | 사업부별 비용       |
+| Team         | 팀별 비용           |
+| Customer     | 고객별 비용         |
+| Product      | 제품별 비용         |
 
 ---
 
@@ -172,24 +171,24 @@ CostCenter
 
 ## EC2
 
-| Key | Value |
-|------|--------|
-| Name | payment-api-01 |
-| Environment | Production |
-| Project | PG |
-| Owner | Backend-Team |
-| CostCenter | CC1001 |
+| Key         | Value          |
+| ----------- | -------------- |
+| Name        | payment-api-01 |
+| Environment | Production     |
+| Project     | PG             |
+| Owner       | Backend-Team   |
+| CostCenter  | CC1001         |
 
 ---
 
 ## S3
 
-| Key | Value |
-|------|--------|
-| Name | image-storage |
-| Environment | Production |
-| Project | Commerce |
-| Department | Platform |
+| Key         | Value         |
+| ----------- | ------------- |
+| Name        | image-storage |
+| Environment | Production    |
+| Project     | Commerce      |
+| Department  | Platform      |
 
 ---
 
@@ -251,10 +250,10 @@ CostCenter
 
 예시
 
-| Project | Cost |
-|----------|------|
-| AI-Agent | $3,200 |
-| Shopping | $8,500 |
+| Project   | Cost   |
+| --------- | ------ |
+| AI-Agent  | $3,200 |
+| Shopping  | $8,500 |
 | Marketing | $1,200 |
 
 ---
@@ -364,36 +363,36 @@ Tags.of(instance).add("Project", "AI-Agent");
 
 # 15. 운영 Best Practice
 
-| 항목 | 권장사항 |
-|------|----------|
-| Tag 표준 | 중앙에서 정의 및 관리 |
-| Mandatory Tag | Name, Environment, Project, Owner, CostCenter |
-| IaC | 기본 Tag 자동 적용 |
-| Tag Policy | 허용 값 강제 |
-| SCP | 필수 Tag 없는 생성 차단 |
-| AWS Config | Tag 누락 지속 점검 |
-| Billing Tag | CostCenter, Project, Department 활성화 |
-| Cost Explorer | Billing Tag 기준 비용 분석 |
-| CUR(Cost & Usage Report) | Athena, QuickSight 연계 |
-| 자동화 | Lambda + EventBridge로 태그 보완 |
+| 항목                     | 권장사항                                      |
+| ------------------------ | --------------------------------------------- |
+| Tag 표준                 | 중앙에서 정의 및 관리                         |
+| Mandatory Tag            | Name, Environment, Project, Owner, CostCenter |
+| IaC                      | 기본 Tag 자동 적용                            |
+| Tag Policy               | 허용 값 강제                                  |
+| SCP                      | 필수 Tag 없는 생성 차단                       |
+| AWS Config               | Tag 누락 지속 점검                            |
+| Billing Tag              | CostCenter, Project, Department 활성화        |
+| Cost Explorer            | Billing Tag 기준 비용 분석                    |
+| CUR(Cost & Usage Report) | Athena, QuickSight 연계                       |
+| 자동화                   | Lambda + EventBridge로 태그 보완              |
 
 ---
 
 # 16. 추천 Tag 표준
 
-| Tag Key | 필수 | Billing | 예시 |
-|----------|:----:|:------:|------|
-| Name | ✅ | ❌ | web-prod-01 |
-| Environment | ✅ | ✅ | Prod |
-| Project | ✅ | ✅ | AI-Platform |
-| Application | ✅ | ✅ | Payment |
-| Owner | ✅ | ❌ | Platform-Team |
-| CostCenter | ✅ | ✅ | CC-1001 |
-| Department | ✅ | ✅ | Engineering |
-| BusinessUnit | 선택 | ✅ | Commerce |
-| ManagedBy | 선택 | ❌ | Terraform |
-| CreatedBy | 선택 | ❌ | CloudFormation |
-| Confidentiality | 선택 | ❌ | Internal |
+| Tag Key         | 필수 | Billing | 예시           |
+| --------------- | :--: | :-----: | -------------- |
+| Name            |  ✅  |   ❌    | web-prod-01    |
+| Environment     |  ✅  |   ✅    | Prod           |
+| Project         |  ✅  |   ✅    | AI-Platform    |
+| Application     |  ✅  |   ✅    | Payment        |
+| Owner           |  ✅  |   ❌    | Platform-Team  |
+| CostCenter      |  ✅  |   ✅    | CC-1001        |
+| Department      |  ✅  |   ✅    | Engineering    |
+| BusinessUnit    | 선택 |   ✅    | Commerce       |
+| ManagedBy       | 선택 |   ❌    | Terraform      |
+| CreatedBy       | 선택 |   ❌    | CloudFormation |
+| Confidentiality | 선택 |   ❌    | Internal       |
 
 ---
 
@@ -434,16 +433,15 @@ Tag Policy      AWS Config
 
 # 18. 핵심 체크리스트
 
-| 항목 | 완료 여부 |
-|------|:---------:|
-| Tag 표준 정의 | ☐ |
-| Mandatory Tag 정의 | ☐ |
-| Billing Tag 활성화 | ☐ |
-| IaC 기본 Tag 적용 | ☐ |
-| Tag Policy 적용 | ☐ |
-| SCP 적용 | ☐ |
-| AWS Config Rule 적용 | ☐ |
-| Cost Explorer 검증 | ☐ |
-| CUR 생성 | ☐ |
-| Athena/QuickSight 연계 | ☐ |
-````
+| 항목                   | 완료 여부 |
+| ---------------------- | :-------: |
+| Tag 표준 정의          |     ☐     |
+| Mandatory Tag 정의     |     ☐     |
+| Billing Tag 활성화     |     ☐     |
+| IaC 기본 Tag 적용      |     ☐     |
+| Tag Policy 적용        |     ☐     |
+| SCP 적용               |     ☐     |
+| AWS Config Rule 적용   |     ☐     |
+| Cost Explorer 검증     |     ☐     |
+| CUR 생성               |     ☐     |
+| Athena/QuickSight 연계 |     ☐     |
