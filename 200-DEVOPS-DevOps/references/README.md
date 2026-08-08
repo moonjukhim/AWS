@@ -44,3 +44,46 @@ Transaction 시작
              ↓
         DB 성능 저하
 ```
+
+359. Health check & Notification(config change)
+
+360. 
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│                    AWS CodePipeline                      │
+│                                                          │
+│  ① Source Stage                                          │
+│  ┌─────────────────┐                                     │
+│  │     GitHub      │◀──── CodeStar Connection            │
+│  │   Repository    │                                     │
+│  └────────┬────────┘                                     │
+│           │                                              │
+│           │ Source 가져오기                               │
+│           ▼                                              │
+│     Source Artifact                                      │
+│           │                                              │
+│           ▼                                              │
+│  ② Build Stage                                           │
+│  ┌──────────────────────────────┐                        │
+│  │        AWS CodeBuild         │                        │
+│  │                              │                        │
+│  │ buildspec.yml                │                        │
+│  │                              │                        │
+│  │ $ git clone GitHub repo      │ ───────────────┐       │
+│  └──────────────────────────────┘                │       │
+│                                                  │       │
+│                                   GitHub 접근 필요│       │
+│                                                  ▼       │
+│                                      CodeStar Connection │
+│                                                  │       │
+│                                                  ▼       │
+│                                           GitHub Repo    │
+│                                                          │
+│           ▼                                              │
+│  ③ Deploy Stage                                         │
+│  ┌─────────────────┐                                    │
+│  │     Deploy      │                                    │
+│  └─────────────────┘                                    │
+└──────────────────────────────────────────────────────────┘
+```
