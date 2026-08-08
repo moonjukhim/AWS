@@ -270,5 +270,65 @@ Root Stack
               Root Stack 실패
 ```
 
+---
+
+370. Active-Passive(Warm Standby)
+
+```text
+              Route 53
+                  │
+           Simple Routing
+                  │
+                  ▼
+             Primary EC2
+                  │
+                  ▼
+                 EFS
+
+             Standby EC2
+             (대기 중)
+```
+
+---
+
+371. 
+
+---
+ 
+372. CodePipeline → Cross-Account CodeDeploy 배포
+
+```text
+┌──────────────── PipelineAccount ────────────────┐
+│                                                 │
+│  CodePipeline                                  │
+│      │                                          │
+│      └─ CodePipeline_Service_Role               │
+│                                                 │
+│  S3 Artifact Bucket                             │
+│      └─ artifact.zip 🔐 KMS                     │
+│                                                 │
+│  Customer Managed KMS Key                       │
+│                                                 │
+└───────────────────┬─────────────────────────────┘
+                    │
+                    │ Cross-Account Deploy
+                    │
+                    ▼
+┌──────────────── CodeDeployAccount ──────────────┐
+│                                                 │
+│              DevOps_Role                        │
+│                   │                             │
+│                   ▼                             │
+│              CodeDeploy                         │
+│                   │                             │
+│                   ▼                             │
+│                EC2                              │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
+
+
+
 
 
