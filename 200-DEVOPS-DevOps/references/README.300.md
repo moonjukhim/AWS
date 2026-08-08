@@ -534,7 +534,32 @@ StackSet Update
 
 ---
 
+390. 패키지 승격(Promotion) 패턴
 
+```text
+       최신 버전
+          │
+          ▼
+┌──────────────────┐
+│ DEV CodeArtifact │ ← Developer만 접근
+└────────┬─────────┘
+         │
+         ▼
+    독립적인 Test
+         │
+     ┌───┴───┐
+   FAIL      PASS
+     │         │
+     ❌        ▼
+          Promotion
+              │
+              ▼
+┌───────────────────┐
+│ PROD CodeArtifact │ ← 검증된 버전만
+└─────────┬─────────┘
+          ▼
+      Applications
+```
 
 
 
