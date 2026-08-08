@@ -15,7 +15,8 @@ Pod Identity access
 355. CloudWatch Logs Data Protection
 
 ```text
-CloudWatch Logs Data Protection은 CloudWatch Logs에 들어오는 로그에서 민감정보(PII, 금융정보, 자격증명 등)를 탐지하고 마스킹(masking)하는 기능
+CloudWatch Logs Data Protection은 CloudWatch Logs에 들어오는 로그에서 <br>
+민감정보(PII, 금융정보, 자격증명 등)를 탐지하고 마스킹(masking)하는 기능
 ```
 
 356. Organizations의 모든 계정에 강제
@@ -47,7 +48,7 @@ Transaction 시작
 
 359. Health check & Notification(config change)
 
-360. 
+360. CodePipeline → CodeBuild → GitHub 사이에서 누가 CodeStar Connection을 사용하는지
 
 ```text
 ┌──────────────────────────────────────────────────────────┐
@@ -87,3 +88,187 @@ Transaction 시작
 │  └─────────────────┘                                    │
 └──────────────────────────────────────────────────────────┘
 ```
+
+---
+
+361. 패키지 공급망(Package Supply Chain) 관리
+
+```text
+                  Public NPM
+                      │
+                      │ package 가져오기
+                      ▼
+             ┌─────────────────┐
+             │ AWS CodeArtifact│
+             │  npm-store      │
+             └────────┬────────┘
+                      │
+                새 버전 검증 CodePipeline
+                      │
+                      ▼
+              ┌───────┴────────┐
+              │                │
+            성공              실패
+              │                │
+              ▼                ▼
+           사용 가능       Unlisted
+              │
+              ▼
+           CodeBuild
+              │
+          npm install
+              │
+              ▼
+        Application Build
+```
+
+---
+
+362. DR 구조
+
+```text
+              ┌──────── CloudFront ────────┐
+              │                            │
+              ▼                            ▼
+        Primary Origin               DR Origin
+         Primary ALB                   DR ALB
+              │                            │
+              ▼                            ▼
+       Auto Scaling                  Auto Scaling
+       desired = 3                   desired = 0 ⭐
+              │                            │
+           EC2 × 3                  장애 시 EC2 생성
+              │
+              ▼
+     Primary OpenSearch
+              │
+              │ Cross-Cluster
+              │ Replication
+              ▼
+        DR OpenSearch
+        (계속 데이터 복제)
+```
+
+---
+
+363. 지속적 규정 준수 검사 + 자동 Remediation
+
+```text
+모든 ALB
+   │
+   └── WAF가 연결되어 있어야 함
+             │
+             ▼
+       누군가 WAF 제거
+             │
+             ▼
+       자동으로 탐지
+             │
+             ▼
+       WAF 다시 연결
+```
+
+---
+
+364. CI/CD에서 스크립트 기반 테스트 실행 → CodeBuild
+
+365. 
+
+---
+
+366. CodeBuild Webhook + Build Status Reporting + Artifacts
+
+```text
+Developer
+    │
+    │ Pull Request 생성/업데이트
+    ▼
+Git Repository
+    │
+    │ Webhook
+    ▼
+┌─────────────────────────┐
+│      AWS CodeBuild      │
+│                         │
+│  Unit Test 실행          │
+│                         │
+│  buildspec.yml          │
+│       │                 │
+│       └─ artifacts      │
+└───────┬──────────┬──────┘
+        │          │
+        │          │ output files
+        │          ▼
+        │      Amazon S3
+        │
+        │ Build Status Reporting
+        ▼
+Git Pull Request
+```
+
+---
+
+367. CodeBuild
+
+```text
+① CodeBuild Project
+   → Artifact destination = S3
+
+② buildspec.yml
+   → 어떤 파일을 artifact로 내보낼지 지정
+
+③ CodeBuild Service Role
+   → S3에 업로드할 권한
+```
+
+---
+ 
+368. CloudFormation Git Sync
+
+```text
+                    지정된 Git Provider
+                           │
+                    Git Repository
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+         Region A                    Region B
+             │                           │
+      CodeConnections              CodeConnections
+       Connection                   Connection
+             │                           │
+             ▼                           ▼
+       Repository Link              Repository Link
+             │                           │
+             ▼                           ▼
+      CloudFormation               CloudFormation
+          Git Sync                     Git Sync
+             │                           │
+             ▼                           ▼
+       CFN Stack A                  CFN Stack B
+```
+
+---
+
+369. Nested Stack Fail
+
+```text
+Root Stack
+│
+├── 기존 Resource
+│
+└── Nested Stack
+       │
+       ├── EC2 #1
+       ├── EC2 #2
+       └── EC2 #3
+              │
+              ❌ CREATE_FAILED
+                    ↓
+            Nested Stack 실패
+                    ↓
+              Root Stack 실패
+```
+
+
+
