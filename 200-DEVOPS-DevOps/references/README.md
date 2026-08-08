@@ -327,6 +327,74 @@ Root Stack
 └─────────────────────────────────────────────────┘
 ```
 
+373. Event-driven 자동화
+
+```text
+Developer
+    │
+    │ EC2 생성 API
+    │ RunInstances
+    ▼
+Amazon EC2
+    │
+    │ API Event
+    ▼
+CloudTrail
+    │
+    │ userIdentity
+    │ eventName
+    │ resource 정보
+    ▼
+EventBridge
+    │
+    │ Rule Match
+    ▼
+Lambda
+    │
+    ├─ User ID 추출
+    ├─ Cost Center 조회
+    │
+    └─ CreateTags
+          │
+          ▼
+       EC2 Resource
+
+       CreatedBy = user123
+       CostCenter = CC-100
+```
+
+---
+
+374. CodeBuild + CodeArtifact + Upstream Repository
+---
+375. 
+---
+376. Pull Through Cache
+
+```text
+                        Upstream Registry
+                     Docker Hub / ECR Public
+                              │
+                              │ 최초 pull
+                              ▼
+CI/CD ──────────────→ ECR Pull Through Cache
+                              │
+                              │ Cached Image
+                              ▼
+                         ECR Private
+                          Registry
+                              │
+                         Image Scanning
+                              │
+                              ▼
+                       취약점 검사
+```
+
+---
+377. 
+---
+
+378.
 
 
 
