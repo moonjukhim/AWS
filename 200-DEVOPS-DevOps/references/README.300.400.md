@@ -12,6 +12,27 @@ EKS
 
 Pod Identity access
 
+303. AWS Control Tower Account Factory가 AWS Service Catalog를 기반으로 계정을 프로비저닝/등록
+
+```text
+Step Functions
+     │
+     ├─ ① AWS Organizations
+     │      ↓
+     │   새 Account 생성
+     │
+     ├─ ② AWSControlTowerExecution Role 생성  ← C
+     │
+     └─ ③ Service Catalog
+             ↓
+        ProvisionProduct API              ← D
+             ↓
+       Control Tower Account Factory
+             ↓
+       Control Tower 관리 계정
+```
+
+---
 355. CloudWatch Logs Data Protection
 
 ```text
