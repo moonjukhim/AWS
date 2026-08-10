@@ -77,7 +77,7 @@ Baseline Configuration
 
 239. AWS API를 호출할 때 누구의 IAM 권한을 사용할 것인가?
 
-| 구분                   | 권한을 사용하는 주체          | 용도                                |
+| 구분                  | 권한을 사용하는 주체    | 용도                                |
 | -------------------- | -------------------- | --------------------------------- |
 | **Cluster IAM Role** | EKS Control Plane    | EKS가 AWS 리소스를 관리                  |
 | **IRSA**             | Pod → ServiceAccount | Pod에 AWS 권한 부여                    |
