@@ -34,8 +34,18 @@ AWS Organizations
 └─ Member Account C
       └─ Security Hub
 ```
+---
+### 163. Account Factory Customization / Blueprint + Service Catalog
 
-207. AWS Control Tower Proactive Control + CloudFormation Hooks
+| 방식                                  | 적합한 사용 사례                                                    |
+| ----------------------------------- | ------------------------------------------------------------ |
+| **Service Catalog / AFC Blueprint** | 계정 생성 시 **선택 가능한 customization** 제공                          |
+| **CloudFormation StackSets**        | 특정 OU/여러 계정에 **동일 리소스 일괄 배포**                                |
+| **CfCT**                            | Control Tower 환경에서 OU/Account별 **조직 표준 customization 자동 배포** |
+
+---
+
+### 207. AWS Control Tower Proactive Control + CloudFormation Hooks
 
 | 방법                             | 검사 시점   | 잘못된 S3 생성 차단 | Control Tower 필요 |
 | ------------------------------- | ---------- | ----------------: | ---------------: |
