@@ -1,6 +1,8 @@
 ### 
 
-101. 
+101. ### Control Tower + Security Hub
+
+Control Tower가 계정을 만들고 → Security Hub가 자동 활성화되고 → Security Account가 조직 전체 결과를 중앙집계하며 → IAM Identity Center가 누가 어디까지 볼 수 있는지를 통제
 
   - 1.CIS Benchmarks를 조직 전체에서 Security Hub로 평가
   - 2.조직 전체 결과는 Security Team만 조회
