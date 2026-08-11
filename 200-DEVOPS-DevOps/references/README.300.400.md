@@ -33,6 +33,75 @@ Step Functions
 ```
 
 ---
+329. 조직 전체에 적용할 통제와 각 계정에 배포할 사용자 권한
+
+```text
+Organizations 전체의 Region/Service 사용 범위 제한 → SCP
+여러 AWS 계정에 동일한 IAM Role/리소스 배포 → CloudFormation StackSets
+```
+
+334. 
+
+```text
+                Control Tower Management Account
+                           │
+              ┌────────────┴─────────────┐
+              │                          │
+       기존 OU 재등록 이벤트       신규 Account/Update 이벤트
+              │                          │
+              └──────── EventBridge ─────┘
+                           │
+                           ▼
+                         Lambda
+                           │
+                     Lambda IAM Role       ← E
+                           │
+                    sts:AssumeRole
+                           ▼
+              AWSControlTowerExecution     ← E
+                    (Member Account)
+                           │
+                           ▼
+                AWS Config Recorder
+                    Customization
+```
+---
+
+348. Control Tower Guardrail/Control을 IaC로 관리
+
+  - Guardrail을 OU 전체에 적용 → AWS::ControlTower::EnableControl의 대상은 OU
+  - 변경 이력/버전 관리 → CodeCommit
+  - 검토 및 롤백 → CloudFormation + Git 기반 관리
+  - Security Team이 자기 OU/계정에서 관리 → Security Team 계정의 CodePipeline
+  - 승인된 Guardrail만 허용 → 승인된 CloudFormation 템플릿을 Repository에서 관리
+  - 운영 효율성 → CodeCommit 변경 → EventBridge → CodePipeline 자동 실행
+
+```text
+Security Team
+     │
+     ▼
+CodeCommit
+(승인된 Guardrail CFN Templates)
+     │
+     │ commit
+     ▼
+EventBridge
+     │
+     ▼
+CodePipeline
+     │
+     ▼
+CloudFormation
+     │
+     │ AWS::ControlTower::EnableControl
+     ▼
+Target OU
+ ├─ Account A
+ ├─ Account B
+ └─ Account C
+```
+
+---
 355. CloudWatch Logs Data Protection
 
 ```text
