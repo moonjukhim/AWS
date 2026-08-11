@@ -794,21 +794,16 @@ AWS Infrastructure
 
 303의 “new accounts are automatically enrolled입니다.
 
-┌───────────┬───────────────────────────────────────┐
-│   번호    │                            수단                            │ 
-├───────────┼───────────────────────────────────────┤
-│ 102       │ GuardDuty 위임 관리자 + auto-enable                        │ 
-├───────────┼───────────────────────────────────────┤
-│ 101       │ Security Hub automatic enablement                          │ 
-├───────────┼───────────────────────────────────────┤
-│ 336       │ StackSets service-managed(root OU) + 관리 계정용 별도 스택 │ 
-├───────────┼───────────────────────────────────────┤
-│ 389       │ CDK 앱 + StackSets 컨스트럭트                              │ 
-├───────────┼──────────────────────────────────────────────────────┤
-│ 382       │ StackSets service-managed + automatic deployment     │ 
-├───────────┼──────────────────────────────────────────────────────┤
-│ 222 / 227 │ Control Tower Account Factory                              │
-└───────────┴───────────────────────────────────────┘
+
+|        번호 | 수단                                                 |
+| --------: | -------------------------------------------------- |
+|       102 | GuardDuty 위임 관리자 + auto-enable                     |
+|       101 | Security Hub automatic enablement                  |
+|       336 | StackSets service-managed (root OU) + 관리 계정용 별도 스택 |
+|       389 | CDK 앱 + StackSets 컨스트럭트                            |
+|       382 | StackSets service-managed + automatic deployment   |
+| 222 / 227 | Control Tower Account Factory                      |
+
 
 암기: 서비스 네이티브 자동 활성화 > StackSets ccount Factory/AFC > EventBridge + Lambda커스텀 (뒤로 갈수록 오버헤드 크고, 앞의 수단이 존재하면 뒤는 오답)
 
