@@ -1,4 +1,28 @@
 
+#### Control Tower 기능
+
+```text
+                    AWS Control Tower
+
+                           │
+
+        ┌──────────────────┼───────────────────┬───────────────────┐
+
+        ▼                  ▼                   ▼                   ▼
+
+   Landing Zone      Account Factory      Governance           Lifecycle Automation
+
+      │                    │                  │                      │
+
+      │                    │                  │
+
+      ▼                    ▼                  ▼
+
+ OU 생성             계정 생성/등록           SCP                       Register OU
+ Guardrails          계정 Provision         Config                    Re-register OU
+ Logging             Enrollment            Detective Control         기존 리소스(Customization) 자동 적용
+```
+
 ```text
                       AWS Control Tower
                             │
@@ -84,3 +108,6 @@ AWS Control Tower
         ▼
 새 Account + Customization
 ```
+
+## 334
+
