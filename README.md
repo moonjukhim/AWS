@@ -12,34 +12,34 @@
 
 | Title                                                | Date           | Status  | V.R | Expire     |
 | ---------------------------------------------------- | -------------- | ------- | --- | ---------- |
+| AWS Certified AI Practitioner                        |                |         |     |            |
 | AWS Certified Cloud Practitioner                     |                |         |     |            |
 | AWS Certified Data Engineer - Associate              |                |         |     |            |
 | AWS Certified Developer Associate                    | 2020-03-03     | Active  |     | 2026-08-04 |
 | AWS Certified Generative AI Developer - Professional | 2026-05-28     | Active  |     | 2029-05-28 |
 | AWS Certified Machine Learning Engineer - Associate  |                |         |     |            |
-| AWS Certified Machine Learning - Specialty           | 2023-02-28     | Active  | O   | 2029-02-28 |
 | AWS Certified Advanced Networking - Specialty        |                |         |     |            |
 | AWS Certified Security - Specialty                   | 2024-01-19     | Active  | O   | 2027-01-19 |
 | AWS Certified Solutions Architect - Associate        | 2019-10-29     | Active  |     | 2028-09-01 |
 | AWS Certified Solutions Architect - Professional     | 2023-09-03     | Active  | O   | 2028-09-01 |
-| AWS Certified SysOps Administrator - Associate       | 2020-08-18     | DevOps  |     | 2026-08-04 |
-| AWS DevOps Engineer Professional                     | 2020-08-18     | Active  |     | 2026-08-04 |
+| AWS Certified CloudOps Engineer - Associate          | 2020-08-18     | DevOps  |     | 2026-08-04 |
+| AWS Certified DevOps Engineer Professional           | 2020-08-18     | Active  |     | 2026-08-04 |
 | ~~AWS Certified Big Data - Specialty~~               | ~~2020-05-15~~ | Expired |     | 2023-05-15 |
 | ~~AWS Certified Data Analytics - Specialty~~         |                |         | O   |            |
 | ~~AWS Certified Database - Specialty~~               |                |         |     |            |
-
+| ~~AWS Certified Machine Learning - Specialty~~       | 2023-02-28     | Active  | O   | 2029-02-28 |
 ---
 
 ###
 
 | Level | Code       | Title                                              | Version | Ko.Ver | Check   |
 | ----- | ---------- | -------------------------------------------------- | ------- | ------ | ------- |
-| 100   | **초급**   | =======================================            |         |        |         |
+| 100   | **초급**    | =======================================            |         |        |         |
 | 100   | BES        | Business-Essential                                 |         |        |         |
 | 100   | MLAGAF     | Agentic AI Foundation                              |         |        |         |
 | 100   | MLGAIE     | Generative AI Essentials                           |         |        |         |
 | 100   | TECESS     | Technical-Essential                                |         |        |         |
-| 200   | **중급**   | =======================================            | ====    | ====   | ====    |
+| 200   | **중급**    | =======================================            | ====    | ====   | ====    |
 | 200   | ANBDLK     | Building-Data-Lakes-on-AWS                         |         |        |         |
 | 200   | ARCHIT     | Architecting-on-AWS                                |         |        |         |
 | 200   | BIGDAT     | Big-Data-on-AWS                                    |         |        |         |
