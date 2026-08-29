@@ -75,6 +75,8 @@
 
 ![AWS Certification Roadmap](999-TEMP/Certifications/aws_roadmap.jpg)
 
+[Credly](https://www.credly.com/users/moonju-khim/edit/badges/credly)
+
 ---
 
 ### Digital Instuctor Enablement
