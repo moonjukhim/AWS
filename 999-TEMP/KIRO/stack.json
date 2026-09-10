@@ -1,0 +1,2847 @@
+{
+  "Description": "Micro Blogging Application Stack",
+  "Resources": {
+    "UserPool6BA7E5F2": {
+      "Type": "AWS::Cognito::UserPool",
+      "Properties": {
+        "AccountRecoverySetting": {
+          "RecoveryMechanisms": [
+            {
+              "Name": "verified_email",
+              "Priority": 1
+            }
+          ]
+        },
+        "AdminCreateUserConfig": {
+          "AllowAdminCreateUserOnly": false
+        },
+        "AutoVerifiedAttributes": [
+          "email"
+        ],
+        "EmailVerificationMessage": "The verification code to your new account is {####}",
+        "EmailVerificationSubject": "Verify your new account",
+        "Policies": {
+          "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": false,
+            "RequireUppercase": true
+          }
+        },
+        "Schema": [
+          {
+            "Mutable": true,
+            "Name": "email",
+            "Required": true
+          },
+          {
+            "Mutable": true,
+            "Name": "preferred_username",
+            "Required": true
+          }
+        ],
+        "SmsVerificationMessage": "The verification code to your new account is {####}",
+        "VerificationMessageTemplate": {
+          "DefaultEmailOption": "CONFIRM_WITH_CODE",
+          "EmailMessage": "The verification code to your new account is {####}",
+          "EmailSubject": "Verify your new account",
+          "SmsMessage": "The verification code to your new account is {####}"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/UserPool/Resource"
+      }
+    },
+    "UserPoolUserPoolClient40176907": {
+      "Type": "AWS::Cognito::UserPoolClient",
+      "Properties": {
+        "AllowedOAuthFlows": [
+          "implicit",
+          "code"
+        ],
+        "AllowedOAuthFlowsUserPoolClient": true,
+        "AllowedOAuthScopes": [
+          "profile",
+          "phone",
+          "email",
+          "openid",
+          "aws.cognito.signin.user.admin"
+        ],
+        "CallbackURLs": [
+          "https://example.com"
+        ],
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_PASSWORD_AUTH",
+          "ALLOW_ADMIN_USER_PASSWORD_AUTH",
+          "ALLOW_USER_SRP_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH"
+        ],
+        "PreventUserExistenceErrors": "ENABLED",
+        "SupportedIdentityProviders": [
+          "COGNITO"
+        ],
+        "UserPoolId": {
+          "Ref": "UserPool6BA7E5F2"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/UserPool/UserPoolClient/Resource"
+      }
+    },
+    "IdentityPool": {
+      "Type": "AWS::Cognito::IdentityPool",
+      "Properties": {
+        "AllowUnauthenticatedIdentities": false,
+        "CognitoIdentityProviders": [
+          {
+            "ClientId": {
+              "Ref": "UserPoolUserPoolClient40176907"
+            },
+            "ProviderName": {
+              "Fn::GetAtt": [
+                "UserPool6BA7E5F2",
+                "ProviderName"
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/IdentityPool"
+      }
+    },
+    "IdentityPoolRoleAttachment": {
+      "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
+      "Properties": {
+        "IdentityPoolId": {
+          "Ref": "IdentityPool"
+        },
+        "Roles": {
+          "authenticated": "arn:aws:iam::485312124475:role/AppStack-AuthenticatedRole"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/IdentityPoolRoleAttachment"
+      }
+    },
+    "UsersTable9725E9C8": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "username",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "username-index",
+            "KeySchema": [
+              {
+                "AttributeName": "username",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ]
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/UsersTable/Resource"
+      }
+    },
+    "PostsTableC82B36F0": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "userId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "createdAt",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "userId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "userId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ]
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/PostsTable/Resource"
+      }
+    },
+    "LikesTable9511B0A4": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "userId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "postId",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "postId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "postId",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "userId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "postId",
+            "KeyType": "RANGE"
+          }
+        ]
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/LikesTable/Resource"
+      }
+    },
+    "CommentsTableBBDBF0A8": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "id",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "postId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "createdAt",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "postId-index",
+            "KeySchema": [
+              {
+                "AttributeName": "postId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "createdAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "id",
+            "KeyType": "HASH"
+          }
+        ]
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/CommentsTable/Resource"
+      }
+    },
+    "FollowsTable7B81FE10": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "followerId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "followeeId",
+            "AttributeType": "S"
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "followee-index",
+            "KeySchema": [
+              {
+                "AttributeName": "followeeId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "followerId",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "followerId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "followeeId",
+            "KeyType": "RANGE"
+          }
+        ]
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/FollowsTable/Resource"
+      }
+    },
+    "MicroBloggingApi546F5920": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "API for Micro Blogging application",
+        "Name": "Micro Blogging API"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Resource"
+      }
+    },
+    "MicroBloggingApiDeployment27CB88BDba0de10b049861b2b14ddf55ea36d8f7": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": "API for Micro Blogging application",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "DependsOn": [
+        "MicroBloggingApiauthloginOPTIONS763D3E04",
+        "MicroBloggingApiauthloginPOSTCDA48F2E",
+        "MicroBloggingApiauthlogin03AE2AD5",
+        "MicroBloggingApiauthOPTIONSED4EE510",
+        "MicroBloggingApiauthregisterOPTIONS48A92167",
+        "MicroBloggingApiauthregisterPOSTE2D65165",
+        "MicroBloggingApiauthregister00A388B6",
+        "MicroBloggingApiauth7DA4919B",
+        "MicroBloggingApiOPTIONSF16EB433",
+        "MicroBloggingApipostspostIdlikeOPTIONS3DE3BEBD",
+        "MicroBloggingApipostspostIdlikePOST3BD0C04C",
+        "MicroBloggingApipostspostIdlike0F38E546",
+        "MicroBloggingApipostspostIdOPTIONS770E35A5",
+        "MicroBloggingApipostspostIdD02F4D19",
+        "MicroBloggingApipostsGET699A8DF9",
+        "MicroBloggingApipostsOPTIONSB5C7B1C6",
+        "MicroBloggingApipostsPOST84CA9959",
+        "MicroBloggingApiposts418AB04A",
+        "MicroBloggingApiusersuserIdfollowOPTIONS1B379C3F",
+        "MicroBloggingApiusersuserIdfollowPOST486D9291",
+        "MicroBloggingApiusersuserIdfollowD3795219",
+        "MicroBloggingApiusersuserIdfollowingGET8C462158",
+        "MicroBloggingApiusersuserIdfollowingOPTIONS66639B38",
+        "MicroBloggingApiusersuserIdfollowing66D5A05C",
+        "MicroBloggingApiusersuserIdGET9363FA02",
+        "MicroBloggingApiusersuserIdOPTIONS1448F2EA",
+        "MicroBloggingApiusersuserIdpostsGET3A540F13",
+        "MicroBloggingApiusersuserIdpostsOPTIONS7C49AE29",
+        "MicroBloggingApiusersuserIdpostsCDDBF408",
+        "MicroBloggingApiusersuserIdPUT79E0E987",
+        "MicroBloggingApiusersuserIdB9F056B8",
+        "MicroBloggingApiusersuserIdunfollowOPTIONS94D3CC51",
+        "MicroBloggingApiusersuserIdunfollowPOST69DF75D5",
+        "MicroBloggingApiusersuserIdunfollow239278BF",
+        "MicroBloggingApiusersOPTIONSA7C3BCC8",
+        "MicroBloggingApiusers3CE2D77C"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Deployment/Resource",
+        "aws:cdk:do-not-refactor": true
+      }
+    },
+    "MicroBloggingApiDeploymentStageprod11C6ED1B": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "MicroBloggingApiDeployment27CB88BDba0de10b049861b2b14ddf55ea36d8f7"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        },
+        "StageName": "prod"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/DeploymentStage.prod/Resource"
+      }
+    },
+    "MicroBloggingApiOPTIONSF16EB433": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "MicroBloggingApi546F5920",
+            "RootResourceId"
+          ]
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiauth7DA4919B": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "MicroBloggingApi546F5920",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "auth",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/Resource"
+      }
+    },
+    "MicroBloggingApiauthOPTIONSED4EE510": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiauth7DA4919B"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiauthregister00A388B6": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiauth7DA4919B"
+        },
+        "PathPart": "register",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/register/Resource"
+      }
+    },
+    "MicroBloggingApiauthregisterOPTIONS48A92167": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiauthregister00A388B6"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/register/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiauthregisterPOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTauthregister63C46AD3": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "RegisterFunction735506DF",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/auth/register"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/register/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..auth.register"
+      }
+    },
+    "MicroBloggingApiauthregisterPOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTauthregisterCA89171D": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "RegisterFunction735506DF",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/auth/register"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/register/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..auth.register"
+      }
+    },
+    "MicroBloggingApiauthregisterPOSTE2D65165": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "RegisterFunction735506DF",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiauthregister00A388B6"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/register/POST/Resource"
+      }
+    },
+    "MicroBloggingApiauthlogin03AE2AD5": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiauth7DA4919B"
+        },
+        "PathPart": "login",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/login/Resource"
+      }
+    },
+    "MicroBloggingApiauthloginOPTIONS763D3E04": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiauthlogin03AE2AD5"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/login/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiauthloginPOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTauthlogin7EB09FFF": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LoginFunction66F090C6",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/auth/login"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/login/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..auth.login"
+      }
+    },
+    "MicroBloggingApiauthloginPOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTauthloginDD0CFA31": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LoginFunction66F090C6",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/auth/login"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/login/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..auth.login"
+      }
+    },
+    "MicroBloggingApiauthloginPOSTCDA48F2E": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "LoginFunction66F090C6",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiauthlogin03AE2AD5"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/auth/login/POST/Resource"
+      }
+    },
+    "MicroBloggingApiusers3CE2D77C": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "MicroBloggingApi546F5920",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "users",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/Resource"
+      }
+    },
+    "MicroBloggingApiusersOPTIONSA7C3BCC8": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusers3CE2D77C"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdB9F056B8": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiusers3CE2D77C"
+        },
+        "PathPart": "{userId}",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdOPTIONS1448F2EA": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdGETApiPermissionAppStackMicroBloggingApiFF188F7CGETusersuserId00506138": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetProfileFunction8A105C24",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/GET/users/*"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/GET/ApiPermission.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}"
+      }
+    },
+    "MicroBloggingApiusersuserIdGETApiPermissionTestAppStackMicroBloggingApiFF188F7CGETusersuserIdB2FF6BFC": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetProfileFunction8A105C24",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/GET/users/*"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/GET/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}"
+      }
+    },
+    "MicroBloggingApiusersuserIdGET9363FA02": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "GetProfileFunction8A105C24",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/GET/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdPUTApiPermissionAppStackMicroBloggingApiFF188F7CPUTusersuserIdAE1A950F": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UpdateProfileFunction2A160882",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/PUT/users/*"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/PUT/ApiPermission.AppStackMicroBloggingApiFF188F7C.PUT..users.{userId}"
+      }
+    },
+    "MicroBloggingApiusersuserIdPUTApiPermissionTestAppStackMicroBloggingApiFF188F7CPUTusersuserIdF7A2B83F": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UpdateProfileFunction2A160882",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/PUT/users/*"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/PUT/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.PUT..users.{userId}"
+      }
+    },
+    "MicroBloggingApiusersuserIdPUT79E0E987": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "PUT",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "UpdateProfileFunction2A160882",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/PUT/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowD3795219": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "PathPart": "follow",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/follow/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowOPTIONS1B379C3F": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdfollowD3795219"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/follow/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowPOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTusersuserIdfollow4B00D2E7": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "FollowUserFunctionD86228D7",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/users/*/follow"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/follow/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..users.{userId}.follow"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowPOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTusersuserIdfollowCFA7F8B1": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "FollowUserFunctionD86228D7",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/users/*/follow"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/follow/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..users.{userId}.follow"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowPOST486D9291": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "FollowUserFunctionD86228D7",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdfollowD3795219"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/follow/POST/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdunfollow239278BF": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "PathPart": "unfollow",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/unfollow/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdunfollowOPTIONS94D3CC51": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdunfollow239278BF"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/unfollow/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdunfollowPOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTusersuserIdunfollow4AC8C99E": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UnfollowUserFunction2E9DAACA",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/users/*/unfollow"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/unfollow/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..users.{userId}.unfollow"
+      }
+    },
+    "MicroBloggingApiusersuserIdunfollowPOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTusersuserIdunfollow3DA99CED": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "UnfollowUserFunction2E9DAACA",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/users/*/unfollow"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/unfollow/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..users.{userId}.unfollow"
+      }
+    },
+    "MicroBloggingApiusersuserIdunfollowPOST69DF75D5": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "UnfollowUserFunction2E9DAACA",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdunfollow239278BF"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/unfollow/POST/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowing66D5A05C": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "PathPart": "following",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/following/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowingOPTIONS66639B38": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdfollowing66D5A05C"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/following/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowingGETApiPermissionAppStackMicroBloggingApiFF188F7CGETusersuserIdfollowing3417991E": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "CheckFollowingFunctionF22CC9B0",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/GET/users/*/following"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/following/GET/ApiPermission.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}.following"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowingGETApiPermissionTestAppStackMicroBloggingApiFF188F7CGETusersuserIdfollowing0E333FE0": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "CheckFollowingFunctionF22CC9B0",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/GET/users/*/following"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/following/GET/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}.following"
+      }
+    },
+    "MicroBloggingApiusersuserIdfollowingGET8C462158": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "CheckFollowingFunctionF22CC9B0",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdfollowing66D5A05C"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/following/GET/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdpostsCDDBF408": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiusersuserIdB9F056B8"
+        },
+        "PathPart": "posts",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/posts/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdpostsOPTIONS7C49AE29": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdpostsCDDBF408"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/posts/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApiusersuserIdpostsGETApiPermissionAppStackMicroBloggingApiFF188F7CGETusersuserIdposts6B167E69": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetPostsFunctionC3346FC5",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/GET/users/*/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/posts/GET/ApiPermission.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}.posts"
+      }
+    },
+    "MicroBloggingApiusersuserIdpostsGETApiPermissionTestAppStackMicroBloggingApiFF188F7CGETusersuserIdposts095F5B64": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetPostsFunctionC3346FC5",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/GET/users/*/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/posts/GET/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.GET..users.{userId}.posts"
+      }
+    },
+    "MicroBloggingApiusersuserIdpostsGET3A540F13": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "GetPostsFunctionC3346FC5",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiusersuserIdpostsCDDBF408"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/users/{userId}/posts/GET/Resource"
+      }
+    },
+    "MicroBloggingApiposts418AB04A": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "MicroBloggingApi546F5920",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "posts",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/Resource"
+      }
+    },
+    "MicroBloggingApipostsOPTIONSB5C7B1C6": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApiposts418AB04A"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApipostsGETApiPermissionAppStackMicroBloggingApiFF188F7CGETpostsD74A7E6B": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetPostsFunctionC3346FC5",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/GET/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/GET/ApiPermission.AppStackMicroBloggingApiFF188F7C.GET..posts"
+      }
+    },
+    "MicroBloggingApipostsGETApiPermissionTestAppStackMicroBloggingApiFF188F7CGETpostsCCA51859": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "GetPostsFunctionC3346FC5",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/GET/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/GET/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.GET..posts"
+      }
+    },
+    "MicroBloggingApipostsGET699A8DF9": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "GetPostsFunctionC3346FC5",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiposts418AB04A"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/GET/Resource"
+      }
+    },
+    "MicroBloggingApipostsPOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTposts00A41A19": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "CreatePostFunction56510812",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..posts"
+      }
+    },
+    "MicroBloggingApipostsPOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTpostsBDA328FB": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "CreatePostFunction56510812",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/posts"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..posts"
+      }
+    },
+    "MicroBloggingApipostsPOST84CA9959": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "CreatePostFunction56510812",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApiposts418AB04A"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/POST/Resource"
+      }
+    },
+    "MicroBloggingApipostspostIdD02F4D19": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApiposts418AB04A"
+        },
+        "PathPart": "{postId}",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/Resource"
+      }
+    },
+    "MicroBloggingApipostspostIdOPTIONS770E35A5": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApipostspostIdD02F4D19"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApipostspostIdlike0F38E546": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "MicroBloggingApipostspostIdD02F4D19"
+        },
+        "PathPart": "like",
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/like/Resource"
+      }
+    },
+    "MicroBloggingApipostspostIdlikeOPTIONS3DE3BEBD": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Credentials": "'true'"
+              },
+              "StatusCode": "204"
+            }
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }"
+          },
+          "Type": "MOCK"
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Credentials": true
+            },
+            "StatusCode": "204"
+          }
+        ],
+        "ResourceId": {
+          "Ref": "MicroBloggingApipostspostIdlike0F38E546"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/like/OPTIONS/Resource"
+      }
+    },
+    "MicroBloggingApipostspostIdlikePOSTApiPermissionAppStackMicroBloggingApiFF188F7CPOSTpostspostIdlike95CEABD6": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LikePostFunctionEAEFAE85",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/",
+              {
+                "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+              },
+              "/POST/posts/*/like"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/like/POST/ApiPermission.AppStackMicroBloggingApiFF188F7C.POST..posts.{postId}.like"
+      }
+    },
+    "MicroBloggingApipostspostIdlikePOSTApiPermissionTestAppStackMicroBloggingApiFF188F7CPOSTpostspostIdlike4AF45867": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LikePostFunctionEAEFAE85",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:us-east-1:485312124475:",
+              {
+                "Ref": "MicroBloggingApi546F5920"
+              },
+              "/test-invoke-stage/POST/posts/*/like"
+            ]
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/like/POST/ApiPermission.Test.AppStackMicroBloggingApiFF188F7C.POST..posts.{postId}.like"
+      }
+    },
+    "MicroBloggingApipostspostIdlikePOST3BD0C04C": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "LikePostFunctionEAEFAE85",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "ResourceId": {
+          "Ref": "MicroBloggingApipostspostIdlike0F38E546"
+        },
+        "RestApiId": {
+          "Ref": "MicroBloggingApi546F5920"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/MicroBloggingApi/Default/posts/{postId}/like/POST/Resource"
+      }
+    },
+    "RegisterFunction735506DF": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "38e88be6c4926f8c1c11089722bc70df75f127bd5244aceb364665d1ef1d4d2b.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2"
+            },
+            "USER_POOL_CLIENT_ID": {
+              "Ref": "UserPoolUserPoolClient40176907"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "register.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-RegisterFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/RegisterFunction/Resource",
+        "aws:asset:path": "asset.38e88be6c4926f8c1c11089722bc70df75f127bd5244aceb364665d1ef1d4d2b.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "LoginFunction66F090C6": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "9c8d7209f8664efdbe8aa06277adea41306bd1b557953a525817f51e95085680.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USER_POOL_ID": {
+              "Ref": "UserPool6BA7E5F2"
+            },
+            "USER_POOL_CLIENT_ID": {
+              "Ref": "UserPoolUserPoolClient40176907"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "login.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-LoginFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/LoginFunction/Resource",
+        "aws:asset:path": "asset.9c8d7209f8664efdbe8aa06277adea41306bd1b557953a525817f51e95085680.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "GetProfileFunction8A105C24": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "181784a31ed68fb44e143763b0014a0b523ee02c6d7f7b78f7f29c93c84008ea.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "getProfile.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-GetProfileFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/GetProfileFunction/Resource",
+        "aws:asset:path": "asset.181784a31ed68fb44e143763b0014a0b523ee02c6d7f7b78f7f29c93c84008ea.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "UpdateProfileFunction2A160882": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "adf3f835e0004f3caf84fdd0ccda7ad627134f824891c1753cbecc7a5d1932df.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "updateProfile.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-UpdateProfileFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/UpdateProfileFunction/Resource",
+        "aws:asset:path": "asset.adf3f835e0004f3caf84fdd0ccda7ad627134f824891c1753cbecc7a5d1932df.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "FollowUserFunctionD86228D7": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "9d25890292e0eb42d29e7e199fa0aaa6702f7711764cc60198948daabe980f53.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            },
+            "FOLLOWS_TABLE": {
+              "Ref": "FollowsTable7B81FE10"
+            }
+          }
+        },
+        "Handler": "followUser.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-FollowUserFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/FollowUserFunction/Resource",
+        "aws:asset:path": "asset.9d25890292e0eb42d29e7e199fa0aaa6702f7711764cc60198948daabe980f53.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "UnfollowUserFunction2E9DAACA": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "2471219096f546a914ece9eee51d1f70aa3caeb648fe864b178dc709937f7263.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            },
+            "FOLLOWS_TABLE": {
+              "Ref": "FollowsTable7B81FE10"
+            }
+          }
+        },
+        "Handler": "unfollowUser.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-UnfollowUserFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/UnfollowUserFunction/Resource",
+        "aws:asset:path": "asset.2471219096f546a914ece9eee51d1f70aa3caeb648fe864b178dc709937f7263.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "CheckFollowingFunctionF22CC9B0": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "7153ae2f04e072299fba6bb67b5341e3df1c44af7685a6ae20ab84d684ce4fe1.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "FOLLOWS_TABLE": {
+              "Ref": "FollowsTable7B81FE10"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "checkFollowing.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-CheckFollowingFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/CheckFollowingFunction/Resource",
+        "aws:asset:path": "asset.7153ae2f04e072299fba6bb67b5341e3df1c44af7685a6ae20ab84d684ce4fe1.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "CreatePostFunction56510812": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "e90006b17df26597c7122e1c6994397b5267e836493e4ccbe1f96bcdff48091f.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "POSTS_TABLE": {
+              "Ref": "PostsTableC82B36F0"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "createPost.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-CreatePostFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/CreatePostFunction/Resource",
+        "aws:asset:path": "asset.e90006b17df26597c7122e1c6994397b5267e836493e4ccbe1f96bcdff48091f.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "GetPostsFunctionC3346FC5": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "0be5aabd8cee6ff32bfd9351975e56372843d6e8f76eb66e311d2520cc7c7b03.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "POSTS_TABLE": {
+              "Ref": "PostsTableC82B36F0"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "getPosts.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-GetPostsFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/GetPostsFunction/Resource",
+        "aws:asset:path": "asset.0be5aabd8cee6ff32bfd9351975e56372843d6e8f76eb66e311d2520cc7c7b03.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "LikePostFunctionEAEFAE85": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-485312124475-us-east-1",
+          "S3Key": "a82b3c522f1a5b83c23c7798c49a894caecdb7e7b822bd135b040735cbe95ab1.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "POSTS_TABLE": {
+              "Ref": "PostsTableC82B36F0"
+            },
+            "LIKES_TABLE": {
+              "Ref": "LikesTable9511B0A4"
+            },
+            "USERS_TABLE": {
+              "Ref": "UsersTable9725E9C8"
+            }
+          }
+        },
+        "Handler": "likePost.handler",
+        "Role": "arn:aws:iam::485312124475:role/AppStack-LikePostFunctionRole",
+        "Runtime": "nodejs22.x"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/LikePostFunction/Resource",
+        "aws:asset:path": "asset.a82b3c522f1a5b83c23c7798c49a894caecdb7e7b822bd135b040735cbe95ab1.zip",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "WebsiteBucket75C24D94": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "AppStack/WebsiteBucket/Resource"
+      }
+    },
+    "WebsiteBucketPolicyE10E3262": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "WebsiteBucket75C24D94"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "CanonicalUser": {
+                  "Fn::GetAtt": [
+                    "OriginAccessIdentityDF1E3CAC",
+                    "S3CanonicalUserId"
+                  ]
+                }
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "WebsiteBucket75C24D94",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "WebsiteBucket75C24D94",
+                          "Arn"
+                        ]
+                      },
+                      "/*"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": "s3:GetObject",
+              "Effect": "Allow",
+              "Principal": {
+                "CanonicalUser": {
+                  "Fn::GetAtt": [
+                    "OriginAccessIdentityDF1E3CAC",
+                    "S3CanonicalUserId"
+                  ]
+                }
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "WebsiteBucket75C24D94",
+                        "Arn"
+                      ]
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/WebsiteBucket/Policy/Resource"
+      }
+    },
+    "OriginAccessIdentityDF1E3CAC": {
+      "Type": "AWS::CloudFront::CloudFrontOriginAccessIdentity",
+      "Properties": {
+        "CloudFrontOriginAccessIdentityConfig": {
+          "Comment": "Allow CloudFront to access the S3 bucket"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/OriginAccessIdentity/Resource"
+      }
+    },
+    "Distribution830FAC52": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "CustomErrorResponses": [
+            {
+              "ErrorCachingMinTTL": 0,
+              "ErrorCode": 403,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            },
+            {
+              "ErrorCachingMinTTL": 0,
+              "ErrorCode": 404,
+              "ResponseCode": 200,
+              "ResponsePagePath": "/index.html"
+            }
+          ],
+          "DefaultCacheBehavior": {
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "Compress": true,
+            "TargetOriginId": "AppStackDistributionOrigin1FA502580",
+            "ViewerProtocolPolicy": "redirect-to-https"
+          },
+          "DefaultRootObject": "index.html",
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "WebsiteBucket75C24D94",
+                  "RegionalDomainName"
+                ]
+              },
+              "Id": "AppStackDistributionOrigin1FA502580",
+              "S3OriginConfig": {
+                "OriginAccessIdentity": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "origin-access-identity/cloudfront/",
+                      {
+                        "Ref": "OriginAccessIdentityDF1E3CAC"
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/Distribution/Resource"
+      }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/22Qy27CMBBFv6V741KokLoMQUhdVKDQrpHjTMKAY0eZSVEU+d8r51FSqas5d+687JVcbTZy+aTutNDZbWEwld2Jlb4Jdadzp11hkZ3svgjqo3NGxLn95Qlig2B5bj0y7xlYRm6n5rlOnIGIWelLCZa9yFqrSpelsvtUqYFQ3oMXqsJCMdxVK7sEiKMKgzvhDirj2nJcOVMnVkU/Z4AEyDW1hq0iEB/AF5cFc6TJHSf37IVRZZop2cW5PUJdIhE6K/aN1Rwgzu3EXtD6rIiASUYhCFrLbtvoG3C/ccDQMtIQjs6gbh/pQXuhjWuyvHaWZXeosUAbaQ1E0xeGjjjU7EPNvxU7JK4xbaZT59r7Py8+NFw1LPrDw2+hLbywLgN5pefv1at8eZPLpyshLurGMpYgkyH+AENYO7NFAgAA"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/CDKMetadata/Default"
+      }
+    }
+  },
+  "Outputs": {
+    "MicroBloggingApiEndpoint2C3F2ADE": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "MicroBloggingApi546F5920"
+            },
+            ".execute-api.us-east-1.",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/",
+            {
+              "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+            },
+            "/"
+          ]
+        ]
+      }
+    },
+    "ViteApiUrl": {
+      "Description": "API Gateway endpoint URL",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "MicroBloggingApi546F5920"
+            },
+            ".execute-api.us-east-1.",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/",
+            {
+              "Ref": "MicroBloggingApiDeploymentStageprod11C6ED1B"
+            },
+            "/"
+          ]
+        ]
+      }
+    },
+    "ViteUserPoolId": {
+      "Description": "Cognito User Pool ID",
+      "Value": {
+        "Ref": "UserPool6BA7E5F2"
+      }
+    },
+    "ViteUserPoolClientId": {
+      "Description": "Cognito User Pool Client ID",
+      "Value": {
+        "Ref": "UserPoolUserPoolClient40176907"
+      }
+    },
+    "ViteIdentityPoolId": {
+      "Description": "Cognito Identity Pool ID",
+      "Value": {
+        "Ref": "IdentityPool"
+      }
+    },
+    "WebsiteBucketName": {
+      "Description": "S3 bucket name for frontend hosting",
+      "Value": {
+        "Ref": "WebsiteBucket75C24D94"
+      }
+    },
+    "CloudFrontDistributionId": {
+      "Description": "CloudFront distribution ID for cache invalidation",
+      "Value": {
+        "Ref": "Distribution830FAC52"
+      }
+    },
+    "CloudFrontDomainName": {
+      "Description": "CloudFront URL for the micro-blogging frontend",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "Distribution830FAC52",
+                "DomainName"
+              ]
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Type": "AWS::SSM::Parameter::Value<String>",
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+    }
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  {
+                    "Ref": "BootstrapVersion"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+        }
+      ]
+    }
+  }
+}
