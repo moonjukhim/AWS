@@ -2,3 +2,4 @@
 .sfdx/
 .sfdx/*
 .env
+__pycache__
