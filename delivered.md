@@ -21,7 +21,7 @@
 | Agentic AI Foundations                                               | 2026-02-10 |
 | Machine Learning Engineering on AWS                                  | 2026-01-23 |
 | Developing Generative AI Applications on AWS                         | 2026-01-16 |
-| **2026년**                                                           |            |
+| **2026년-------------------------------------**                      |            |
 | Architecting on AWS                                                  | 2025-12-18 |
 | Running Containers on Amazon Elastic Kubernetes Service (Amazon EKS) | 2025-12-12 |
 | Agentic AI Foundations                                               | 2025-11-21 |
