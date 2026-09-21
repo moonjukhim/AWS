@@ -2,7 +2,7 @@
 
 [agentcore-samples](https://github.com/awslabs/agentcore-samples)
 
-###
+##### event=driven-claims-agent
 
 보험 청구가 이메일로 들어오면 자동으로 판단하고, 확신도에 따라 자동 처리와 사람 검토로 나눕니다.
 
@@ -18,3 +18,7 @@
 
 확인내용 : 라우팅과 프롬프트 체이닝 패턴(두 에이전트 순차 실행), Human-in-the-loop, AgentCore
 Policy·Memory·Evaluation.
+
+---
+
+##### Bedrock flows
