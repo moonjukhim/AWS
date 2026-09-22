@@ -1,0 +1,29 @@
+Parameters:
+  VpcId:
+    Type: String
+    Description: "The ID of the Amazon Virtual Private Cloud (VPC) that SageMaker uses for communication."
+    
+  Subnets:
+    Type: String
+    Description: "The comma separated list of VPC subnet IDs that SageMaker uses for communication."
+
+Mappings:
+  RegionMapARN:
+    us-east-1:
+      jupyterarn: 'arn:aws:sagemaker:us-east-1:081325390199:image/jupyter-server-3'
+    us-west-2:
+      jupyterarn: 'arn:aws:sagemaker:us-west-2:236514542706:image/jupyter-server-3'
+
+Resources:
+  SageMakerDomain:
+    Type: AWS::SageMaker::Domain
+    Properties:
+      DomainName: SageMaker-Domain
+      VpcId: !Ref VpcId
+      SubnetIds: !Split [',', !Ref Subnets ]
+      AuthMode: IAM
+      DefaultUserSettings:
+        ExecutionRole: !Join ["", ["arn:aws:iam::", !Ref AWS::AccountId, ":role/SageMakerExecutionRole"] ]
+        JupyterServerAppSettings:
+          DefaultResourceSpec:
+            SageMakerImageArn: !FindInMap [RegionMapARN, !Ref AWS::Region, jupyterarn]

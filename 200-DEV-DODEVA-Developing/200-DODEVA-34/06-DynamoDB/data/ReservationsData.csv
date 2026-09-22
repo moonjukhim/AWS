@@ -1,0 +1,1001 @@
+CustomerId,City,Date
+1,Pittsburgh,10/2/2019
+2,Seattle,9/21/2019
+3,Reno,9/16/2019
+4,Philadelphia,9/29/2019
+5,Reno,9/18/2019
+6,Pittsburgh,10/2/2019
+7,Memphis,9/26/2019
+8,Reno,9/13/2019
+9,Carson City,9/12/2019
+10,San Antonio,9/8/2019
+11,Phoenix,9/10/2019
+12,Reno,9/16/2019
+13,Philadelphia,9/28/2019
+14,Pittsburgh,10/1/2019
+15,Reno,9/14/2019
+16,Dallas,9/11/2019
+17,Boston,9/25/2019
+18,Phoenix,9/10/2019
+19,Dallas,9/11/2019
+20,Pittsburgh,10/1/2019
+21,Dallas,9/20/2019
+22,Dallas,9/19/2019
+23,New York City,10/5/2019
+24,Boston,9/24/2019
+25,Phoenix,9/10/2019
+26,New York City,10/4/2019
+27,Reno,9/15/2019
+28,Reno,9/16/2019
+29,Seattle,9/22/2019
+30,Memphis,9/27/2019
+31,Boston,9/25/2019
+32,San Francisco,9/30/2019
+33,Boston,9/24/2019
+34,Las Vegas,10/7/2019
+35,Reno,9/13/2019
+36,Reno,9/16/2019
+37,Memphis,9/26/2019
+38,Reno,9/17/2019
+39,Philadelphia,9/28/2019
+40,Las Vegas,10/7/2019
+41,Dallas,9/20/2019
+42,Reno,9/18/2019
+43,Memphis,9/27/2019
+44,Boston,9/25/2019
+45,Pittsburgh,10/2/2019
+46,Boston,9/25/2019
+47,Reno,9/16/2019
+48,Reno,9/18/2019
+49,Seattle,9/22/2019
+50,Phoenix,9/10/2019
+51,Reno,9/17/2019
+52,Reno,9/13/2019
+53,Reno,9/14/2019
+54,Memphis,9/26/2019
+55,Phoenix,9/10/2019
+56,Philadelphia,9/28/2019
+57,Albuquerque,9/9/2019
+58,Reno,9/18/2019
+59,Dallas,9/11/2019
+60,Reno,9/15/2019
+61,Seattle,9/21/2019
+62,Reno,9/16/2019
+63,Reno,9/14/2019
+64,Boston,9/24/2019
+65,Seattle,9/22/2019
+66,San Antonio,9/8/2019
+67,Las Vegas,10/7/2019
+68,Albuquerque,9/9/2019
+69,Boston,9/24/2019
+70,Albuquerque,9/9/2019
+71,Seattle,9/23/2019
+72,New York City,10/4/2019
+73,Phoenix,9/10/2019
+74,Reno,9/18/2019
+75,New York City,10/4/2019
+76,San Antonio,9/8/2019
+77,New York City,10/3/2019
+78,Dallas,9/20/2019
+79,New York City,10/5/2019
+80,Pittsburgh,10/1/2019
+81,Boston,9/24/2019
+82,Carson City,9/12/2019
+83,Boston,9/24/2019
+84,New York City,10/3/2019
+85,Carson City,9/12/2019
+86,Reno,9/15/2019
+87,Phoenix,9/10/2019
+88,Boston,9/25/2019
+89,New York City,10/5/2019
+90,San Antonio,9/8/2019
+91,Memphis,9/27/2019
+92,Reno,9/18/2019
+93,Philadelphia,9/29/2019
+94,Seattle,9/23/2019
+95,San Francisco,9/29/2019
+96,Albuquerque,9/9/2019
+97,Reno,9/16/2019
+98,San Antonio,9/8/2019
+99,Dallas,9/11/2019
+100,Boston,9/23/2019
+101,Phoenix,9/10/2019
+102,Reno,9/16/2019
+103,New York City,10/5/2019
+104,Reno,9/16/2019
+105,New York City,10/3/2019
+106,Pittsburgh,10/2/2019
+107,Pittsburgh,10/2/2019
+108,Philadelphia,9/28/2019
+109,Dallas,9/19/2019
+110,Reno,9/17/2019
+111,Albuquerque,9/9/2019
+112,Reno,9/18/2019
+113,Seattle,9/21/2019
+114,Pittsburgh,10/1/2019
+115,New York City,10/4/2019
+116,Dallas,9/19/2019
+117,Las Vegas,10/7/2019
+118,New York City,10/4/2019
+119,San Francisco,9/29/2019
+120,Reno,9/18/2019
+121,Reno,9/18/2019
+122,Dallas,9/11/2019
+123,San Antonio,9/8/2019
+124,San Antonio,9/8/2019
+125,Reno,9/18/2019
+126,Reno,9/17/2019
+127,Albuquerque,9/9/2019
+128,Reno,9/13/2019
+129,Albuquerque,9/9/2019
+130,Pittsburgh,10/1/2019
+131,Dallas,9/11/2019
+132,San Francisco,9/29/2019
+133,New York City,10/5/2019
+134,Memphis,9/27/2019
+135,Boston,9/24/2019
+136,New York City,10/6/2019
+137,Pittsburgh,10/1/2019
+138,New York City,10/5/2019
+139,New York City,10/4/2019
+140,Boston,9/24/2019
+141,Dallas,9/11/2019
+142,Reno,9/14/2019
+143,Memphis,9/27/2019
+144,Reno,9/16/2019
+145,Dallas,9/19/2019
+146,New York City,10/3/2019
+147,Carson City,9/12/2019
+148,Carson City,9/12/2019
+149,Reno,9/14/2019
+150,Carson City,9/12/2019
+151,New York City,10/5/2019
+152,San Francisco,9/29/2019
+153,Memphis,9/27/2019
+154,Pittsburgh,10/2/2019
+155,Reno,9/15/2019
+156,Carson City,9/12/2019
+157,Reno,9/15/2019
+158,Boston,9/25/2019
+159,Dallas,9/19/2019
+160,New York City,10/3/2019
+161,Memphis,9/27/2019
+162,Memphis,9/27/2019
+163,San Antonio,9/8/2019
+164,Philadelphia,9/28/2019
+165,Dallas,9/19/2019
+166,New York City,10/6/2019
+167,Phoenix,9/10/2019
+168,San Francisco,9/29/2019
+169,Boston,9/25/2019
+170,Reno,9/16/2019
+171,Dallas,9/19/2019
+172,New York City,10/3/2019
+173,San Francisco,9/30/2019
+174,Dallas,9/19/2019
+175,Pittsburgh,10/2/2019
+176,Las Vegas,10/7/2019
+177,Memphis,9/26/2019
+178,Las Vegas,10/7/2019
+179,Reno,9/17/2019
+180,New York City,10/6/2019
+181,Memphis,9/27/2019
+182,Reno,9/17/2019
+183,San Francisco,9/30/2019
+184,Dallas,9/19/2019
+185,Memphis,9/26/2019
+186,San Antonio,9/8/2019
+187,Reno,9/16/2019
+188,San Francisco,9/30/2019
+189,Reno,9/18/2019
+190,Dallas,9/11/2019
+191,Philadelphia,9/28/2019
+192,New York City,10/6/2019
+193,Boston,9/24/2019
+194,Phoenix,9/10/2019
+195,Memphis,9/26/2019
+196,Reno,9/13/2019
+197,Philadelphia,9/28/2019
+198,Reno,9/15/2019
+199,Pittsburgh,10/1/2019
+200,Boston,9/24/2019
+201,Pittsburgh,10/1/2019
+202,Reno,9/15/2019
+203,San Francisco,9/29/2019
+204,San Francisco,9/30/2019
+205,Boston,9/23/2019
+206,Dallas,9/19/2019
+207,Boston,9/23/2019
+208,Reno,9/17/2019
+209,Albuquerque,9/9/2019
+210,New York City,10/5/2019
+211,Philadelphia,9/28/2019
+212,New York City,10/3/2019
+213,Dallas,9/11/2019
+214,Reno,9/16/2019
+215,Memphis,9/27/2019
+216,Pittsburgh,10/1/2019
+217,Reno,9/16/2019
+218,San Francisco,9/30/2019
+219,Carson City,9/12/2019
+220,Reno,9/17/2019
+221,New York City,10/4/2019
+222,Carson City,9/12/2019
+223,Dallas,9/19/2019
+224,Dallas,9/20/2019
+225,Philadelphia,9/28/2019
+226,New York City,10/3/2019
+227,Seattle,9/22/2019
+228,Las Vegas,10/7/2019
+229,Albuquerque,9/9/2019
+230,San Francisco,9/30/2019
+231,New York City,10/6/2019
+232,Memphis,9/27/2019
+233,Reno,9/13/2019
+234,New York City,10/6/2019
+235,Albuquerque,9/9/2019
+236,Seattle,9/21/2019
+237,Phoenix,9/10/2019
+238,Phoenix,9/10/2019
+239,Dallas,9/11/2019
+240,Memphis,9/27/2019
+241,Dallas,9/20/2019
+242,Reno,9/16/2019
+243,Seattle,9/22/2019
+244,Seattle,9/22/2019
+245,Seattle,9/21/2019
+246,Memphis,9/27/2019
+247,Seattle,9/21/2019
+248,New York City,10/3/2019
+249,Las Vegas,10/7/2019
+250,Dallas,9/20/2019
+251,Reno,9/16/2019
+252,Boston,9/24/2019
+253,Pittsburgh,10/2/2019
+254,San Francisco,9/30/2019
+255,Seattle,9/21/2019
+256,Phoenix,9/10/2019
+257,Albuquerque,9/9/2019
+258,Reno,9/18/2019
+259,Reno,9/14/2019
+260,New York City,10/6/2019
+261,Reno,9/16/2019
+262,Memphis,9/26/2019
+263,Reno,9/14/2019
+264,Austin,9/8/2019
+265,New York City,10/3/2019
+266,Pittsburgh,10/2/2019
+267,Memphis,9/26/2019
+268,Phoenix,9/10/2019
+269,Reno,9/17/2019
+270,Reno,9/16/2019
+271,New York City,10/4/2019
+272,San Francisco,9/30/2019
+273,Reno,9/18/2019
+274,Seattle,9/22/2019
+275,Dallas,9/11/2019
+276,New York City,10/6/2019
+277,San Francisco,9/29/2019
+278,Las Vegas,10/7/2019
+279,Boston,9/25/2019
+280,Reno,9/16/2019
+281,San Francisco,9/30/2019
+282,Carson City,9/12/2019
+283,Boston,9/24/2019
+284,Carson City,9/12/2019
+285,Reno,9/15/2019
+286,New York City,10/5/2019
+287,Memphis,9/27/2019
+288,Memphis,9/26/2019
+289,San Francisco,9/30/2019
+290,New York City,10/3/2019
+291,Philadelphia,9/28/2019
+292,Phoenix,9/10/2019
+293,San Francisco,9/29/2019
+294,Reno,9/15/2019
+295,Reno,9/16/2019
+296,Philadelphia,9/28/2019
+297,Memphis,9/27/2019
+298,Dallas,9/11/2019
+299,Memphis,9/26/2019
+300,Reno,9/17/2019
+301,Albuquerque,9/9/2019
+302,Boston,9/24/2019
+303,San Francisco,9/30/2019
+304,Reno,9/18/2019
+305,Reno,9/18/2019
+306,Dallas,9/19/2019
+307,Reno,9/18/2019
+308,Austin,9/8/2019
+309,Dallas,9/19/2019
+310,Dallas,9/19/2019
+311,Memphis,9/26/2019
+312,Seattle,9/21/2019
+313,Dallas,9/11/2019
+314,Austin,9/8/2019
+315,Boston,9/25/2019
+316,San Antonio,9/9/2019
+317,Dallas,9/10/2019
+318,New York City,10/5/2019
+319,Las Vegas,10/7/2019
+320,Pittsburgh,10/2/2019
+321,Boston,9/23/2019
+322,New York City,10/4/2019
+323,San Francisco,9/30/2019
+324,Boston,9/25/2019
+325,Boston,9/25/2019
+326,Las Vegas,10/7/2019
+327,New York City,10/4/2019
+328,Boston,9/25/2019
+329,Pittsburgh,10/1/2019
+330,Seattle,9/22/2019
+331,Seattle,9/22/2019
+332,Carson City,9/12/2019
+333,Reno,9/14/2019
+334,Dallas,9/11/2019
+335,Las Vegas,10/7/2019
+336,Reno,9/15/2019
+337,Dallas,9/11/2019
+338,Pittsburgh,10/2/2019
+339,New York City,10/4/2019
+340,Reno,9/18/2019
+341,New York City,10/5/2019
+342,Seattle,9/21/2019
+343,Reno,9/18/2019
+344,Pittsburgh,10/2/2019
+345,Boston,9/23/2019
+346,Seattle,9/22/2019
+347,Austin,9/8/2019
+348,Seattle,9/22/2019
+349,New York City,10/3/2019
+350,San Francisco,9/29/2019
+351,Seattle,9/22/2019
+352,Las Vegas,10/7/2019
+353,Reno,9/17/2019
+354,Memphis,9/26/2019
+355,Memphis,9/26/2019
+356,Dallas,9/20/2019
+357,Reno,9/16/2019
+358,Reno,9/14/2019
+359,San Antonio,9/9/2019
+360,Austin,9/8/2019
+361,Reno,9/18/2019
+362,San Francisco,9/30/2019
+363,New York City,10/5/2019
+364,Dallas,9/19/2019
+365,New York City,10/3/2019
+366,Reno,9/17/2019
+367,Las Vegas,10/7/2019
+368,New York City,10/3/2019
+369,Dallas,9/10/2019
+370,Dallas,9/19/2019
+371,Reno,9/14/2019
+372,Philadelphia,9/28/2019
+373,San Francisco,9/29/2019
+374,Memphis,9/25/2019
+375,Dallas,9/19/2019
+376,Reno,9/16/2019
+377,Pittsburgh,10/2/2019
+378,Seattle,9/21/2019
+379,New York City,10/6/2019
+380,Reno,9/17/2019
+381,Boston,9/24/2019
+382,Reno,9/14/2019
+383,San Francisco,9/30/2019
+384,Memphis,9/25/2019
+385,Philadelphia,9/28/2019
+386,San Antonio,9/9/2019
+387,San Francisco,9/29/2019
+388,Reno,9/17/2019
+389,Dallas,9/20/2019
+390,Pittsburgh,10/2/2019
+391,Boston,9/24/2019
+392,Reno,9/18/2019
+393,Dallas,9/10/2019
+394,New York City,10/4/2019
+395,Memphis,9/25/2019
+396,Memphis,9/26/2019
+397,Pittsburgh,10/1/2019
+398,Las Vegas,10/7/2019
+399,New York City,10/5/2019
+400,Seattle,9/22/2019
+401,Reno,9/18/2019
+402,Seattle,9/21/2019
+403,Reno,9/15/2019
+404,New York City,10/6/2019
+405,Memphis,9/27/2019
+406,San Antonio,9/9/2019
+407,Reno,9/18/2019
+408,Austin,9/8/2019
+409,Reno,9/13/2019
+410,Reno,9/16/2019
+411,Memphis,9/27/2019
+412,San Antonio,9/9/2019
+413,Memphis,9/26/2019
+414,Philadelphia,9/28/2019
+415,Seattle,9/22/2019
+416,Pittsburgh,10/2/2019
+417,Dallas,9/18/2019
+418,Austin,9/8/2019
+419,Dallas,9/18/2019
+420,New York City,10/3/2019
+421,Pittsburgh,10/1/2019
+422,Reno,9/15/2019
+423,Reno,9/14/2019
+424,New York City,10/5/2019
+425,Memphis,9/26/2019
+426,Memphis,9/25/2019
+427,San Francisco,9/29/2019
+428,New York City,10/4/2019
+429,Pittsburgh,10/2/2019
+430,Memphis,9/26/2019
+431,Boston,9/23/2019
+432,Reno,9/17/2019
+433,Austin,9/8/2019
+434,Philadelphia,9/28/2019
+435,Seattle,9/22/2019
+436,Memphis,9/27/2019
+437,Seattle,9/22/2019
+438,Memphis,9/26/2019
+439,Dallas,9/20/2019
+440,Dallas,9/19/2019
+441,Reno,9/15/2019
+442,Austin,9/8/2019
+443,New York City,10/4/2019
+444,New York City,10/4/2019
+445,Reno,9/16/2019
+446,New York City,10/3/2019
+447,Dallas,9/10/2019
+448,Reno,9/16/2019
+449,San Antonio,9/9/2019
+450,San Francisco,9/30/2019
+451,Carson City,9/12/2019
+452,Reno,9/17/2019
+453,Philadelphia,9/28/2019
+454,New York City,10/3/2019
+455,Reno,9/14/2019
+456,Memphis,9/26/2019
+457,San Francisco,9/29/2019
+458,Dallas,9/18/2019
+459,Pittsburgh,10/2/2019
+460,Seattle,9/21/2019
+461,Dallas,9/20/2019
+462,Philadelphia,9/28/2019
+463,Dallas,9/20/2019
+464,Reno,9/14/2019
+465,Carson City,9/12/2019
+466,Memphis,9/26/2019
+467,Pittsburgh,10/1/2019
+468,Las Vegas,10/7/2019
+469,Pittsburgh,10/2/2019
+470,Dallas,9/18/2019
+471,Boston,9/23/2019
+472,Austin,9/8/2019
+473,New York City,10/3/2019
+474,San Francisco,9/29/2019
+475,Reno,9/13/2019
+476,New York City,10/5/2019
+477,Boston,9/23/2019
+478,Memphis,9/26/2019
+479,Boston,9/24/2019
+480,Dallas,9/18/2019
+481,New York City,10/4/2019
+482,Reno,9/15/2019
+483,Dallas,9/11/2019
+484,Seattle,9/21/2019
+485,Dallas,9/20/2019
+486,Philadelphia,9/28/2019
+487,San Francisco,9/30/2019
+488,Reno,9/13/2019
+489,San Francisco,9/29/2019
+490,San Francisco,9/29/2019
+491,Memphis,9/25/2019
+492,New York City,10/5/2019
+493,Reno,9/13/2019
+494,Memphis,9/25/2019
+495,Reno,9/16/2019
+496,Boston,9/24/2019
+497,San Francisco,9/29/2019
+498,New York City,10/3/2019
+499,San Antonio,9/9/2019
+500,Reno,9/15/2019
+501,San Francisco,9/29/2019
+502,Dallas,9/19/2019
+503,Las Vegas,10/7/2019
+504,Reno,9/13/2019
+505,Dallas,9/11/2019
+506,Boston,9/23/2019
+507,Boston,9/23/2019
+508,Memphis,9/25/2019
+509,San Francisco,9/29/2019
+510,Pittsburgh,10/1/2019
+511,Dallas,9/19/2019
+512,Dallas,9/19/2019
+513,Reno,9/15/2019
+514,New York City,10/4/2019
+515,Pittsburgh,10/2/2019
+516,Pittsburgh,10/1/2019
+517,Las Vegas,10/7/2019
+518,Reno,9/16/2019
+519,Las Vegas,10/7/2019
+520,Philadelphia,9/27/2019
+521,San Francisco,9/29/2019
+522,New York City,10/3/2019
+523,Reno,9/16/2019
+524,Memphis,9/26/2019
+525,Reno,9/17/2019
+526,Reno,9/15/2019
+527,Reno,9/17/2019
+528,Boston,9/24/2019
+529,Dallas,9/18/2019
+530,Dallas,9/18/2019
+531,Philadelphia,9/28/2019
+532,Boston,9/24/2019
+533,Reno,9/13/2019
+534,Dallas,9/20/2019
+535,Philadelphia,9/28/2019
+536,Dallas,9/11/2019
+537,Pittsburgh,10/1/2019
+538,New York City,10/3/2019
+539,Dallas,9/11/2019
+540,Pittsburgh,10/2/2019
+541,Dallas,9/11/2019
+542,San Antonio,9/9/2019
+543,Dallas,9/10/2019
+544,San Antonio,9/9/2019
+545,Seattle,9/22/2019
+546,Dallas,9/20/2019
+547,Boston,9/23/2019
+548,Seattle,9/21/2019
+549,Carson City,9/12/2019
+550,Reno,9/14/2019
+551,Reno,9/15/2019
+552,Las Vegas,10/7/2019
+553,Reno,9/14/2019
+554,New York City,10/5/2019
+555,San Francisco,9/29/2019
+556,Reno,9/13/2019
+557,San Francisco,9/30/2019
+558,Dallas,9/10/2019
+559,New York City,10/5/2019
+560,Boston,9/24/2019
+561,Dallas,9/11/2019
+562,Dallas,9/10/2019
+563,Dallas,9/18/2019
+564,Philadelphia,9/27/2019
+565,San Francisco,9/30/2019
+566,Dallas,9/20/2019
+567,Philadelphia,9/27/2019
+568,Dallas,9/10/2019
+569,Dallas,9/18/2019
+570,Philadelphia,9/28/2019
+571,Dallas,9/20/2019
+572,San Francisco,9/29/2019
+573,New York City,10/6/2019
+574,Seattle,9/22/2019
+575,Pittsburgh,10/1/2019
+576,New York City,10/5/2019
+577,Memphis,9/26/2019
+578,Boston,9/24/2019
+579,Reno,9/17/2019
+580,Dallas,9/19/2019
+581,Boston,9/23/2019
+582,Pittsburgh,10/1/2019
+583,San Francisco,9/29/2019
+584,New York City,10/5/2019
+585,Reno,9/15/2019
+586,Memphis,9/26/2019
+587,Dallas,9/20/2019
+588,New York City,10/3/2019
+589,Albuquerque,9/8/2019
+590,Reno,9/16/2019
+591,Boston,9/24/2019
+592,Dallas,9/19/2019
+593,New York City,10/5/2019
+594,Reno,9/16/2019
+595,Albuquerque,9/8/2019
+596,Memphis,9/26/2019
+597,Seattle,9/21/2019
+598,Memphis,9/25/2019
+599,Dallas,9/18/2019
+600,Dallas,9/19/2019
+601,Memphis,9/25/2019
+602,Boston,9/24/2019
+603,New York City,10/3/2019
+604,Reno,9/15/2019
+605,Pittsburgh,10/2/2019
+606,New York City,10/6/2019
+607,Memphis,9/25/2019
+608,New York City,10/5/2019
+609,Albuquerque,9/8/2019
+610,Las Vegas,10/7/2019
+611,Reno,9/16/2019
+612,Dallas,9/19/2019
+613,Dallas,9/19/2019
+614,Reno,9/13/2019
+615,Dallas,9/10/2019
+616,New York City,10/6/2019
+617,Reno,9/14/2019
+618,Reno,9/14/2019
+619,Carson City,9/12/2019
+620,Pittsburgh,10/1/2019
+621,Philadelphia,9/27/2019
+622,New York City,10/6/2019
+623,Philadelphia,9/27/2019
+624,Las Vegas,10/7/2019
+625,Reno,9/13/2019
+626,Reno,9/16/2019
+627,Philadelphia,9/28/2019
+628,Seattle,9/22/2019
+629,New York City,10/6/2019
+630,San Francisco,9/29/2019
+631,Memphis,9/25/2019
+632,Dallas,9/18/2019
+633,New York City,10/5/2019
+634,Memphis,9/26/2019
+635,Carson City,9/12/2019
+636,Seattle,9/22/2019
+637,San Francisco,9/29/2019
+638,San Francisco,9/29/2019
+639,Philadelphia,9/27/2019
+640,Reno,9/17/2019
+641,Memphis,9/26/2019
+642,Reno,9/16/2019
+643,New York City,10/3/2019
+644,Dallas,9/18/2019
+645,New York City,10/4/2019
+646,New York City,10/6/2019
+647,Carson City,9/12/2019
+648,Philadelphia,9/27/2019
+649,Reno,9/14/2019
+650,San Francisco,9/30/2019
+651,New York City,10/3/2019
+652,Reno,9/17/2019
+653,Reno,9/16/2019
+654,Albuquerque,9/8/2019
+655,Reno,9/16/2019
+656,Memphis,9/25/2019
+657,Philadelphia,9/28/2019
+658,Dallas,9/20/2019
+659,Seattle,9/21/2019
+660,New York City,10/4/2019
+661,Dallas,9/20/2019
+662,Seattle,9/21/2019
+663,Memphis,9/25/2019
+664,Seattle,9/21/2019
+665,Seattle,9/21/2019
+666,Dallas,9/20/2019
+667,Philadelphia,9/27/2019
+668,Reno,9/15/2019
+669,Phoenix,9/9/2019
+670,Seattle,9/21/2019
+671,Pittsburgh,10/2/2019
+672,Reno,9/16/2019
+673,Seattle,9/21/2019
+674,Dallas,9/19/2019
+675,Dallas,9/10/2019
+676,Philadelphia,9/27/2019
+677,San Francisco,9/30/2019
+678,Seattle,9/22/2019
+679,Reno,9/15/2019
+680,Reno,9/14/2019
+681,Reno,9/13/2019
+682,Reno,9/17/2019
+683,San Francisco,9/30/2019
+684,Dallas,9/10/2019
+685,Philadelphia,9/27/2019
+686,Boston,9/23/2019
+687,San Francisco,9/30/2019
+688,San Francisco,9/30/2019
+689,Philadelphia,9/28/2019
+690,New York City,10/5/2019
+691,New York City,10/3/2019
+692,Dallas,9/19/2019
+693,New York City,10/4/2019
+694,Dallas,9/10/2019
+695,San Francisco,9/30/2019
+696,Reno,9/14/2019
+697,Dallas,9/10/2019
+698,Carson City,9/12/2019
+699,New York City,10/6/2019
+700,Seattle,9/22/2019
+701,Dallas,9/19/2019
+702,Boston,9/24/2019
+703,New York City,10/5/2019
+704,Reno,9/13/2019
+705,Dallas,9/11/2019
+706,Dallas,9/11/2019
+707,Dallas,9/20/2019
+708,Reno,9/15/2019
+709,Memphis,9/26/2019
+710,Reno,9/17/2019
+711,New York City,10/4/2019
+712,Dallas,9/11/2019
+713,Reno,9/15/2019
+714,Seattle,9/21/2019
+715,San Francisco,9/29/2019
+716,Dallas,9/20/2019
+717,Seattle,9/21/2019
+718,New York City,10/5/2019
+719,Las Vegas,10/7/2019
+720,Seattle,9/21/2019
+721,Memphis,9/26/2019
+722,Carson City,9/12/2019
+723,Phoenix,9/9/2019
+724,Memphis,9/26/2019
+725,Dallas,9/10/2019
+726,Memphis,9/26/2019
+727,Dallas,9/11/2019
+728,Memphis,9/25/2019
+729,New York City,10/6/2019
+730,Reno,9/13/2019
+731,Memphis,9/26/2019
+732,Pittsburgh,10/1/2019
+733,Philadelphia,9/27/2019
+734,Boston,9/23/2019
+735,Dallas,9/11/2019
+736,Memphis,9/26/2019
+737,Boston,9/23/2019
+738,Philadelphia,9/27/2019
+739,Boston,9/23/2019
+740,New York City,10/6/2019
+741,Boston,9/23/2019
+742,San Francisco,9/29/2019
+743,Dallas,9/19/2019
+744,New York City,10/3/2019
+745,New York City,10/4/2019
+746,Albuquerque,9/8/2019
+747,New York City,10/4/2019
+748,Memphis,9/25/2019
+749,Albuquerque,9/8/2019
+750,Dallas,9/19/2019
+751,Boston,9/23/2019
+752,Carson City,9/12/2019
+753,Pittsburgh,10/2/2019
+754,Phoenix,9/9/2019
+755,New York City,10/6/2019
+756,Memphis,9/26/2019
+757,Philadelphia,9/27/2019
+758,Dallas,9/20/2019
+759,Dallas,9/11/2019
+760,Philadelphia,9/28/2019
+761,Reno,9/13/2019
+762,Boston,9/24/2019
+763,Boston,9/24/2019
+764,Dallas,9/10/2019
+765,Dallas,9/19/2019
+766,Las Vegas,10/7/2019
+767,Boston,9/24/2019
+768,Las Vegas,10/7/2019
+769,Reno,9/15/2019
+770,Dallas,9/20/2019
+771,Albuquerque,9/8/2019
+772,Carson City,9/12/2019
+773,New York City,10/3/2019
+774,Reno,9/15/2019
+775,New York City,10/6/2019
+776,New York City,10/4/2019
+777,Reno,9/14/2019
+778,Reno,9/17/2019
+779,Las Vegas,10/7/2019
+780,New York City,10/6/2019
+781,Reno,9/17/2019
+782,Memphis,9/25/2019
+783,New York City,10/2/2019
+784,Boston,9/24/2019
+785,Dallas,9/11/2019
+786,Memphis,9/25/2019
+787,Dallas,9/10/2019
+788,Dallas,9/10/2019
+789,New York City,10/2/2019
+790,Albuquerque,9/8/2019
+791,Las Vegas,10/7/2019
+792,Seattle,9/22/2019
+793,Dallas,9/18/2019
+794,Philadelphia,9/28/2019
+795,Reno,9/17/2019
+796,Memphis,9/26/2019
+797,Philadelphia,9/27/2019
+798,Phoenix,9/9/2019
+799,Seattle,9/22/2019
+800,Dallas,9/18/2019
+801,Dallas,9/19/2019
+802,Dallas,9/20/2019
+803,Albuquerque,9/8/2019
+804,Carson City,9/12/2019
+805,Dallas,9/20/2019
+806,Seattle,9/20/2019
+807,New York City,10/6/2019
+808,Phoenix,9/9/2019
+809,Seattle,9/22/2019
+810,Carson City,9/11/2019
+811,Pittsburgh,10/1/2019
+812,Philadelphia,9/28/2019
+813,Dallas,9/19/2019
+814,Pittsburgh,10/1/2019
+815,Reno,9/13/2019
+816,Memphis,9/25/2019
+817,Seattle,9/21/2019
+818,Las Vegas,10/7/2019
+819,Reno,9/13/2019
+820,San Francisco,9/29/2019
+821,Las Vegas,10/6/2019
+822,Las Vegas,10/6/2019
+823,San Francisco,9/30/2019
+824,Las Vegas,10/7/2019
+825,New York City,10/2/2019
+826,Dallas,9/19/2019
+827,Dallas,9/10/2019
+828,Philadelphia,9/27/2019
+829,Seattle,9/20/2019
+830,Pittsburgh,10/1/2019
+831,Reno,9/13/2019
+832,Phoenix,9/9/2019
+833,Las Vegas,10/7/2019
+834,Philadelphia,9/28/2019
+835,Seattle,9/22/2019
+836,Phoenix,9/9/2019
+837,Reno,9/15/2019
+838,New York City,10/5/2019
+839,Pittsburgh,10/1/2019
+840,Philadelphia,9/28/2019
+841,Carson City,9/11/2019
+842,Reno,9/15/2019
+843,Reno,9/15/2019
+844,Seattle,9/22/2019
+845,San Francisco,9/29/2019
+846,Phoenix,9/9/2019
+847,Las Vegas,10/6/2019
+848,Reno,9/14/2019
+849,New York City,10/2/2019
+850,San Francisco,9/30/2019
+851,Pittsburgh,10/1/2019
+852,Reno,9/14/2019
+853,San Francisco,9/29/2019
+854,Reno,9/16/2019
+855,Seattle,9/22/2019
+856,Seattle,9/20/2019
+857,Reno,9/17/2019
+858,New York City,10/3/2019
+859,Seattle,9/20/2019
+860,Reno,9/17/2019
+861,Carson City,9/11/2019
+862,San Francisco,9/30/2019
+863,New York City,10/2/2019
+864,Dallas,9/18/2019
+865,Reno,9/13/2019
+866,Reno,9/14/2019
+867,New York City,10/4/2019
+868,Seattle,9/21/2019
+869,Albuquerque,9/8/2019
+870,San Francisco,9/30/2019
+871,San Francisco,9/29/2019
+872,Pittsburgh,10/1/2019
+873,Seattle,9/20/2019
+874,Philadelphia,9/28/2019
+875,San Francisco,9/30/2019
+876,Boston,9/23/2019
+877,Memphis,9/26/2019
+878,Boston,9/24/2019
+879,San Francisco,9/30/2019
+880,Las Vegas,10/6/2019
+881,New York City,10/4/2019
+882,Phoenix,9/9/2019
+883,Pittsburgh,9/30/2019
+884,Albuquerque,9/8/2019
+885,Phoenix,9/9/2019
+886,Seattle,9/20/2019
+887,Seattle,9/21/2019
+888,Philadelphia,9/27/2019
+889,San Francisco,9/29/2019
+890,Pittsburgh,9/30/2019
+891,Albuquerque,9/8/2019
+892,Las Vegas,10/6/2019
+893,Reno,9/14/2019
+894,Carson City,9/11/2019
+895,Boston,9/24/2019
+896,Boston,9/23/2019
+897,Reno,9/16/2019
+898,Las Vegas,10/6/2019
+899,Reno,9/14/2019
+900,Philadelphia,9/27/2019
+901,Pittsburgh,10/1/2019
+902,Pittsburgh,10/1/2019
+903,Dallas,9/19/2019
+904,Philadelphia,9/28/2019
+905,Memphis,9/25/2019
+906,New York City,10/5/2019
+907,Dallas,9/19/2019
+908,New York City,10/2/2019
+909,New York City,10/4/2019
+910,New York City,10/5/2019
+911,Dallas,9/18/2019
+912,Philadelphia,9/27/2019
+913,Dallas,9/18/2019
+914,Pittsburgh,10/1/2019
+915,Las Vegas,10/7/2019
+916,New York City,10/3/2019
+917,Memphis,9/26/2019
+918,New York City,10/3/2019
+919,New York City,10/4/2019
+920,New York City,10/3/2019
+921,Dallas,9/19/2019
+922,Pittsburgh,10/1/2019
+923,Dallas,9/19/2019
+924,Seattle,9/22/2019
+925,Phoenix,9/9/2019
+926,Reno,9/16/2019
+927,San Francisco,9/29/2019
+928,Dallas,9/19/2019
+929,Dallas,9/18/2019
+930,New York City,10/5/2019
+931,Carson City,9/12/2019
+932,Reno,9/17/2019
+933,Pittsburgh,9/30/2019
+934,Seattle,9/22/2019
+935,Carson City,9/12/2019
+936,San Francisco,9/29/2019
+937,Dallas,9/18/2019
+938,Philadelphia,9/27/2019
+939,New York City,10/2/2019
+940,Dallas,9/10/2019
+941,Las Vegas,10/7/2019
+942,Memphis,9/25/2019
+943,New York City,10/3/2019
+944,New York City,10/3/2019
+945,Seattle,9/21/2019
+946,Carson City,9/11/2019
+947,Albuquerque,9/8/2019
+948,Reno,9/15/2019
+949,Memphis,9/25/2019
+950,Carson City,9/11/2019
+951,Carson City,9/12/2019
+952,Pittsburgh,10/1/2019
+953,Reno,9/14/2019
+954,Seattle,9/21/2019
+955,Dallas,9/18/2019
+956,Pittsburgh,9/30/2019
+957,Philadelphia,9/27/2019
+958,Philadelphia,9/28/2019
+959,San Francisco,9/29/2019
+960,Albuquerque,9/8/2019
+961,Reno,9/13/2019
+962,Memphis,9/25/2019
+963,Boston,9/23/2019
+964,Seattle,9/20/2019
+965,San Francisco,9/29/2019
+966,Albuquerque,9/8/2019
+967,Boston,9/23/2019
+968,Reno,9/14/2019
+969,Philadelphia,9/27/2019
+970,Philadelphia,9/27/2019
+971,Dallas,9/10/2019
+972,Boston,9/23/2019
+973,Memphis,9/25/2019
+974,Las Vegas,10/6/2019
+975,Dallas,9/10/2019
+976,Pittsburgh,10/1/2019
+977,Philadelphia,9/27/2019
+978,Reno,9/14/2019
+979,San Francisco,9/29/2019
+980,Carson City,9/12/2019
+981,Reno,9/15/2019
+982,Dallas,9/18/2019
+983,Carson City,9/12/2019
+984,Seattle,9/22/2019
+985,Albuquerque,9/8/2019
+986,New York City,10/4/2019
+987,New York City,10/4/2019
+988,Memphis,9/26/2019
+989,Pittsburgh,10/1/2019
+990,Carson City,9/11/2019
+991,Carson City,9/11/2019
+992,Boston,9/23/2019
+993,Dallas,9/18/2019
+994,San Francisco,9/29/2019
+995,Reno,9/13/2019
+996,New York City,10/3/2019
+997,Pittsburgh,10/1/2019
+998,Reno,9/16/2019
+999,Reno,9/12/2019
+1000,San Francisco,9/29/2019
