@@ -10,14 +10,14 @@
 
 ---
 
-| Title                                                | Date           | Status  | V.R | Expire     |
-| ---------------------------------------------------- | -------------- | ------- | --- | ---------- |
-| AWS Certified AI Practitioner                        | 2026-08-19     | 🟢 Active  |     | 2029-08-19 |
-| AWS Certified Cloud Practitioner                     |                |         |     |            |
-| AWS Certified Data Engineer - Associate              |                |         |     |            |
-| AWS Certified Developer Associate                    | 2020-03-03     | Expired |     | 2026-08-04 |
-| AWS Certified CloudOps Engineer - Associate          | 2020-08-18     | Expired |     | 2026-08-04 |
-| AWS Certified Machine Learning Engineer - Associate  |                |         |     |            |
+| Title                                                | Date           | Status      | V.R | Expire     |
+| ---------------------------------------------------- | -------------- | ----------- | --- | ---------- |
+| AWS Certified AI Practitioner                        | 2026-08-19     | 🟢 Active   |     | 2029-08-19 |
+| AWS Certified Cloud Practitioner                     |                |             |     |            |
+| AWS Certified Data Engineer - Associate              | 2026-09-28     | 🟢 Active   |     | 2029-0928  |
+| AWS Certified Developer Associate                    | 2020-03-03     | Expired     |     | 2026-08-04 |
+| AWS Certified CloudOps Engineer - Associate          | 2020-08-18     | Expired     |     | 2026-08-04 |
+| AWS Certified Machine Learning Engineer - Associate  |                |             |     |            |
 | AWS Certified Solutions Architect - Associate        | 2019-10-29     | 🟢 Active  |     | 2028-09-01 |
 | AWS Certified Generative AI Developer - Professional | 2026-05-28     | 🟢 Active  |     | 2029-05-28 |
 | AWS Certified DevOps Engineer Professional**         | 2020-08-18     | 🟢 Active  |     | 2029-08-12 |
@@ -45,6 +45,7 @@
 | 200   | BIGDAT     | Big-Data-on-AWS                                    |         |        |         |
 | 200   | COREKS     | Running-Containers-on-Elastic-Kubernetes-Service   |         |        |         |
 | 200   | CSAWAF     | Well-Architected-Best-Practices                    |         |        |         |
+| 200   | MLAGA      | Building-Agentic-AI-AgentCore                      |         |        |         |
 | 200   | DAREDS     | Building-Data-Analytics-Solutions-Amazon-Redshift  |         |        |         |
 | 200   | DBDBAW     | Planning-and-Designing-Databases-on-AWS            |         |        |         |
 | 200   | DBDWOA     | Data-Warehousing-on-AWS                            |         |        |         |
