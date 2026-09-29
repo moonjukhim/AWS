@@ -22,7 +22,7 @@
 | AWS Certified Generative AI Developer - Professional | 2026-05-28     | 🟢 Active  |     | 2029-05-28 |
 | AWS Certified DevOps Engineer Professional**         | 2020-08-18     | 🟢 Active  |     | 2029-08-12 |
 | AWS Certified Solutions Architect - Professional     | 2023-09-03     | 🟢 Active  | O   | 2028-09-01 |
-| AWS Certified Advanced Networking - Specialty        |                |         |     |            |
+| AWS Certified Advanced Networking - Specialty        |                |             |     |            |
 | AWS Certified Security - Specialty                   | 2024-01-19     | 🟢 Active  | O   | 2027-01-19 |
 | ~~AWS Certified Big Data - Specialty~~               | ~~2020-05-15~~ | Expired |     | 2023-05-15 |
 | ~~AWS Certified Data Analytics - Specialty~~         |                |         | O   |            |
