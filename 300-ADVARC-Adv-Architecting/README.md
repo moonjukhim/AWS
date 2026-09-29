@@ -15,3 +15,6 @@
 | 11  | Migrating Workloads         | --> | 200-MTMAWS-Migrating-to-AWS                  |
 | 12  | Optimizing Cost             | --> | 200-CMCFTE-Financial-Management-for-Builders |
 | 13  | Architecting for the Edge   |     |                                              |
+
+---
+
