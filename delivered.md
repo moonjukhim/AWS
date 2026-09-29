@@ -1,5 +1,9 @@
 | course_name                                                          | end_date   |
 | -------------------------------------------------------------------- | ---------- |
+| Building Advanced Agentic AI Systems                                 | 2026-10-22 |
+| Building Agentic AI with Bedrock AgentCore                           | 2026-10-20 |
+| Agentic AI Foundation                                                | 2026-10-19 |
+| Advanced Architecting on AWS                                         | 2026-10-13 |
 | Spec-drive Development with Kiro                                     | 2026-09-17 |
 | Developing Generative AI Applications on AWS                         | 2026-09-16 |
 | Developing Generative AI Applications on AWS                         | 2026-09-15 |
