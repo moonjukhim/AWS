@@ -1,6 +1,7 @@
 # SEC
 
 - [AI Agent의 구조](https://github.com/moonjukhim/AWS/tree/master/100-AI-MLAGAF-Agentic-AI-Foundation)
+  - claims-agent-bedrock-flows
 - [AgentCore]()
   - 인증, 메모리, 관측성 추가
 - [AgentCore Advanced]()
