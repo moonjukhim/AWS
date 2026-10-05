@@ -1,3 +1,0 @@
-- Class Imbalance(CI): 데이터 세트에서 유리한 그룹이 불리한 그룹보다 훨씬 더 높은 비율로 나타나는지 또는 그 반대인지 감지합니다.
-- Total Variation Distance (Total Variation Distance): 레이블 분포의 거리 측정은 유리한 클래스의 레이블 확률 분포와 불리한 클래스의 확률 분포 사이의 해밍 거리의 절반입니다.
-- Conditional Demographic Disparity in Predicted Labels(예측 라벨의 조건부 인구통계학적 불일치): 이 측정항목은 모델이 동일한 클래스에 대해 허용된 결과의 비율보다 불리한 계층에 대해 거부된 결과의 더 큰 비율을 예측했는지 여부를 조사합니다.

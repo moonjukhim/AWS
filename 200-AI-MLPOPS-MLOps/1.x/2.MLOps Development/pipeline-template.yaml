@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "A MLOPS lab"
+
+Resources:
+  buildImageProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Description: Build a Model Image
+      ServiceRole: !GetAtt buildImageProjectRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        PrivilegedMode: True
+        EnvironmentVariables:
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref ecrModelRepo
+          - Name: AWS_ACCOUNT_ID
+            Value: !Sub ${AWS::AccountId}
+          - Name: AWS_DEFAULT_REGION
+            Value: !Sub ${AWS::Region}
+          - Name: IMAGE_NAME
+            Value: trained_model
+          - Name: ECR_URI
+            Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ecrModelRepo}
+
+  deployModelPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt deployModelPipelineRole.Arn
+      ArtifactStore:
+          Type: S3
+          Location: !Ref modelArtifactBucket
+      Stages:
+        -
+          Name: Source
+          Actions:
+            -
+              Name: GetSource
+              Namespace: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: ModelSourceOutput
+              Configuration:
+                BranchName: main
+                RepositoryName: !Ref modelCodeRepository
+                PollForSourceChanges: false
+              RunOrder: 1
+        -
+          Name: Build
+          Actions:
+            -
+              Name: BuildImage
+              InputArtifacts:
+                - Name: ModelSourceOutput
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: ModelBuildOutput
+              Configuration:
+                ProjectName: !Ref buildImageProject
+                EnvironmentVariables: "[{\"name\":\"RunId\",\"value\":\"#{codepipeline.PipelineExecutionId}\",\"type\":\"PLAINTEXT\"}]"
+              RunOrder: 1
+        -
+          Name: Train
+          Actions:
+            -
+              Name: Train
+              InputArtifacts:
+                - Name: ModelSourceOutput
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: StepFunctions
+              Configuration:
+                Input: !Join
+                  - ''
+                  - - '{"BuildId":"#{codepipeline.PipelineExecutionId}",'
+                    - '"Job":"Job-#{codepipeline.PipelineExecutionId}",'
+                    - '"Model":"Model-#{codepipeline.PipelineExecutionId}",'
+                    - '"Endpoint":"Endpoint-#{codepipeline.PipelineExecutionId}",'
+                    - !Sub '"ecrArn":"${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ecrModelRepo}:#{codepipeline.PipelineExecutionId}",'
+                    - !Sub '"dataBucketPath":"s3://${modelDataBucket}/v1.0/train",'
+                    - '"triggerSource":"pipeline",'
+                    - !Sub '"DynamoDBTable":"${DynamoDBTable}",'
+                    - '"commitId":"#{Source.CommitId}",'
+                    - '"authorDate":"#{Source.AuthorDate}"}'
+                StateMachineArn: !Ref trainingStepFunction
+              OutputArtifacts:
+                - Name: trainingJobArtifact
+              RunOrder: 1
+
+  ecrModelRepo:
+    Type: AWS::ECR::Repository
+
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "RunId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "RunId"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "1"
+        WriteCapacityUnits: "1"
+      StreamSpecification:
+        StreamViewType: "NEW_IMAGE"
+
+  modelDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+
+  modelArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+
+  modelCodeRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: modelCode
+
+  trainingStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !GetAtt StepFunctionsRole.Arn
+      DefinitionString:
+        !Sub |
+            {
+              "StartAt": "Train Step",
+              "States": {
+                "Train Step": {
+                  "Resource": "arn:aws:states:::sagemaker:createTrainingJob.sync",
+                  "Parameters": {
+                    "RoleArn": "${SageMakerRole.Arn}",
+                    "TrainingJobName.$": "$$.Execution.Input['JobName']",
+                    "AlgorithmSpecification": {
+                      "TrainingImage": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ecrModelRepo}:latest",
+                      "TrainingInputMode": "File"
+                    },
+                    "ResourceConfig": {
+                      "InstanceCount": 1,
+                      "InstanceType": "ml.m5.large",
+                      "VolumeSizeInGB": 10
+                    },
+                    "InputDataConfig": [
+                      {
+                        "ChannelName": "training",
+                        "DataSource": {
+                          "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": "s3://modelDataBucket/v1.0/train",
+                            "S3DataDistributionType": "FullyReplicated"
+                          }
+                        },
+                        "ContentType": "csv",
+                        "CompressionType": "None"
+                      }
+                    ],
+                    "StoppingCondition": {
+                      "MaxRuntimeInSeconds": 3600
+                    },
+                    "OutputDataConfig": {
+                      "S3OutputPath": "s3://${modelArtifactBucket}/$$.Execution.Input['JobName']"
+                    }
+                  },
+                  "Type": "Task",
+                  "Next": "Save model"
+                },
+                "Save model": {
+                  "Parameters": {
+                    "ExecutionRoleArn": "${SageMakerRole.Arn}",
+                    "ModelName.$": "$$.Execution.Input['ModelName']",
+                    "PrimaryContainer": {
+                      "Environment": {},
+                      "Image": "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ecrModelRepo}:latest",
+                      "ModelDataUrl.$": "$['ModelArtifacts']['S3ModelArtifacts']"
+                    }
+                  },
+                  "Resource": "arn:aws:states:::sagemaker:createModel",
+                  "Type": "Task",
+                  "End": true
+                }
+              }
+            }
