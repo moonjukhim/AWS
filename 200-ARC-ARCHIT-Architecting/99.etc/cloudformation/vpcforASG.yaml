@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: EC2 for ASG
+
+Mappings:
+  RegionMap: 
+    us-east-1:
+      Linux2: ami-0be2609ba883822ec
+    us-east-2:
+      Linux2: ami-0a0ad6b70e61be944
+    us-west-1:
+      Linux2: ami-03130878b60947df3
+    us-west-2:
+      Linux2: ami-0a36eb8fadc976275
+    ap-northeast-1:
+      Linux2: ami-01748a72bed07727c
+    ap-northeast-2:
+      Linux2: ami-0094965d55b3bb1ff
+
+Parameters:
+  KeyName:
+    Description: Name of KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+
+  VPCCidr:
+    Description: Cidr Block for VPC
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnet1Cidr:
+    Description: Cidr Block for Public Subnet
+    Type: String
+    Default: 10.0.1.0/24
+  PublicSubnet2Cidr:
+    Description: Cidr Block for Public Subnet
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnet1Cidr:
+    Description: Cidr Block for Private Subnet
+    Type: String
+    Default: 10.0.10.0/24
+  PrivateSubnet2Cidr:
+    Description: Cidr Block for Private Subnet
+    Type: String
+    Default: 10.0.20.0/24
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: VPC-ASG
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Cidr
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Cidr
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public2
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1Cidr
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      Tags:
+        - Key: Name
+          Value: private1
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2Cidr
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      Tags:
+        - Key: Name
+          Value: private2
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: myigw
+  Attachigw:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+
+  PublicRT:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public RT
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: Attachigw
+    Properties:
+      RouteTableId: !Ref PublicRT
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  PublicSubnet1RTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRT
+      SubnetId:
+        !Ref PublicSubnet1
+  PublicSubnet2RTAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRT
+      SubnetId:
+        !Ref PublicSubnet2
+
+  SGforWeb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: allow 22, 80
+      GroupName: webaccess
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      VpcId: !Ref VPC
+
+  EC2forWeb:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [ RegionMap, !Ref "AWS::Region", Linux2 ]
+      KeyName: !Ref KeyName
+      AvailabilityZone: !GetAtt PublicSubnet1.AvailabilityZone
+      InstanceType: t3.micro
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds:
+        - !Ref SGforWeb
+      UserData:
+        Fn::Base64:
+          !Join [ "", [
+          "#!/bin/bash\n",
+          "amazon-linux-extras install -y epel\n",
+          "yum install -y httpd php git stress\n",
+          "git clone https://github.com/suminhong/cloudformation_yaml.git /cf\n",
+          "mv /cf/webstress.php /var/www/html/index.php\n",
+          "rm -f /var/www/html/index.html\n",
+          "systemctl enable httpd\n",
+          "systemctl start httpd\n"] ]
+      Tags:
+        - Key: Name
+          Value: Web Server

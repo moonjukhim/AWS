@@ -1,0 +1,416 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: "Lab 3 of SysOps"
+
+Parameters:
+
+  AmazonLinuxAMIID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2
+
+Resources:
+
+###########
+# Lab Network Structure
+###########
+  LabVPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+        CidrBlock: "10.0.0.0/16"
+        InstanceTenancy: "default"
+        EnableDnsSupport: true
+        EnableDnsHostnames: true
+        Tags:
+          -
+            Key: "Name"
+            Value: "LabVPC"
+
+  RouteTable:
+    Type: "AWS::EC2::RouteTable"
+    DependsOn: 
+      - Subnet1
+      - Subnet2
+    Properties:
+        VpcId: !Ref LabVPC
+
+  PublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn:
+      - GatewayAttach
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+
+  Subnet1RouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DependsOn: PublicRoute
+    Properties:
+        SubnetId: !Ref Subnet1
+        RouteTableId: !Ref RouteTable
+
+
+  Subnet2RouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DependsOn: PublicRoute
+    Properties:
+        SubnetId: !Ref Subnet2
+        RouteTableId: !Ref RouteTable
+
+  Subnet1:
+    Type: "AWS::EC2::Subnet"
+    DependsOn: GatewayAttach
+    Properties:
+        VpcId: !Ref LabVPC
+        CidrBlock: "10.0.0.0/24"
+        MapPublicIpOnLaunch: True
+        AvailabilityZone: !Select
+          - 0
+          - !GetAZs
+
+  Subnet2:
+    Type: "AWS::EC2::Subnet"
+    DependsOn: GatewayAttach
+    Properties:
+        VpcId: !Ref LabVPC
+        CidrBlock: "10.0.1.0/24"
+        MapPublicIpOnLaunch: True
+        AvailabilityZone: !Select
+          - 1
+          - !GetAZs
+
+  IGW:
+    Type: "AWS::EC2::InternetGateway"
+
+  GatewayAttach:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+        VpcId: !Ref LabVPC
+        InternetGatewayId: !Ref IGW
+
+  WebServerSG:
+      Type: "AWS::EC2::SecurityGroup"
+      Properties:
+          GroupDescription: "SG that allows inbound web traffic to WebServers"
+          GroupName: "WebServerSG"
+          VpcId: !Ref LabVPC
+          SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
+
+# SSM service Role
+  AutomationServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ssm.amazonaws.com
+            - ec2.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Path: "/"
+      RoleName: AutomationServiceRole
+
+# EC2 IAM instance profile
+  SSMInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: "A SSM role for use by EC2 Instances to be managed."
+      ManagedPolicyArns: ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore", "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"]
+      RoleName: SSMInstanceRole
+  SSMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      InstanceProfileName: "SSMInstanceProfile"
+      Roles:
+        - !Ref SSMInstanceRole
+
+###########
+# AppServers
+###########
+  AppServer1:
+    Type: AWS::EC2::Instance
+    DependsOn: Subnet1RouteTableAssociation
+    Properties:
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      Tenancy: "default"
+      Monitoring: false
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: "stop"
+      CreditSpecification:
+        CPUCredits: "standard"
+      EbsOptimized: false
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 8
+              DeleteOnTermination: true
+              VolumeType: "gp2"
+              Encrypted: true
+      SubnetId: !Ref 'Subnet1'
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "AppServer1"
+
+  AppServer2:
+    Type: AWS::EC2::Instance
+    DependsOn: Subnet2RouteTableAssociation
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      Tenancy: "default"
+      Monitoring: false
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: "stop"
+      CreditSpecification:
+        CPUCredits: "standard"
+      EbsOptimized: false
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 8
+              DeleteOnTermination: true
+              VolumeType: "gp2"
+              Encrypted: true
+      SubnetId: !Ref 'Subnet2'
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "AppServer2"
+
+###########
+# WebServers
+###########
+  WebServer1:
+    Type: AWS::EC2::Instance
+    DependsOn: Subnet1RouteTableAssociation
+    Properties:
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      Tenancy: "default"
+      Monitoring: false
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: "stop"
+      CreditSpecification:
+        CPUCredits: "standard"
+      EbsOptimized: false
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 8
+              DeleteOnTermination: true
+              VolumeType: "gp2"
+              Encrypted: true
+      SubnetId: !Ref 'Subnet1'
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "WebServer1"
+        - Key: "WorkGroup"
+          Value: "WebServer"
+
+  WebServer2:
+    Type: AWS::EC2::Instance
+    DependsOn: Subnet2RouteTableAssociation
+    Properties:
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      Tenancy: "default"
+      Monitoring: false
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: "stop"
+      CreditSpecification:
+        CPUCredits: "standard"
+      EbsOptimized: false
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 8
+              DeleteOnTermination: true
+              VolumeType: "gp2"
+              Encrypted: true
+      SubnetId: !Ref 'Subnet1'
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "WebServer2"
+        - Key: "WorkGroup"
+          Value: "WebServer"
+
+  WebServer3:
+    Type: AWS::EC2::Instance
+    DependsOn: Subnet2RouteTableAssociation
+    Properties:
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      ImageId: !Ref AmazonLinuxAMIID
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref SSMInstanceProfile
+      Tenancy: "default"
+      Monitoring: false
+      DisableApiTermination: false
+      InstanceInitiatedShutdownBehavior: "stop"
+      CreditSpecification:
+        CPUCredits: "standard"
+      EbsOptimized: false
+      BlockDeviceMappings:
+        -
+          DeviceName: "/dev/xvda"
+          Ebs:
+              VolumeSize: 8
+              DeleteOnTermination: true
+              VolumeType: "gp2"
+              Encrypted: true
+      SubnetId: !Ref 'Subnet2'
+      SecurityGroupIds:
+        - !Ref WebServerSG
+      Tags:
+        - Key: "Project"
+          Value: "Working"
+        - Key: "Name"
+          Value: "WebServer3"
+        - Key: "WorkGroup"
+          Value: "WebServer"
+###########
+# Resource Group
+###########
+  ResourceGroupWebServer:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Description: 'A resource group of the Webserver Amazon EC2 instances'
+      Name: 'ProductionWebServers'
+      ResourceQuery:
+        Type:
+          "TAG_FILTERS_1_0"
+        Query:
+          ResourceTypeFilters:
+            - "AWS::AllSupported"
+          TagFilters:
+            -
+              Key: "WorkGroup"
+              Values:
+                - "WebServer"
+
+###########
+# load balancer for optional task
+###########
+  WebServerLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: GatewayAttach
+    Properties:
+      IpAddressType: "ipv4"
+      Name: "WebServerLB"
+      Scheme: "internet-facing"
+      SecurityGroups:
+        - !Ref WebServerSG
+      Subnets:
+        - !Ref Subnet1
+        - !Ref Subnet2
+      Type: "application"
+
+  LabTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: 'LabTargetGroup'
+      Port: 80
+      Protocol: 'HTTP'
+      Targets:
+        - Id: !Ref WebServer3
+          Port: 80
+        - Id: !Ref WebServer2
+          Port: 80
+        - Id: !Ref WebServer1
+          Port: 80
+      TargetType: 'instance'
+      UnhealthyThresholdCount: 2
+      VpcId: !Ref LabVPC
+
+  LabLBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref LabTargetGroup
+          Type: 'forward'
+      LoadBalancerArn: !Ref WebServerLB
+      Port: 80
+      Protocol: 'HTTP'
+  
+  EC2EnforcerStack:
+      Type: AWS::CloudFormation::Stack
+      Properties:
+        TemplateURL: !Sub  https://${AWS::Region}-tcprod.s3.amazonaws.com/courses/aws-tc-lab-enforcer/ec2/yml/ec2_enforcer.yml
+        Parameters:
+          S3Bucket: !Sub '${AWS::Region}-tcprod'
+          S3CodePath: "courses/aws-tc-lab-enforcer/ec2/zipped_code"
+          AllowedRegions: !Sub '${AWS::Region}'
+          MaxInstances: "5"
+
+###########
+# Outputs
+###########
+Outputs:
+  LabRegion:
+    Description: "The AWS Region this Lab was created in"
+    Value: !Ref AWS::Region
+    Export:
+      Name: "LabRegion"
+  WebServer1DNS:
+    Description: "Public DNS Record of the WebServer1"
+    Value: !GetAtt WebServer1.PublicDnsName
+  WebServer2DNS:
+    Description: "Public DNS Record of the WebServer2"
+    Value: !GetAtt WebServer2.PublicDnsName
+  WebServer3DNS:
+    Description: "Public DNS Record of the WebServer3"
+    Value: !GetAtt WebServer3.PublicDnsName

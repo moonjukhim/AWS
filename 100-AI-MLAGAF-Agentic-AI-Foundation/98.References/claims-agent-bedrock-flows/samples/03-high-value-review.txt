@@ -1,0 +1,16 @@
+From: bob.j@example.com
+Subject: Insurance Claim - Vehicle Total Loss
+Date: 2026-09-20
+
+Dear Claims Team,
+
+I am filing a claim on policy POL-11111. My 2024 Honda Civic was struck by a
+truck on the highway yesterday and the vehicle is a total loss. The repair shop
+inspected it and confirmed the frame is bent beyond repair.
+
+The assessed replacement value of the vehicle is $68,000. I have the police
+report (ref. 2026-0920-1183), the repair shop's total-loss assessment, and
+photos of the vehicle.
+
+Regards,
+Bob Johnson

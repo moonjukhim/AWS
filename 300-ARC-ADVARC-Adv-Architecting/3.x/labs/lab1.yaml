@@ -1,0 +1,481 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Learn how to use Amazon S3 endpoints to securely access data from an EC2 instance located in a private subnet.
+# Parameters used in these asset creation
+Parameters:
+  InstanceType:
+    Description: Amazon EC2 instance type
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+    - t3.small
+    - t3.micro
+    ConstraintDescription: must be a valid EC2 instance type.
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  # KeyName:
+  #   Description: EC2 KeyPair to enable SSH access to the instances
+  #   Type: AWS::EC2::KeyPair::KeyName
+  #   Default: default-lab-key
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  VPCCIDR:
+    Description: 'CIDR Block for VPC'
+    Type: String
+    Default: 10.0.0.0/16
+  PubSubA:
+    Description: 'Public Subnet A'
+    Type: String
+    Default: 10.0.1.0/24
+  PrivSubA:
+    Description: 'Private Subnet A'
+    Type: String
+    Default: 10.0.11.0/24
+
+  UserId:
+    Default: awsstudent
+    Type: String
+# These conditions are used to control what subnets should be created.
+
+Resources:
+  ### Networking Section ###
+  # Defining the VPC Used for this lab, it contains a public subnet and a private subnet
+  labVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !Ref VPCCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+      - Key: Name
+        Value: labVPC
+
+
+  # Users will hit EC2 instances which are running in the public subnets.
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    DependsOn: labVPC
+    Properties:
+      Tags:
+      - Key: Name
+        Value: labVPC-IGW
+
+  # Attached this IGW to the VPC
+  AttachGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref labVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Create public subnets using conditions to decide if they are made or not.
+  PublicSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref labVPC
+      CidrBlock: !Ref PubSubA
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+      - Key: Reach
+        Value: Public
+      - Key: Name
+        Value: PublicSubnetA
+
+  # Create private subnets using conditions to decide if they are made or not.
+  PrivateSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref labVPC
+      CidrBlock: !Ref PrivSubA
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+      - Key: Reach
+        Value: Private
+      - Key: Name
+        Value: PrivateSubnetA
+
+  # Create the Public Routing Tables.
+  PublicRouteTableA:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+    - AttachGateway
+    Properties:
+      VpcId: !Ref labVPC
+      Tags:
+      - Key: Name
+        Value: PublicRouteTable
+
+  # Create the private route tables
+  PrivateRouteTableA:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref labVPC
+      Tags:
+      - Key: Name
+        Value: PrivateRouteTable
+
+  # And add in the default route to 0.0.0.0/0
+  PublicRouteIGW:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PublicRouteTableA
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # Attach the routing table to each of the subnets
+  PublicRouteTableAssociationA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTableA
+
+  PrivateRouteTableAssociationA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTableA
+
+  # Allow inbound traffic on port 443 from internal VPC CIDR range
+  SSMSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTPS access via port 443
+      VpcId: !Ref 'labVPC'
+      SecurityGroupIngress:
+      - IpProtocol: tcp   # Open port 443 to allow CloudFormation Endpoint to communicate with EC2 instances
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 10.0.0.0/16
+      Tags:
+      - Key: Name
+        Value: HTTPS-SSM-ENDPOINT
+
+
+  # Create a CloudFormation endpoint so that the EC2 instances can signal success.
+  CloudFormationEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref labVPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.cloudformation"
+      VpcEndpointType: "Interface"
+      PrivateDnsEnabled: true
+      SubnetIds:
+      - !Ref PublicSubnetA
+      SecurityGroupIds:
+      - !Ref SSMSecurityGroup
+
+  # Create a SSM endpoint so that the EC2 instances can be connected to
+  SSMmessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref labVPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      VpcEndpointType: "Interface"
+      PrivateDnsEnabled: true
+      SubnetIds:
+      - !Ref PrivateSubnetA
+      SecurityGroupIds:
+      - !Ref SSMSecurityGroup
+
+  # Create a SSM endpoint so that the EC2 instances can be connected to
+  EC2messagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref labVPC
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      VpcEndpointType: "Interface"
+      PrivateDnsEnabled: true
+      SubnetIds:
+      - !Ref PrivateSubnetA
+      SecurityGroupIds:
+      - !Ref SSMSecurityGroup
+
+  # Create an S3 bucket that will store files that will be accessed via the S3 endpoint
+  LabBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LabLoggingBucket
+
+  # Create an S3 bucket that will receive server access logs
+  LabLoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: LogDeliveryWrite
+      OwnershipControls:
+        Rules:
+        - ObjectOwnership: BucketOwnerPreferred
+
+  PublicCommandHost:
+    DependsOn: CloudFormationEndpoint
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      #KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref CommandHostInstProfile
+      NetworkInterfaces:
+      - DeviceIndex: "0"
+        AssociatePublicIpAddress: true
+        SubnetId: !Ref PublicSubnetA
+        GroupSet:
+        - !Ref SSMSecurityGroup
+      Tags:
+      - Key: 'Name'
+        Value: 'PublicCommandHost'
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -ex
+          yum update -y &&
+          yum install jq -y &&
+
+          # Add default region
+          mkdir -p /home/ec2-user/.aws/ &&
+          echo "[default]" > /home/ec2-user/.aws/config &&
+          echo "region = ${AWS::Region}" >> /home/ec2-user/.aws/config &&
+          chown ec2-user:ec2-user -R /home/ec2-user &&
+
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PublicCommandHost --region ${AWS::Region}
+
+  PrivateCommandHost:
+    DependsOn: CloudFormationEndpoint
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+        Count: 1
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      #KeyName: !Ref KeyName
+      IamInstanceProfile: !Ref CommandHostInstProfile
+      NetworkInterfaces:
+      - DeviceIndex: "0"
+        SubnetId: !Ref PrivateSubnetA
+        GroupSet:
+        - !Ref SSMSecurityGroup
+      Tags:
+      - Key: 'Name'
+        Value: 'PrivateCommandHost'
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash
+          # yum update -y &&
+
+          # Add default region
+          mkdir -p /home/ec2-user/.aws/ &&
+          echo "[default]" > /home/ec2-user/.aws/config &&
+          echo "region = ${AWS::Region}" >> /home/ec2-user/.aws/config &&
+          chown ec2-user:ec2-user -R /home/ec2-user &&
+
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PrivateCommandHost --region ${AWS::Region}
+
+          # This will ping the ssm service until it receives a 404 response. Once it receives the response, you know
+          # the endpoint is reachable (we don't really care if its a 404 vs 200 response, we just want to know we
+          # can find it) it will restart the SSM agent. Restarting the SSM agent re-registers/flushes dns/magics
+          # the instance to it is recognized and you are able to connect to it.
+          exitCode=4
+          count=0
+          while [[ "$exitCode" -ne "8" ]]
+          do 
+            echo "start $count"
+            /usr/bin/wget --server-response https://ssm.${AWS::Region}.amazonaws.com -t 1 -T 5 --no-cache -q
+            exitCode=$?
+            echo "trying $count"
+            ((count++))
+          done
+          /bin/systemctl restart amazon-ssm-agent
+
+  CommandHostInstProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - !Ref CommandHostRole
+
+  # Create a role that will allow the EC2 instance to access S3.
+  CommandHostRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: SimpleStorageServiceAccessPolicy
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            Resource:
+            - !Sub ${LabBucket.Arn}
+            - !Sub ${LabBucket.Arn}/*
+          - Effect: Allow
+            Action:
+            - s3:Get*
+            - s3:ListBucket
+            - s3:ListAllMyBuckets
+            - ec2:Describe*
+            - ec2:CreateVpcEndpoint
+            - ec2:ModifyVpcEndpoint
+            Resource: '*'
+
+  LambdaCreateTextFile:
+    Type: AWS::Lambda::Function
+    DependsOn: LabBucket
+    Properties:
+      Code:
+        ZipFile: !Sub |
+          import json, boto3, os
+          import cfnresponse
+          def lambda_handler(event, context):
+              s3 = boto3.client('s3')
+              try:
+                # Check if this is a create or delete action
+                if (event['RequestType'] == "Create"):
+                  writeToS3("${LabBucket}", "Some text", "demo.txt")              
+                
+                msg = "Configuration complete"
+                responseData = {}
+                responseData['Data'] = msg
+                cfnresponse.send(event, context, "SUCCESS", responseData, event["LogicalResourceId"]);
+              except Exception as e:
+                print('Error: ' + str(e))
+                msg = f"Exception raised for function: \nException details: \n{e}"
+                responseData = {}
+                responseData['Data'] = msg
+                cfnresponse.send(event, context, "FAILED", responseData, event["LogicalResourceId"]);
+
+          def writeToS3(thisBucket, dataDump, fileName):
+              s3 = boto3.resource('s3')
+              bucket = thisBucket
+              object = s3.Object(bucket, fileName)
+              try:
+                object.put(Body=dataDump)
+              except Exception as e:
+                print('Error: ' + str(e))
+      Handler: 'index.lambda_handler'
+      Role: !GetAtt 'LambdaPrepTextFileRole.Arn'
+      Runtime: python3.11
+      Timeout: 120
+      MemorySize: 128
+
+  LambdaPrepTextFileRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: customLambdaPol
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'cloudwatch:describe*'
+            - 'cloudwatch:Get*'
+            - 'cloudwatch:List*'
+            - 'cloudwatch:PutMetricData'
+            - 'logs:CreateLogDelivery'
+            - 'logs:CreateLogGroup'
+            - 'logs:CreateLogStream'
+            - 'logs:Describe*'
+            - 'logs:Get*'
+            - 'logs:List*'
+            - 'logs:PutLogEvents'
+            - 's3:Get*'
+            - 's3:List*'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - 's3:PutObject'
+            Resource:
+            - !Sub ${LabBucket.Arn}
+            - !Sub ${LabBucket.Arn}/*
+
+  LambdaPrepTextFileTrigger:
+    Type: 'Custom::LambdaPrepTextFileTrigger'
+    DependsOn:
+    - LambdaPrepTextFileRole
+    Properties:
+      ServiceToken: !GetAtt LambdaCreateTextFile.Arn
+
+Outputs:
+  Region:
+    Description: 'Region the lab is running in'
+    Value: !Sub ${AWS::Region}
+  LabBucket:
+    Description: 'S3 data bucket'
+    Value: !Sub ${LabBucket}
+  LabLoggingBucket:
+    Description: 'S3 logging bucket'
+    Value: !Sub ${LabLoggingBucket}
+  PublicCommandHostURL:
+    Description: 'The URL to the Session Management Console for the public command host server'
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${PublicCommandHost}?region=${AWS::Region}
+  PrivateCommandHostURL:
+    Description: 'The URL to the Session Management Console for the private command host server'
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/systems-manager/session-manager/${PrivateCommandHost}?region=${AWS::Region}
+
+# This is a map of Regions and AZ's
+Mappings:
+  # This needs to be updated as Regions and AZ's are added.
+  RegionMap:
+    af-south-1: # Cape Town
+      SubnetA: true
+    ap-east-1: # Hong Kong
+      SubnetA: true
+    ap-south-1: # Mumbai
+      SubnetA: true
+    ap-northeast-3: # Osaka-Local
+      SubnetA: true
+    ap-northeast-2: # Seoul
+      SubnetA: true
+    ap-southeast-1: # Singapore
+      SubnetA: true
+    ap-southeast-2: # Sydney
+      SubnetA: true
+    ap-northeast-1: # Tokyo
+      SubnetA: true
+    ca-central-1: # Canada (Central)
+      SubnetA: true
+    eu-central-1: # Frankfurt
+      SubnetA: true
+    eu-west-1: # Ireland
+      SubnetA: true
+    eu-west-2: # London
+      SubnetA: true
+    eu-south-1: # Milan
+      SubnetA: true
+    eu-west-3: # Paris
+      SubnetA: true
+    eu-north-1: # Stockholm
+      SubnetA: true
+    sa-east-1: # Sao Paulo
+      SubnetA: true
+    us-east-1: # N. Virginia
+      SubnetA: true
+    us-east-2: # Ohio
+      SubnetA: true
+    us-west-1: # N. California
+      SubnetA: true
+    us-west-2: # Oregon
+      SubnetA: true

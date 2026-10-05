@@ -1,0 +1,1255 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Lab 4: Monitoring Amazon EKS"
+
+Parameters:
+  LabVpcCidr:
+    Type: String
+    Default: 10.10.0.0/16
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  BastionHostSubnetCidr:
+    Type: String
+    Default: 10.10.32.0/19
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  EksPublicSubnet1Cidr:
+    Type: String
+    Default: 10.10.64.0/19
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  EksPublicSubnet2Cidr:
+    Type: String
+    Default: 10.10.96.0/19
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  EksPublicSubnet3Cidr:
+    Type: String
+    Default: 10.10.128.0/19
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
+
+  LatestAL2AmiId: # Locate latest Amazon Linux 2 AMI from public parameter store
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+
+  KubernetesVersion:
+    Description: The Kubernetes version to deploy on the Amazon EKS cluster
+    Type: String
+    Default: "1.29"
+
+  HelmVersion:
+    Type: String
+    Default: "3"
+
+  EksctlVersion:
+    Type: String
+    Default: "0.176.0"
+  KubectlVersion:
+    Type: String
+    Default: "1.29.3"
+  KubectlReleaseDate:
+    Type: String
+    Default: "2024-04-19"
+
+  HelmBaseUrl:
+    Type: String
+    Default: "https://raw.githubusercontent.com/helm/helm/master/scripts"
+
+  EksctlBaseUrl:
+    Type: String
+    Default: "https://github.com/weaveworks/eksctl/releases/download"
+
+  KubectlBaseUrl:
+    Type: String
+    Default: "https://s3.us-west-2.amazonaws.com/amazon-eks"
+
+Resources:
+
+  # Start - Create VPC, subnets, internet gateway, and routes
+  LabVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref LabVpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+      - Key: Name
+        Value: Lab VPC
+
+  BastionHostSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn:
+    - AttachGateway
+    Properties:
+      CidrBlock: !Ref BastionHostSubnetCidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      Tags:
+      - Key: Name
+        Value: !Sub Bastion Host Subnet - ${AWS::Region}a
+
+  EksPublicSubnet1:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: !Ref EksPublicSubnet1Cidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      Tags:
+      - Key: Name
+        Value: !Sub EKS Public Subnet 1 - ${AWS::Region}a
+
+  EksPublicSubnet2:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: !Ref EksPublicSubnet2Cidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 1
+        - Fn::GetAZs: ""
+      Tags:
+      - Key: Name
+        Value: !Sub EKS Public Subnet 2 - ${AWS::Region}b
+
+  EksPublicSubnet3:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      CidrBlock: !Ref EksPublicSubnet3Cidr
+      VpcId: !Ref LabVpc
+      MapPublicIpOnLaunch: true
+      AvailabilityZone:
+        Fn::Select:
+        - 2
+        - Fn::GetAZs: ""
+      Tags:
+      - Key: Name
+        Value: !Sub EKS Public Subnet 3 - ${AWS::Region}c
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: Internet Gateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LabVpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn:
+    - BastionHostSubnet
+    - EksPublicSubnet1
+    - EksPublicSubnet2
+    - EksPublicSubnet3
+    Properties:
+      VpcId: !Ref LabVpc
+
+  BastionHostSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - PublicRoute
+    Properties:
+      SubnetId: !Ref BastionHostSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  EksPublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref EksPublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  EksPublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref EksPublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  EksPublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref EksPublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  BastionHostEip:
+    Type: AWS::EC2::EIP
+    DependsOn: BastionHost
+    Properties:
+      InstanceId: !Ref BastionHost
+  # End - Create VPC, subnets (bastion host, EKS public and private), internet gateway, and routes
+
+  #Start - Create security groups
+  BastionHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Bastion host access
+      GroupDescription: Network access rules applied to the bastion host
+      VpcId: !Ref LabVpc
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 80
+        ToPort: 80
+        Description: Allow HTTP connections to anywhere for downloading files
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 443
+        ToPort: 443
+        Description: Allow HTTPS connections to anywhere for downloading files
+      - IpProtocol: tcp
+        CidrIp: !Ref EksPublicSubnet1Cidr
+        FromPort: 0
+        ToPort: 65535
+        Description: Allow connections to EKS Public Subnet 1 on any port
+      - IpProtocol: tcp
+        CidrIp: !Ref EksPublicSubnet2Cidr
+        FromPort: 0
+        ToPort: 65535
+        Description: Allow connections to EKS Public Subnet 2 on any port
+      - IpProtocol: tcp
+        CidrIp: !Ref EksPublicSubnet3Cidr
+        FromPort: 0
+        ToPort: 65535
+        Description: Allow connections to EKS Public Subnet 3 on any port
+      - IpProtocol: tcp
+        CidrIp: 0.0.0.0/0
+        FromPort: 22
+        ToPort: 22
+        Description: Allow SSH connections to anywhere for CodeCommit
+
+  ControlPlaneSecurityGroup: # Rules are populated automatically when the cluster is created
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EKS control plane access
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: !Ref LabVpc
+      SecurityGroupIngress:
+        # Allow inbound traffic from the bastion host security group on any port
+      - IpProtocol: "-1"
+        SourceSecurityGroupId: !Ref BastionHostSecurityGroup
+        Description: Allow connections from bastion host subnet on any port
+      - IpProtocol: "-1"
+        CidrIp: !Ref EksPublicSubnet1Cidr
+        Description: Allow connections from EKS Public Subnet 1 on any port
+      - IpProtocol: "-1"
+        CidrIp: !Ref EksPublicSubnet2Cidr
+        Description: Allow connections from EKS Public Subnet 2 on any port
+      - IpProtocol: "-1"
+        CidrIp: !Ref EksPublicSubnet3Cidr
+        Description: Allow connections from EKS Public Subnet 3 on any port
+  # End - Create security groups
+
+  # Start - Create bastion host IAM instance profile
+  BastionHostInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: BastionHostIamInstanceProfile
+      Roles:
+      - !Ref BastionHostIamRole
+
+  BastionHostIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BastionHostIamRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/ReadOnlyAccess
+      - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Policies:
+      - PolicyName: ResumeSession
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:ResumeSession
+            - ssm:StartSession
+            - ssm:ResumeSession
+            Resource: 
+            - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:session/*
+            - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+          - Effect: Allow
+            Action:
+            - elasticfilesystem:DescribeFileSystems
+            - elasticfilesystem:DescribeFileSystemPolicy
+            - elasticfilesystem:DescribeLifecycleConfiguration
+            - elasticfilesystem:DescribeMountTargets
+            - elasticfilesystem:DescribeMountTargetSecurityGroups
+            - elasticfilesystem:DescribeTags
+            - elasticfilesystem:DescribeAccessPoints
+            - elasticfilesystem:DescribeReplicationConfigurations
+            - elasticfilesystem:ListTagsForResource
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+            - elasticfilesystem:CreateFileSystem
+            - elasticfilesystem:CreateMountTarget
+            Resource: !Sub arn:aws:elasticfilesystem:${AWS::Region}:${AWS::AccountId}:file-system/*
+
+  BastionHostBuildPolicy: # Permissions required to build the lab environment. This policy is removed from the role at the end of the build process
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: BastionHostBuildPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          # Allow bastion host to assume BastionHostIamRole role
+        - Effect: Allow
+          Action:
+          - sts:AssumeRole
+          Resource:
+          - !GetAtt BastionHostIamRole.Arn
+        - Effect: Allow
+          Action:
+          - autoscaling:AttachInstances
+          - autoscaling:AttachLoadBalancerTargetGroups
+          - autoscaling:AttachLoadBalancers
+          - autoscaling:CreateAutoScalingGroup
+          - autoscaling:CreateLaunchConfiguration
+          - autoscaling:CreateOrUpdateTags
+          - autoscaling:SetDesiredCapacity
+          - autoscaling:UpdateAutoScalingGroup
+          - cloudformation:CreateStack
+          - ec2:AllocateAddress
+          - ec2:AuthorizeSecurityGroupEgress
+          - ec2:AuthorizeSecurityGroupIngress
+          - ec2:CreateLaunchTemplate
+          - ec2:CreateSecurityGroup
+          - ec2:CreateTags
+          - ec2:ModifySubnetAttribute
+          - ec2:ModifyVpcAttribute
+          - ec2:RunInstances
+          - ec2:DescribeVpcs
+          - eks:CreateCluster
+          - eks:CreateNodegroup
+          - eks:TagResource
+          - eks:UpdateClusterConfig
+          - eks:UpdateNodegroupConfig
+          - iam:AddRoleToInstanceProfile
+          - iam:AttachRolePolicy
+          - iam:CreateOpenIDConnectProvider
+          - iam:UntagRole
+          - iam:ListRoleTags
+          - iam:TagRole
+          - iam:TagOpenIDConnectProvider
+          - iam:CreateServiceLinkedRole
+          - iam:DeleteRolePolicy
+          - iam:PassRole
+          - ssm:GetParameter
+          - s3:PutObject
+          - s3:GetObjectAcl
+          - s3:GetObject
+          - s3:List*
+          - s3:DeleteObject
+          - s3:PutObjectAcl
+          Resource: "*"
+            #added condition to prevent privilege escalation
+          Condition:
+            StringNotEquals:
+              aws:username: awsstudent
+        - Effect: Allow
+          Action:
+          - iam:CreateRole
+          Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/eksctl-dev-cluster*
+        - Effect: Allow
+          Action:
+          - ssm:UpdateDocument*
+          - ssm:CreateDocument*
+          - ssm:DeleteDocument*
+          Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/SSM-SessionManagerRunShell
+      Roles:
+      - !Ref BastionHostIamRole
+
+  BastionHostRunPolicy: # Permissions required to complete the lab objectives only
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: BastionHostRunPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+          - firehose:CreateDeliveryStream
+          - firehose:DeleteDeliveryStream
+          - firehose:UpdateDestination
+          - firehose:PutRecord
+          - firehose:PutRecordBatch
+          Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/eks-stream
+        - Effect: Allow
+          Action:
+          - iam:PassRole
+          Resource:
+          - !GetAtt FirehoseRole.Arn
+          Condition:
+            StringEquals:
+              iam:PassedToService: firehose.amazonaws.com
+        - Effect: Deny
+          Action:
+          - cloudformation:Get*
+          - cloudformation:Describe*
+          - cloudformation:List*
+          - cloudformation:Set*
+          Resource:
+          - arn:aws:cloudformation:*:*:stack/qls*/*
+        - Effect: Deny
+          Action:
+          - iam:Get*
+          - iam:Describe*
+          - iam:List*
+          Resource:
+          - arn:aws:iam::*:policy/lab_policy
+          - arn:aws:iam::*:policy/default_iam_policy
+          - arn:aws:iam::*:policy/default_QL_policy
+          - arn:aws:iam::*:policy/default_policy
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource:
+          - arn:aws:secretsmanager:*:*:secret:GrafanaPassword*
+      Roles:
+      - !Ref BastionHostIamRole
+  # End - Create bastion host IAM instance profile
+
+  # Start - Create EKS IAM roles
+  EksClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EksClusterRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+      - arn:aws:iam::aws:policy/ReadOnlyAccess
+
+  EksNodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EksNodeRole
+      ## ecr-credential-provider - needs the ability to get a token to pull images in other regions
+      Tags:
+        - Key: AttachRegionPinningPolicy
+          Value: False
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+      - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+  # End - Create EKS IAM roles
+
+  # Start - Create bastion host
+  BastionHost:
+    Type: AWS::EC2::Instance
+    DependsOn:
+    - S3workshop
+    - BastionHostSubnetRouteTableAssociation
+    # NOTE - Additional RouteTableAssociation are included because the eksctl create-cluster command launches nodes in these subnets
+    - EksPublicSubnet1RouteTableAssociation
+    - EksPublicSubnet2RouteTableAssociation
+    - EksPublicSubnet3RouteTableAssociation
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          InstallTools:
+          - "update-yum"
+          - "install-python3"
+          - "create-kube-directory"
+          - "install-aws-cli-v2"
+          - "install-kubectl"
+          - "install-eksctl"
+          - "install-other-tools"
+          - "install-helm"
+          - "install-tree"
+          - "install-docker"
+          IncreaseSessionMgrTimeout:
+          - "inc-session-timeout"
+          CreateVariablesScript:
+          - "create-variables-script"
+          EksctlCreateCluster:
+          - "create-cluster-config"
+          - "create-eks-cluster"
+          DownloadFiles:
+          - "create-fluentbit-configmap"
+          CreateSsmUser:
+          - "create-ssm-user"
+          ChangeDirectoryOwner:
+          - "change-ssm-user-directory-owner"
+          InstallVpcCni:
+          - "install-vpc-cni"
+          InstallApplication:
+          - "busybox-dep"
+          - "copy-star-app"
+          InstallMetricsServer:
+          - "install-k8s-metrics-server"
+          ModifyInstancePermissions:
+          - "remove-lab-build-policy"
+        # Start - InstallTools config set commands
+        update-yum:
+          commands:
+            update-yum:
+              command: yum update -y
+              ignoreErrors: false
+        install-python3:
+          commands:
+            install-python3:
+              command: yum install -y python3
+              ignoreErrors: false
+        create-kube-directory:
+          commands:
+            a-create-kube-directory:
+              command: mkdir -p /home/ssm-user/.kube
+              ignoreErrors: false
+        install-aws-cli-v2:
+          commands:
+            a-remove-aws-cli-v1:
+              command: rm -rf /usr/bin/aws
+              ignoreErrors: false
+            b-download-aws-cli-v2:
+              #NOTE: I have temporarily hardcoded the AWS CLI version to avoid a problem with kubeconfig. This problem first appeared in v.2.6.3. Presumably, it will be addressed in a future release.
+              command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              #command: curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.6.2.zip" -o "awscliv2.zip"
+              ignoreErrors: false
+            c-unzip-package:
+              command: unzip awscliv2.zip
+              ignoreErrors: false
+            d-install-aws-cli-v2:
+              command: sudo ./aws/install -b
+              ignoreErrors: false
+        install-kubectl:
+          commands:
+            a-download-kubeconfig:
+              command: !Sub curl -LO -o kubectl "${KubectlBaseUrl}/${KubectlVersion}/${KubectlReleaseDate}/bin/linux/amd64/kubectl"
+              ignoreErrors: false
+            b-make-executable:
+              command: chmod +x ./kubectl
+              ignoreErrors: false
+            c-set-path:
+              command: mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+              ignoreErrors: false
+            d-export-path:
+              command: echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+              ignoreErrors: false
+        install-eksctl:
+          commands:
+            a-download-ekstcl:
+              command: !Sub curl --silent --location "${EksctlBaseUrl}/v${EksctlVersion}/eksctl_Linux_amd64.tar.gz" | tar xz -C /tmp
+              ignoreErrors: false
+            b-move-to-bin:
+              command: mv /tmp/eksctl /usr/local/bin
+              ignoreErrors: false
+        install-other-tools:
+          commands:
+            a-install-tools:
+              command: yum -y install jq gettext bash-completion git
+              ignoreErrors: false
+        install-tree:
+          commands:
+            a-install-tree:
+              command: yum -y install tree
+              ignoreErrors: false
+        install-helm:
+          commands:
+            install-helm:
+              command: !Sub "curl -sSL ${HelmBaseUrl}/get-helm-${HelmVersion} | bash"
+              ignoreErrors: false
+        install-docker:
+          commands:
+            a-install-docker:
+              command: amazon-linux-extras install docker
+              ignoreErrors: false
+            b-start-docker-service:
+              command: service docker start
+              ignoreErrors: false
+        # Increase the timeout for Session Mgr
+        inc-session-timeout:
+          files:
+            /temp/ssm-settings.yaml:
+              content: |
+                ---
+                schemaVersion: '1.0'
+                description: Document to hold regional settings for Session Manager
+                sessionType: Standard_Stream
+                inputs:
+                  s3BucketName: ''
+                  s3KeyPrefix: ''
+                  s3EncryptionEnabled: true
+                  cloudWatchLogGroupName: ''
+                  cloudWatchEncryptionEnabled: true
+                  cloudWatchStreamingEnabled: true
+                  kmsKeyId: ''
+                  runAsEnabled: false
+                  runAsDefaultUser: ''
+                  idleSessionTimeout: '60'
+                  maxSessionDuration: '60'
+                  shellProfile:
+                    windows: ''
+                    linux: echo "Setting up environment variables..."; cd $HOME; source /usr/local/bin/variables.sh; clear; echo -e "\e[1;32mEnvironment variable setup completed successfully. Enjoy the lab! \e[1;m"
+          commands:
+            a-create-ssm-document:
+              command: aws ssm create-document --name "SSM-SessionManagerRunShell" --content "file:///temp/ssm-settings.yaml" --document-format YAML --document-type Session
+              ignoreErrors: true
+            b-configure-ssm:
+              command: aws ssm update-document --name "SSM-SessionManagerRunShell" --content "file:///temp/ssm-settings.yaml" --document-format YAML --document-version '$LATEST'
+              ignoreErrors: true
+        # Start - CreateVariablesScript
+        create-variables-script:
+          files:
+            /usr/local/bin/variables.sh:
+              content: |
+                #!/bin/bash
+                #The SSM document calls this script when each new session is started to recreate environment variables
+              mode: "000777"
+              owner: "ssm-user"
+          commands:
+            a-set-account-id:
+              command: !Sub echo "export ACCOUNT_ID=${AWS::AccountId}" >> /usr/local/bin/variables.sh
+              ignoreErrors: false
+            b-set-region:
+              command: !Sub echo "export AWS_REGION=${AWS::Region}" >> /usr/local/bin/variables.sh
+              ignoreErrors: false
+            c-update-path:
+              command: echo "export PATH=\"/usr/local/bin:$PATH\"" >> /usr/local/bin/variables.sh
+              ignoreErrors: false
+            d-set-FirehoseRoleArn:
+              command: !Sub 
+                - echo "export FIREHOSE_ROLE_ARN=${RoleArn}" >> /usr/local/bin/variables.sh
+                - RoleArn: !GetAtt FirehoseRole.Arn
+              ignoreErrors: false
+            e-set-StreamBucketArn:
+              command: echo "export STREAM_BUCKET_ARN=arn:aws:s3:::$(aws s3 ls | awk '/firehosebucket/ {print $3}')" >> /usr/local/bin/variables.sh
+              ignoreErrors: false
+            f-set-S3_bucket:
+              command: echo "export S3_BUCKET_NAME=$(aws s3 ls | grep workshop | awk '{ print $3 }')" >> /usr/local/bin/variables.sh
+              ignoreErrors: false
+        # Start - EksctlCreateCluster config set commands
+        create-cluster-config:
+          files:
+            /home/ssm-user/scripts/cluster.yaml:
+              content: !Sub |
+                apiVersion: eksctl.io/v1alpha5
+                kind: ClusterConfig
+                metadata:
+                  name: dev-cluster
+                  region: ${AWS::Region}
+                  version: "${KubernetesVersion}"
+                vpc:
+                  id: ${LabVpc}
+                  securityGroup: "${ControlPlaneSecurityGroup}"
+                  subnets:
+                    public:
+                      ${AWS::Region}a: { id: ${EksPublicSubnet1} }
+                      ${AWS::Region}b: { id: ${EksPublicSubnet2} }
+                      ${AWS::Region}c: { id: ${EksPublicSubnet3} }
+                  clusterEndpoints:
+                    publicAccess: true
+                    privateAccess: true
+                iam:
+                  serviceRoleARN: "${EksClusterRole.Arn}"
+                managedNodeGroups:
+                  - name: dev-nodes
+                    minSize: 2
+                    maxSize: 4
+                    desiredCapacity: 3
+                    volumeSize: 20
+                    instanceType: t3.medium
+                    iam:
+                      instanceRoleARN: ${EksNodeInstanceRole.Arn}  
+        create-eks-cluster:
+          commands:
+            eksctl-create-cluster:
+              command: eksctl create cluster -f /home/ssm-user/scripts/cluster.yaml --kubeconfig /home/ssm-user/.kube/config
+              ignoreErrors: false
+        # Start - Download files for lab tasks
+        create-fluentbit-configmap: # Chose to create the file here instead of downloading it so the "region" field could be populated automatically instead of the student needing to modify it
+          files:
+            /home/ssm-user/scripts/task5/eks-fluent-bit-configmap.yaml:
+              content: !Sub |
+                apiVersion: v1
+                kind: ConfigMap
+                metadata:
+                  name: fluent-bit-config
+                  namespace: fb
+                  labels:
+                    app.kubernetes.io/name: fluentbit
+                data:
+                  fluent-bit.conf: |
+                    # The service defines the global behavior of Fluent Bit
+                    [SERVICE]
+                        Parsers_File  parsers.conf
+                    # The input tells Fluent Bit where to look for logs    
+                    [INPUT]
+                        Name              tail
+                        Tag               kube.*
+                        Path              /var/log/containers/*.log
+                        Parser            cri
+                        DB                /var/log/flb_kube.db
+                        Mem_Buf_Limit     5MB
+                        Skip_Long_Lines   On
+                        Refresh_Interval  10
+                    # The output tells Fluent Bit where to send the logstream    
+                    [OUTPUT]
+                        Name kinesis_firehose
+                        Match *
+                        delivery_stream eks-stream
+                        region ${AWS::Region}
+                    # The filter injects kubernetes metadata into the logstream
+                    [FILTER]
+                        Name             kubernetes
+                        Match            kube.*
+                        Kube_URL         https://kubernetes.default.svc:443
+                        Kube_CA_File     /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                        Kube_Token_File  /var/run/secrets/kubernetes.io/serviceaccount/token
+                        Kube_Tag_Prefix  kube.var.log.containers.
+                        Merge_Log        On
+                        Merge_Log_Key    log_processed   
+                  parsers.conf: |
+                    # The parser tells Fluent Bit how to process the incoming data from the container logs
+                    [PARSER]
+                        # http://rubular.com/r/tjUt3Awgg4
+                        Name        cri
+                        Format      regex
+                        Regex       ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>[^ ]*) (?<message>.*)$
+                        Time_Key    time
+                        Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+                        Time_Keep   On
+            /home/ssm-user/scripts/task5/eks-fluent-bit-daemonset-rbac.yaml:
+              content: !Sub |
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: ClusterRole
+                metadata:
+                  name: pod-log-reader
+                rules:
+                - apiGroups: [""]
+                  resources:
+                  - namespaces
+                  - pods
+                  verbs: ["get", "list", "watch"]
+                ---
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: ClusterRoleBinding
+                metadata:
+                  name: pod-log-crb
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: ClusterRole
+                  name: pod-log-reader
+                subjects:
+                - kind: ServiceAccount
+                  name: fluent-bit
+                  namespace: fb
+            /home/ssm-user/scripts/task5/eks-fluent-bit-daemonset.yaml:
+              content: !Sub |
+                apiVersion: apps/v1
+                kind: DaemonSet
+                metadata:
+                  name: fluentbit
+                  namespace: fb
+                  labels:
+                    app.kubernetes.io/name: fluentbit
+                spec:
+                  selector:
+                    matchLabels:
+                      name: fluentbit
+                  template:
+                    metadata:
+                      labels:
+                        name: fluentbit
+                    spec:
+                      serviceAccountName: fluent-bit
+                      containers:
+                      - name: aws-for-fluent-bit
+                        image: amazon/aws-for-fluent-bit:2.31.12
+                        volumeMounts:
+                        - name: varlog
+                          mountPath: /var/log
+                        - name: varlibdockercontainers
+                          mountPath: /var/lib/docker/containers
+                          readOnly: true
+                        - name: fluent-bit-config
+                          mountPath: /fluent-bit/etc/
+                        - name: mnt
+                          mountPath: /mnt
+                          readOnly: true
+                        resources:
+                          limits:
+                            memory: 500Mi
+                          requests:
+                            cpu: 500m
+                            memory: 100Mi
+                      volumes:
+                      - name: varlog
+                        hostPath:
+                          path: /var/log
+                      - name: varlibdockercontainers
+                        hostPath:
+                          path: /var/lib/docker/containers
+                      - name: fluent-bit-config
+                        configMap:
+                          name: fluent-bit-config
+                      - name: mnt
+                        hostPath:
+                          path: /mnt
+            /home/ssm-user/delivery-stream.json:
+              content: !Sub |
+                {
+                  "DeliveryStreamName": "eks-stream",
+                  "DeliveryStreamType": "DirectPut",
+                  "AmazonopensearchserviceDestinationConfiguration": {
+                  "RoleARN": "FIREHOSE_ROLE_ARN",
+                  "DomainARN": "arn:aws:es:<AWS_REGION>:<ACCOUNT_ID>:domain/eks-domain",
+                  "IndexName": "access-logs",
+                  "S3Configuration": {
+                        "RoleARN": "FIREHOSE_ROLE_ARN",
+                        "BucketARN": "STREAM_BUCKET_ARN"
+                    }
+                  }
+                }
+        # Start - Create ssm-user and assign as sudoer
+        create-ssm-user:
+          commands:
+            a-create-ssm-user:
+              command: if id -u "ssm-user" >/dev/null 2>&1; then echo 'ssm-user already exists'; else useradd ssm-user -m -U; fi
+              ignoreErrors: false
+            b-make-ssm-user-sudoer:
+              command: echo "ssm-user  ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ssm-user
+        # Start - Change ownership of ssm-user home directory and all sub-directories
+        change-ssm-user-directory-owner:
+          commands:
+            a-set-owner-ssm-user:
+              command: chown -R ssm-user /home/ssm-user
+              ignoreErrors: false
+        # Start - InstallVpcCni
+        install-vpc-cni:
+          commands:
+            a-download-vpc-cni:
+              command: runuser -l ssm-user -c 'curl https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/v1.15.3/config/master/aws-k8s-cni.yaml -o /home/ssm-user/aws-k8s-cni.yaml'
+              ignoreErrors: false
+            b-sed-network-policy:
+              command: sed -i 's/- --enable-network-policy=false/- --enable-network-policy=true/g' /home/ssm-user/aws-k8s-cni.yaml
+              ignoreErrors: false
+            c-sed-network-policy-controller:
+              command: sed -i 's/enable-network-policy-controller:\ "false"/enable-network-policy-controller:\ "true"/g' /home/ssm-user/aws-k8s-cni.yaml
+              ignoreErrors: false
+            d-apply-vpc-cni:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/aws-k8s-cni.yaml'
+              ignoreErrors: false
+        # Start - InstallApplication -- download application files
+        busybox-dep:
+          commands:
+            a-copy-dep-file:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/malfunction.yaml /home/ssm-user/scripts/malfunction.yaml
+              ignoreErrors: false
+            b-create-namespace:
+              command: runuser -l ssm-user -c 'kubectl create namespace malfunction'
+              ignoreErrors: false
+            c-apply-dep:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl -n malfunction apply -f /home/ssm-user/scripts/malfunction.yaml'
+              ignoreErrors: false
+            d-cop-second-dep-file:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/malfunction-cpu.yaml /home/ssm-user/scripts/malfunction-cpu.yaml
+              ignoreErrors: false
+        copy-star-app:
+          commands:
+            a-make-app-dir:
+              command: runuser -l ssm-user -c 'mkdir -p /home/ssm-user/scripts/appcode && chmod 777 /home/ssm-user/scripts/appcode'
+              ignoreErrors: false
+            b-copy-file-1:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/namespace.yaml /home/ssm-user/scripts/appcode/namespace.yaml
+              ignoreErrors: false
+            c-copy-file-2:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/management-ui.yaml /home/ssm-user/scripts/appcode/management-ui.yaml
+              ignoreErrors: false
+            d-copy-file-3:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/backend.yaml /home/ssm-user/scripts/appcode/backend.yaml
+              ignoreErrors: false
+            e-copy-file-4:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/frontend.yaml /home/ssm-user/scripts/appcode/frontend.yaml
+              ignoreErrors: false
+            f-copy-file-5:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/client.yaml /home/ssm-user/scripts/appcode/client.yaml
+              ignoreErrors: false
+            g-copy-file-6:
+              command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/app/backend-fix.yaml /home/ssm-user/scripts/appcode/backend-fix.yaml
+              ignoreErrors: false
+            h-apply-namespace:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/namespace.yaml'
+              ignoreErrors: false
+            i-apply-management-ui:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/management-ui.yaml'
+              ignoreErrors: false
+            j-apply-backend:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/backend.yaml'
+              ignoreErrors: false
+            k-apply-frontend:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/frontend.yaml'
+              ignoreErrors: false
+            l-apply-client:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/client.yaml'
+              ignoreErrors: false
+            #l-copy-file-6:
+            #  command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/network-policies/default-deny.yaml /home/ssm-user/scripts/appcode/default-deny.yaml
+            #  ignoreErrors: false
+            #m-copy-file-7:
+            #  command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/network-policies/allow-ui.yaml /home/ssm-user/scripts/appcode/allow-ui.yaml
+            #  ignoreErrors: false
+            #n-copy-file-8:
+            #  command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/network-policies/allow-ui-client.yaml /home/ssm-user/scripts/appcode/allow-ui-client.yaml
+            #  ignoreErrors: false
+            #o-copy-file-9:
+            #  command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/network-policies/allow-frontend-to-backend.yml /home/ssm-user/scripts/appcode/allow-frontend-to-backend.yml
+            #  ignoreErrors: false
+            #p-copy-file-10:
+            #  command: aws s3 cp s3://us-west-2-tcprod/courses/ILT-TF-200-COREKS/v2.1.11.prod-f7f1d0c0/lab-4-monitoring/scripts/star-policy-demo/network-policies/allow-client-to-frontend.yml /home/ssm-user/scripts/appcode/allow-client-to-frontend.yml
+            #  ignoreErrors: false
+            #q-apply-default-deny-star:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -n stars -f /home/ssm-user/scripts/appcode/default-deny.yaml'
+            #  ignoreErrors: false  
+            #r-apply-default-deny-client:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -n client -f /home/ssm-user/scripts/appcode/default-deny.yaml'
+            #  ignoreErrors: false
+            #s-apply-allow-ui:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/allow-ui.yaml'
+            #  ignoreErrors: false
+            #t-apply-allow-ui-client:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/allow-ui-client.yaml'
+            #  ignoreErrors: false
+            #u-apply-allow-frontend-to-backend:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/allow-frontend-to-backend.yml'
+            #  ignoreErrors: false
+            #v-apply-allow-client-to-frontend:
+            #  command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f /home/ssm-user/scripts/appcode/allow-client-to-frontend.yml'
+            #  ignoreErrors: false          
+        # Start - InstallMetricsServer      
+        install-k8s-metrics-server:
+          commands:
+            a-apply:
+              command: runuser -l ssm-user -c 'AWS_REGION=${AWS::Region} kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml'
+              ignoreErrors: false
+        # Start - Modify instance permissions
+        remove-lab-build-policy:
+          commands:
+            remove-lab-build-policy:
+              command: !Sub /usr/local/bin/aws iam delete-role-policy --role-name ${BastionHostIamRole} --policy-name BastionHostBuildPolicy
+    Properties:
+      ImageId: !Ref LatestAL2AmiId
+      InstanceType: t3.micro
+      IamInstanceProfile: !Ref BastionHostInstanceProfile
+      Tags:
+      - Key: Name
+        Value: Bastion Host
+      InstanceInitiatedShutdownBehavior: terminate
+      BlockDeviceMappings:
+      - DeviceName: /dev/xvda
+        Ebs:
+          VolumeSize: 8
+          DeleteOnTermination: true
+          VolumeType: gp2
+          Encrypted: true
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: true
+        DeviceIndex: "0"
+        GroupSet:
+        - !Ref BastionHostSecurityGroup
+        SubnetId: !Ref BastionHostSubnet
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y aws-cfn-bootstrap
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource BastionHost --configsets InstallTools,IncreaseSessionMgrTimeout,EksctlCreateCluster,CreateSsmUser,ChangeDirectoryOwner,InstallVpcCni,InstallApplication,InstallMetricsServer,CreateVariablesScript,DownloadFiles,ModifyInstancePermissions --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource BastionHost --region ${AWS::Region}
+
+    CreationPolicy:
+      ResourceSignal:
+        Count: '1'
+        Timeout: PT45M
+  # End - Create bastion host
+
+  # Create Fluent Bit DaemonSet policy
+  FluentBitDaemonSetPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: eks-fluent-bit-daemonset-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+          - firehose:PutRecordBatch
+          - firehose:UpdateDestination
+          Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/eks-stream
+        - Effect: Allow
+          Action:
+          - logs:CreateLogStream
+          - logs:DescribeLogStreams
+          - logs:PutLogEvents
+          - logs:CreateLogGroup
+          Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*:*
+      Roles:
+      - !Ref EksNodeInstanceRole
+
+  # Create an Amazon S3 bucket to store data from Amazon Kinesis Data Firehose
+  FirehoseBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: #Sets "Block all public access" to "On" for the bucket
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # Start - Create Amazon Kinesis Data Firehose IAM role and policies
+  FirehoseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: firehose-delivery-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - firehose.amazonaws.com
+
+  FirehoseDeliveryPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: firehose-delivery-policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+          - glue:GetTableVersions
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - s3:AbortMultipartUpload
+          - s3:GetBucketLocation
+          - s3:GetObject
+          - s3:ListBucket
+          - s3:ListBucketMultipartUploads
+          - s3:PutObject
+          Resource:
+          - !Sub ${FirehoseBucket.Arn}
+          - !Sub ${FirehoseBucket.Arn}/*
+          - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%
+          - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*
+        - Effect: Allow
+          Action:
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:*:*
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          - lambda:GetFunctionConfiguration
+          Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_DEFAULT_FUNCTION%:%FIREHOSE_DEFAULT_VERSION%
+        - Effect: Allow
+          Action:
+          - logs:PutLogEvents
+          Resource:
+          - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/eks-stream:log-stream:*
+        - Effect: Allow
+          Action:
+          - kinesis:DescribeStream
+          - kinesis:GetShardIterator
+          - kinesis:GetRecords
+          Resource: !Sub arn:aws:kinesis:${AWS::Region}:${AWS::AccountId}:stream/%FIREHOSE_STREAM_NAME%
+        - Effect: Allow
+          Action:
+          - kms:Decrypt
+          Resource:
+          - !Sub arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/%SSE_KEY_ID%
+          Condition:
+            StringEquals:
+              kms:ViaService: kinesis.%REGION_NAME%.amazonaws.com
+            StringLike:
+              kms:EncryptionContext:aws:kinesis:arn: !Sub arn:aws:kinesis:%REGION_NAME%:${AWS::AccountId}:stream/%FIREHOSE_STREAM_NAME%
+        - Effect: Allow
+          Action:
+          - es:DescribeElasticsearchDomain
+          - es:DescribeElasticsearchDomains
+          - es:DescribeElasticsearchDomainConfig
+          - es:ESHttpPost
+          - es:ESHttpPut
+          Resource:
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/*
+        - Effect: Allow
+          Action:
+          - es:ESHttpGet
+          Resource:
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/_all/_settings
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/_cluster/stats
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/access-logs/_mapping/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/_nodes
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/_nodes/*/stats
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/_stats
+          - !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/access-logs/_stats
+      Roles:
+      - !Ref FirehoseRole
+  # End - Create Amazon Kinesis Data Firehose IAM role and policies
+
+
+  #Create a S3 bucket
+  S3workshop:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub workshop-${AWS::AccountId}
+      PublicAccessBlockConfiguration: #Sets "Block all public access" to "On" for the bucket
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+#create opensearch domain
+  OpenSearchServiceDomain:
+    Type: AWS::OpenSearchService::Domain
+    Properties:
+      DomainName: 'eks-domain'
+      EngineVersion: 'OpenSearch_1.3'
+      ClusterConfig:
+        InstanceCount: '3'
+        ZoneAwarenessEnabled: false
+        InstanceType: 'm5.large.search'
+      AccessPolicies:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: 'Allow'
+          Principal:
+            AWS: '*'
+          Action: 'es:*'
+          Resource: !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/eks-domain/*
+      AdvancedSecurityOptions:
+        Enabled: true
+        InternalUserDatabaseEnabled: true
+        MasterUserOptions:
+          MasterUserName: admin
+          MasterUserPassword: !Sub ${LabFusionGenerateRandomAlphaNumericPassword.Outputs.RandomAlphaNumber}
+      EBSOptions:
+        EBSEnabled: true
+        Iops: '0'
+        VolumeSize: '10'
+        VolumeType: 'gp2'
+      EncryptionAtRestOptions:
+        Enabled: true
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      DomainEndpointOptions:
+        CustomEndpointEnabled: false
+        EnforceHTTPS: true
+
+#--- Start Grafana ---#
+  GrafanaPassword:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: GrafanaPassword
+      Description: "A random password for the Grafana admin user"
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: "password"
+        ExcludePunctuation: 'true'
+        PasswordLength: 16
+      Tags:
+      - Key: Grafana
+        Value: Password
+#--- End Grafana ---#
+
+  LabFusionGenerateRandomAlphaNumericPassword:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${AWS::Region}-tcprod.s3.amazonaws.com/courses/aws-tc-lab-common-resources/lambda-functions/generaterandomalphanumeric/yml/generate-random-alpha-number.yml
+      Parameters:
+        PasswordLength: 12
+        ExcludeCharacters: ""
+        ExcludeNumbers: "False"
+        ExcludePunctuation: "False"
+        ExcludeUppercase: "False"
+        ExcludeLowercase: "False"
+        IncludeSpace: "False"
+        RequireEachIncludedType: "True"
+
+Outputs:
+  OpenSearchPassword:
+    Description: Password for OpenSearch Dashboard
+    Value: !Sub ${LabFusionGenerateRandomAlphaNumericPassword.Outputs.RandomAlphaNumber}
+
+  #S3workshop:
+  #  Description: Bucket Created using this template.
+  #  Value: !Ref S3workshop
+
+  FirehoseRoleArn:
+    Description: ARN of the IAM role used by Amazon Kinesis Data Firehose
+    Value: !GetAtt FirehoseRole.Arn
+
+  StreamBucketArn:
+    Description: ARN of the S3 bucket to store Amazon Kinesis Data Firehose data in
+    Value: !GetAtt FirehoseBucket.Arn
+
+  #FirehoseBucket:
+  #  Description: Name of the S3 bucket to store Amazon Kinesis Data Firehose data in
+  #  Value: !Ref FirehoseBucket
+
+  DomainEndpointDashboard:
+    Description: OpenSearch Dashboard URL
+    Value: !Join ['', ['https://', !GetAtt OpenSearchServiceDomain.DomainEndpoint, '/_dashboards']]
+
+  AwsRegion:
+    Description: The AWS Region that the lab is running in
+    Value: !Ref AWS::Region
+
+  #DataLocation:
+  #  Description: The Lab Resources
+  #  Value: !Sub s3://${AWS::Region}${S3BucketSuffix}/${S3PathPrefix}

@@ -1,0 +1,11 @@
+From: jane.doe@example.com
+Subject: Claim - storm damage
+Date: 2026-09-19
+
+Hi,
+
+Policy POL-67890. Something happened to my house during the storm last night.
+There is damage. I think it is quite bad. Please help.
+
+Thanks,
+Jane

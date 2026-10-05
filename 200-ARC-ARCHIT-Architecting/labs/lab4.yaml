@@ -1,0 +1,471 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Architecting on AWS - Lab 4 - Creating a Highly Available Environment
+
+# Lab VPC with 2 public + 2 private subnets
+# 1 x NAT Gateway (Student adds a second)
+# DB Subnet Group across the 2 private subnets
+# RDS in Private Subnet
+
+# last modified 2025-05-21
+ 
+Resources:
+  ###########
+  # VPC with Internet Gateway
+  ###########
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/20
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: Lab VPC
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Lab IG
+
+  VPCtoIGWConnection:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref IGW
+      VpcId: !Ref VPC
+
+  ###########
+  # Public Route Table
+  ###########
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Public Route Table
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - VPCtoIGWConnection
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+      RouteTableId: !Ref PublicRouteTable
+
+  ###########
+  # Private Route Table
+  ###########
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private Route Table 1
+
+  ###########
+  # Public Subnets x 2
+  ###########
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      MapPublicIpOnLaunch: true
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Public Subnet 1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      MapPublicIpOnLaunch: true
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Public Subnet 2
+
+  PublicRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  ###########
+  # Private Subnets x 2
+  ###########
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/23
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Private Subnet 1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/23
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs
+      Tags:
+        - Key: Name
+          Value: Private Subnet 2
+
+  PrivateRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  ###########
+  # NAT Gateway
+  ###########
+
+  # NATGateway:
+  #   DependsOn: PrivateSubnet1
+  #   Type: AWS::EC2::NatGateway
+  #   Properties:
+  #     SubnetId: !Ref PublicSubnet1
+  #     AllocationId: !GetAtt NATGatewayEIP.AllocationId
+
+  # NATGatewayEIP:
+  #   Type: AWS::EC2::EIP
+  #   Properties:
+  #     Domain: vpc
+
+  # NATGatewayRoute:
+  #   Type: AWS::EC2::Route
+  #   Properties:
+  #     RouteTableId:
+  #       Ref: PrivateRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     NatGatewayId:
+  #       Ref: NATGateway
+
+  ###########
+  # IAM Role for App
+  ###########
+
+  # EC2 Launch Template
+  WebAppLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: WebAppLaunchTemplate
+      VersionDescription: "v1"
+      LaunchTemplateData:
+        InstanceType: "t3.micro"
+        ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
+        SecurityGroupIds:
+          - !Ref WebAppSecurityGroup
+        IamInstanceProfile:
+          Name: !Ref InstanceProfile
+        UserData: 
+          Fn::Base64: |
+            #!/bin/bash
+            sudo yum update -y
+            sudo yum install -y httpd
+            sudo systemctl start httpd
+            sudo systemctl enable httpd
+            echo "Hello World" >> /var/www/html/index.html​
+        # KeyName: "aws-seoul-key"
+
+  # Auto Scaling Group
+  WebAppAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MinSize: "2"
+      MaxSize: "2"
+      DesiredCapacity: 2
+      VPCZoneIdentifier:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebAppLaunchTemplate
+        Version: !GetAtt WebAppLaunchTemplate.LatestVersionNumber
+      HealthCheckType: EC2
+      HealthCheckGracePeriod: 300
+      TargetGroupARNs:
+        - !Ref WebAppALBTargetGroup
+      Tags:
+        - Key: Name
+          Value: WebAppAutoScalingInstance
+          PropagateAtLaunch: "true"
+
+  # Application Load Balancer
+  WebAppALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: WebAppALB
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref WebAppLBSecurityGroup
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "60"
+      Scheme: internet-facing
+      Type: application
+
+  # ALB Target Group
+  WebAppALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      Protocol: HTTP
+      Port: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: 80
+      HealthCheckPath: "/"
+      Matcher:
+        HttpCode: "200"
+
+  # ALB Listener
+  WebAppALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebAppALBTargetGroup
+      LoadBalancerArn: !Ref WebAppALB
+      Port: 80
+      Protocol: HTTP
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: Inventory-App-Role
+      Roles:
+        - !Ref AppRole
+
+  AppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Inventory-App-Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ssm:*
+                Resource: "*"
+
+  ###########
+  # App Security Group
+  ###########
+
+  WebAppLBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebAppLBSG
+      GroupDescription: Enable access to App
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0  # Allow HTTP traffic from anywhere
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0  # Allow HTTPS traffic from anywhere
+      Tags:
+        - Key: Name
+          Value: WebAppLBSG
+
+  WebAppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebAppSG
+      GroupDescription: Enable access to App
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref WebAppLBSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref WebAppLBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: WebAppSG
+  ###########
+  # DB Subnet Group
+  ###########
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Lab-DB-Subnet-Group
+      DBSubnetGroupName: Lab-DB-Subnet-Group
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: DBSubnetGroup
+
+  ###########
+  # DB Security Group
+  ###########
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Inventory-DB
+      GroupDescription: Enable access to MySQL
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 10.0.0.0/20
+      Tags:
+        - Key: Name
+          Value: Inventory-DB
+
+  ###########
+  # RDS Database
+  ###########
+
+#  RDSDatabase:
+#    Type: AWS::RDS::DBInstance
+#    Properties:
+#      DBName: inventory
+#      DBInstanceIdentifier: inventory-db
+#      AllocatedStorage: "5"
+#      DBInstanceClass: db.t3.micro
+#      Engine: MySQL
+#      MasterUsername: dbadmin
+#      MasterUserPassword: lab-password
+#      MultiAZ: false
+#      DBSubnetGroupName: !Ref DBSubnetGroup
+#      VPCSecurityGroups:
+#        - !Ref DBSecurityGroup
+#      Tags:
+#        - Key: Name
+#          Value: inventory-db
+
+  ###########
+  # Lambda function to clear existing Parameter Store parameters
+  ###########
+
+  LambdaClearParameters:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: Clear-parameter-store
+      Handler: clear-parameter-store.handler
+      MemorySize: 128
+      Timeout: 300
+      Role: !GetAtt LambdaVPCRole.Arn
+      Code:
+        S3Bucket: !Sub ${AWS::Region}-tcprod
+        S3Key: courses/ILT-TF-200-ARCHIT/v6.8.15/lab-2-webapp/scripts/clear-parameter-store.zip
+      Runtime: python3.8
+
+  CustomClearParameters:
+    Type: Custom::CustomClearParameters
+    Properties:
+      ServiceToken: !GetAtt LambdaClearParameters.Arn
+
+  LambdaVPCRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: SSMCleanup
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:Describe*
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - ssm:*
+                Resource: "*"
+
+  ReadOnlyGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+
+
+
+###########
+# Outputs
+###########
+
+Outputs:
+#  Endpoint:
+#    Value: !GetAtt RDSDatabase.Endpoint.Address
+#    Description: Database endpoint
+
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+    Description: PublicSubnet2
+
+#  NATGateway1:
+#    Value: !Ref NATGateway
+#    Description: NATGateway1
+
+  Region:
+    Value: !Ref AWS::Region
+    Description: Lab Region

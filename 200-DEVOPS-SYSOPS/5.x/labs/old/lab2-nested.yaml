@@ -1,0 +1,294 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creates and hooks up lambda to enforce a max number of ec2 instances
+
+Parameters:
+  S3Bucket:
+    Type: String
+    
+  S3CodePath:
+    Type: String
+
+  AllowedRegions:
+    Type: String
+    AllowedPattern: '.+-.+-\d(,.+-.+-\d)*'
+    Description: A comma-separated list of AWS regions
+    ConstraintDescription: must contain a comma-separated list of AWS regions. We assume regions are like us-east-1 (two dashes, digit at the end)
+    Default: us-west-2
+  MaxInstances:
+    Type: Number
+    Default: 1
+    Description: The maximum number of ec2 instances allowed
+
+Resources:
+  EventBridgeIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              !Sub events.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: PutEventsDestinationBus
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - events:PutEvents
+            Resource:
+            - !Sub "arn:aws:events:*:${AWS::AccountId}:event-bus/*"
+
+  LambdaIamRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        -
+          PolicyName: "LambdaPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - ec2:*
+                  - events:*
+                Resource: "*"
+              -
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+              - 
+                Effect: "Allow"
+                Action:
+                  - iam:PassRole
+                Resource: !GetAtt EventBridgeIAMRole.Arn
+
+  RulesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Ec2NumInstancesEnforcer
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt EventRule.Arn
+
+  EventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "EventRule"
+      Name: "enforce-rule"
+      EventPattern:
+        source:
+          -  "aws.ec2"
+        detail-type:
+          - "EC2 Instance State-change Notification"
+        detail:
+          state: ["running"]
+      State: "ENABLED"
+      Targets:
+        -
+          Arn: !GetAtt Ec2NumInstancesEnforcer.Arn
+          Id: Lambda1
+  
+  EC2FleetRulesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Ec2NumInstancesEnforcer
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt EC2FleetEventRule.Arn
+
+  EC2FleetEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "EC2FleetEventRule"
+      Name: "enforce-rule-ec2fleet"
+      EventPattern:
+        source:
+          -  "aws.ec2fleet"
+        detail-type:
+          - "EC2 Fleet State Change"
+        detail:
+          sub-type: ["submitted","active","modify_in_progress","modify_succeeded"]
+      State: "ENABLED"
+      Targets:
+        -
+          Arn: !GetAtt Ec2NumInstancesEnforcer.Arn
+          Id: Lambda2
+
+  EC2SpotFleetRulesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Ec2NumInstancesEnforcer
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt EC2SpotFleetEventRule.Arn
+
+  EC2SpotFleetEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "EC2SpotFleetEventRule"
+      Name: "enforce-rule-ec2spotfleet"
+      EventPattern:
+        source:
+          -  "aws.ec2spotfleet"
+        detail-type:
+          - "EC2 Spot Fleet State Change"
+        detail:
+          sub-type: ["submitted","active","modify_in_progress","modify_succeeded"]
+      State: "ENABLED"
+      Targets:
+        -
+          Arn: !GetAtt Ec2NumInstancesEnforcer.Arn
+          Id: Lambda3
+
+  Ec2NumInstancesEnforcer:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: Ec2NumInstancesEnforcer
+      Handler: enforce_ec2.handler
+      Role: !GetAtt LambdaIamRole.Arn
+      Runtime: python3.11
+      Timeout: 180
+      Environment:
+        Variables:
+          ALLOWED_REGIONS: !Sub "${AllowedRegions}"
+          MAX_INSTANCES: !Sub "${MaxInstances}"
+          STACK_ID: !Sub "${AWS::StackId}"
+      Code:
+        S3Bucket: !Sub ${S3Bucket}
+        S3Key: !Sub ${S3CodePath}/enforce_ec2.zip
+  
+  CreateEventBridgeRules:
+    Type: Custom::EventBridgeRules
+    Properties:
+      ServiceToken: !GetAtt EventBridgeRulesLambda.Arn
+      EventBridgeIAMRole: !GetAtt EventBridgeIAMRole.Arn
+      Regions: !Ref AllowedRegions
+
+  EventBridgeRulesLambda:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName: EventBridgeRulesLambda
+      Handler: index.handler
+      Role: !GetAtt LambdaIamRole.Arn
+      Runtime: python3.11
+      Timeout: 180
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          import cfnresponse
+          from botocore.config import Config
+
+          config = Config(retries={
+                      "max_attempts": 50,
+                      "mode": "standard"
+                  })
+
+          runtime_region = os.environ['AWS_REGION']
+
+          # function to create an event bridge rule
+          def create_event_rule(rule_name,rule_description,rule_event_pattern,runtime_region,region,account_id,target_role):
+              # define event bridge client
+              event_bridge_client = boto3.client('events',region_name=region)
+              # create event bridge rule
+              put_rule_response = event_bridge_client.put_rule(
+                          Name = rule_name,
+                          EventPattern = rule_event_pattern,
+                          State = 'ENABLED',
+                          Description = rule_description
+                      )
+              print(put_rule_response)
+
+              put_target_response = event_bridge_client.put_targets(
+                  Rule=rule_name,
+                  Targets=[
+                      {
+                          'Id': runtime_region + '-default-bus',
+                          'Arn': 'arn:aws:events:' + runtime_region + ':' + account_id + ':event-bus/default',
+                          'RoleArn': target_role
+                      }
+                  ]
+              )
+              print(put_target_response)
+
+              print('created event rule {}'.format(rule_name))
+
+          # function to create event rules in multiple regions
+          def create_event_rules_in_multiple_regions(regions,target_role, runtime_region, account_id):               
+              for region in regions:
+                  # rule for detecting running ec2 instance        
+                  ec2_rule_name = 'enforce-ec2-rule-{}'.format(region)
+                  ec2_rule_description = 'enforce ec2 instance in region {}'.format(region)
+                  ec2_rule_event_pattern = '{"source": ["aws.ec2"],"detail-type": ["EC2 Instance State-change Notification"], "detail": { "state": ["running"] } }'
+                  
+                  # rule for detecting running ec2 fleet
+                  ec2_fleet_rule_name = 'enforce-ec2-fleet-rule-{}'.format(region)
+                  ec2_fleet_rule_description = 'enforce ec2 fleet in region {}'.format(region)
+                  ec2_fleet_rule_event_pattern = '{"source": ["aws.ec2fleet"],"detail-type": ["EC2 Fleet State Change"], "detail": { "sub-type": ["submitted","active","modify_in_progress","modify_succeeded"] } }'
+
+                  # rule for detecting running ec2 spot fleet
+                  ec2_spot_fleet_rule_name = 'enforce-ec2-spot-fleet-rule-{}'.format(region)
+                  ec2_spot_fleet_rule_description = 'enforce ec2 spot fleet in region {}'.format(region)
+                  ec2_spot_fleet_rule_event_pattern = '{"source": ["aws.ec2spotfleet"],"detail-type": ["EC2 Spot Fleet State Change"], "detail": { "state": ["submitted","active","modify_in_progress","modify_succeeded"] } }'
+
+                  # create event rules
+                  create_event_rule(rule_name=ec2_rule_name,rule_description=ec2_rule_description,rule_event_pattern=ec2_rule_event_pattern,runtime_region=runtime_region,region=region,account_id=account_id,target_role=target_role)
+                
+                  create_event_rule(rule_name=ec2_fleet_rule_name,rule_description=ec2_fleet_rule_description,rule_event_pattern=ec2_fleet_rule_event_pattern,runtime_region=runtime_region,region=region,account_id=account_id,target_role=target_role)
+              
+                  create_event_rule(rule_name=ec2_spot_fleet_rule_name,rule_description=ec2_spot_fleet_rule_description,rule_event_pattern=ec2_spot_fleet_rule_event_pattern,runtime_region=runtime_region,region=region,account_id=account_id,target_role=target_role)
+                  
+                  print('created event rules in region {}'.format(region))
+            
+          def handler(event, context):
+            print('event ...', event)            
+            try:
+                responseData = {}
+
+                if event["RequestType"] == 'Create':
+                  account_id = context.invoked_function_arn.split(":")[4]
+                  print(f'runtime_region={runtime_region}, account_id={account_id}')
+                  
+                  # remove runtime region from the regions list
+                  regions = event["ResourceProperties"]["Regions"].split(',')
+                  regions.remove(runtime_region)
+
+                  target_role = event["ResourceProperties"]["EventBridgeIAMRole"]
+                  print('creating event rules in multiple regions')                
+                  create_event_rules_in_multiple_regions(regions=regions,runtime_region=runtime_region,account_id=account_id,target_role=target_role)
+                  
+                  response = "CloudFormation create triggered"                  
+                  responseData['Data'] = response
+                  cfnresponse.send(event, context, "SUCCESS", responseData, event["LogicalResourceId"]);                
+                else:
+                  response = "No work to do"                  
+                  responseData['Data'] = response
+                  cfnresponse.send(event, context, "SUCCESS", responseData, event["LogicalResourceId"]);
+              
+            except Exception as e:
+                print(f'There is a problem occured during the execution, Exception: ${e}')
+                response = f"Exception raised for function: \nException details: \n{e}"
+                responseData = {}
+                responseData['Data'] = response
+                cfnresponse.send(event, context, "FAILED", responseData, event["LogicalResourceId"]);
+
+

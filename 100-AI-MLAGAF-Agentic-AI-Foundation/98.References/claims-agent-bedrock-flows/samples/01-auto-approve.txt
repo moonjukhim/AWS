@@ -1,0 +1,16 @@
+From: john.smith@example.com
+Subject: Insurance Claim - Minor Collision
+Date: 2026-09-18
+
+Dear SecureGuard Insurance,
+
+I need to file a claim under my policy POL-12345. Yesterday afternoon another
+driver rear-ended my Toyota Camry at a red light on Oak Street. The rear bumper
+and trunk lid are damaged, and the rear-view camera no longer works.
+
+The body shop gave me a written estimate of $3,200. I have the police report
+(ref. 2026-0918-4471), photos of the damage, and the other driver's insurance
+details.
+
+Best regards,
+John Smith

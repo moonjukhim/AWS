@@ -1,0 +1,287 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Lab 1 of Sysops, builds out a VPC, 2 public EC2 instances and several IAM resources"
+Parameters:
+  AmazonLinuxAMIID:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+
+Resources:
+  LabVPC:
+      Type: "AWS::EC2::VPC"
+      Properties:
+          CidrBlock: "10.0.0.0/16"
+          InstanceTenancy: "default"
+          EnableDnsSupport: true
+          EnableDnsHostnames: true
+          Tags:
+            -
+              Key: "Name"
+              Value: "LabVPC"
+
+  RouteTable:
+      Type: "AWS::EC2::RouteTable"
+      DependsOn: Subnet1
+      Properties:
+          VpcId: !Ref LabVPC
+
+  PublicRoute:
+      Type: 'AWS::EC2::Route'
+      DependsOn:
+        - GatewayAttach
+      Properties:
+        RouteTableId: !Ref RouteTable
+        DestinationCidrBlock: 0.0.0.0/0
+        GatewayId: !Ref IGW
+
+  RouteTableAssociation:
+      Type: "AWS::EC2::SubnetRouteTableAssociation"
+      DependsOn: PublicRoute
+      Properties:
+          SubnetId: !Ref Subnet1
+          RouteTableId: !Ref RouteTable
+
+  Subnet1:
+      Type: "AWS::EC2::Subnet"
+      DependsOn: GatewayAttach
+      Properties:
+          VpcId: !Ref LabVPC
+          CidrBlock: "10.0.0.0/24"
+          AvailabilityZone: !Select
+            - 0
+            - !GetAZs
+
+  IGW:
+              Type: "AWS::EC2::InternetGateway"
+
+  GatewayAttach:
+      Type: "AWS::EC2::VPCGatewayAttachment"
+      Properties:
+          VpcId: !Ref LabVPC
+          InternetGatewayId: !Ref IGW
+
+  AppServerInstance:
+      Type: "AWS::EC2::Instance"
+      DependsOn: RouteTableAssociation
+      Properties:
+          AvailabilityZone: !Select
+            - 0
+            - !GetAZs
+          ImageId: !Ref AmazonLinuxAMIID
+          IamInstanceProfile: !Ref SSMInstanceProfile
+          InstanceType: "t3.micro"
+          Tenancy: "default"
+          Monitoring: false
+          DisableApiTermination: false
+          InstanceInitiatedShutdownBehavior: "stop"
+          CreditSpecification:
+              CPUCredits: "standard"
+          EbsOptimized: false
+          Tags:
+            -
+              Key: "Name"
+              Value: "App Server"
+          BlockDeviceMappings:
+            -
+              DeviceName: "/dev/xvda"
+              Ebs:
+                  VolumeSize: 8
+                  DeleteOnTermination: true
+                  VolumeType: "gp2"
+                  Encrypted: true
+          NetworkInterfaces:
+            -
+              DeviceIndex: "0"
+              Description: "Primary network interface"
+              AssociatePublicIpAddress: true
+              DeleteOnTermination: true
+              SubnetId: !Ref Subnet1
+              Ipv6AddressCount: 0
+
+  WebServerInstance:
+      Type: "AWS::EC2::Instance"
+      DependsOn: RouteTableAssociation
+      Properties:
+          AvailabilityZone: !Select
+            - 0
+            - !GetAZs
+          ImageId: !Ref AmazonLinuxAMIID
+          IamInstanceProfile: !Ref SSMInstanceProfile
+          InstanceType: "t3.micro"
+          Tenancy: "default"
+          Monitoring: false
+          DisableApiTermination: false
+          InstanceInitiatedShutdownBehavior: "stop"
+          CreditSpecification:
+              CPUCredits: "standard"
+          EbsOptimized: false
+          Tags:
+            -
+              Key: "Name"
+              Value: "Web Server"
+          BlockDeviceMappings:
+            -
+              DeviceName: "/dev/xvda"
+              Ebs:
+                  VolumeSize: 8
+                  DeleteOnTermination: true
+                  VolumeType: "gp2"
+                  Encrypted: true
+          NetworkInterfaces:
+            -
+              DeviceIndex: "0"
+              Description: "Primary network interface"
+              AssociatePublicIpAddress: true
+              DeleteOnTermination: true
+              SubnetId: !Ref Subnet1
+              Ipv6AddressCount: 0
+
+# SSM service Role
+  AutomationServiceRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ssm.amazonaws.com
+              - ec2.amazonaws.com
+            Action: sts:AssumeRole
+        ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+        Path: "/"
+        RoleName: AutomationServiceRole
+
+# EC2 IAM instance profile
+  SSMInstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+              - ssm.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: "A SSM role for use by EC2 Instances to be managed."
+      ManagedPolicyArns: [
+        "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+        "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+        "arn:aws:iam::aws:policy/AmazonSSMFullAccess",
+        "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
+      ]
+      RoleName: SSMInstanceRole
+  SSMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      InstanceProfileName: "LabSSMRole"
+      Roles:
+        - !Ref SSMInstanceRole
+
+#IAM assume role and policy for CloudTrail in task 6. Alternatively student could have the service generate this inline policy during Trail setup.
+  CloudTrailRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: Lab_CloudTrail_CloudWatch_Role
+      Description: "A Role to allow CloudTrail logs to communicate with CloudWatch Events"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - cloudtrail.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: "LogStreamPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                Resource:
+                  'Fn::Sub': >-
+                    arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:aws-cloudtrail-logs-${AWS::AccountId}-*:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*
+              - Effect: Allow
+                Action:
+                  - 'logs:PutLogEvents'
+                Resource:
+                  'Fn::Sub': >-
+                    arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:aws-cloudtrail-logs-${AWS::AccountId}-*:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*
+
+#IAM policy for task 5
+  TheCorrectPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "TheCorrectPolicy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'dynamodb:PutItem'
+            Resource: '*'
+      Groups:
+        - !Ref DBWriters
+#DBwriters IAM group for task 5
+  DBWriters:
+    Type: "AWS::IAM::Group"
+    Properties:
+      GroupName: "DBWriters"
+
+#three default IAM users for lab
+  user1:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: CarlosSalazar
+      Policies:
+        - PolicyName: TheWrongPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'dynamodb:Delete*'
+                Resource: '*'
+
+  user2:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: JohnDoe
+      Policies:
+        - PolicyName: TheWrongPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'dynamodb:Delete*'
+                Resource: '*'
+
+  user3:
+    Type: 'AWS::IAM::User'
+    Properties:
+      UserName: NikkiWolf
+      Policies:
+        - PolicyName: TheWrongPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'dynamodb:Delete*'
+                Resource: '*'
+
+###########
+# Outputs
+###########
+Outputs:
+  LabRegion:
+    Description: "The AWS Region this Lab was created in"
+    Value: !Ref AWS::Region
+    Export:
+      Name: "LabRegion"
