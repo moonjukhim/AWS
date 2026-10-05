@@ -3,3 +3,4 @@
 .sfdx/*
 .env
 __pycache__
+.flow-config.json
