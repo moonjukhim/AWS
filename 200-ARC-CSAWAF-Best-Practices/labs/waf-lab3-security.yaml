@@ -1,0 +1,436 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# 참고: CloudFormation은 Description/Label 등 화면에 표시되는 문자열의 한글(비 ASCII)을
+# '?'로 바꿔 저장하므로, 표시용 문자열은 영어로 작성하고 한글은 주석에만 사용합니다.
+Description: >-
+  Well-Architected Lab 3 (Security) - on top of the Lab 2 (waf-lab2-reliability) stack,
+  enables granular logging (CloudTrail, AWS Config), granular SG communication control
+  (DB security group) and network-based control (LoadBalancerIsolation NACL).
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: 'Lab 2 stack' }
+        Parameters: [Lab2StackName]
+      - Label: { default: 'Task 1 - Logging (CloudTrail / AWS Config)' }
+        Parameters: [BucketSuffix, EnableAwsConfig]
+    ParameterLabels:
+      Lab2StackName: { default: 'Lab 2 stack name' }
+      BucketSuffix: { default: 'S3 bucket name suffix (YOURNAME-RANDOMNUMBERS)' }
+      EnableAwsConfig: { default: 'Create AWS Config recorder / delivery channel' }
+
+Parameters:
+  Lab2StackName:
+    Type: String
+    Default: lab2
+    Description: >-
+      Name of the stack deployed from waf-lab2-reliability.yaml. Its exports (VPC, public
+      subnets, DB subnet CIDRs, wa-asg-sg, wa-rds-sg) are imported by this stack.
+  BucketSuffix:
+    Type: String
+    Description: >-
+      Unique suffix for the bucket names (lowercase letters, numbers, '-'). e.g. johndoe123 ->
+      cloudsecurity-demo-bucket-johndoe123, config-bucket-johndoe123
+    AllowedPattern: '^[a-z0-9][a-z0-9-]{1,35}[a-z0-9]$'
+    ConstraintDescription: Use 3-37 characters of lowercase letters, numbers and '-'.
+  EnableAwsConfig:
+    Type: String
+    Description: >-
+      Only one AWS Config recorder is allowed per region. Set to false if a recorder already exists.
+    AllowedValues: ['true', 'false']
+    Default: 'true'
+
+Conditions:
+  CreateConfig: !Equals [!Ref EnableAwsConfig, 'true']
+
+Resources:
+  # ---------------------------------------------------------------------------
+  # 태스크 1.1: AWS CloudTrail
+  # ---------------------------------------------------------------------------
+  CloudTrailBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'cloudsecurity-demo-bucket-${BucketSuffix}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  CloudTrailBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CloudTrailBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSCloudTrailAclCheck
+            Effect: Allow
+            Principal: { Service: cloudtrail.amazonaws.com }
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt CloudTrailBucket.Arn
+            Condition:
+              StringEquals:
+                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/All-API-Commands-across-all-Regions'
+          - Sid: AWSCloudTrailWrite
+            Effect: Allow
+            Principal: { Service: cloudtrail.amazonaws.com }
+            Action: s3:PutObject
+            Resource: !Sub '${CloudTrailBucket.Arn}/AWSLogs/${AWS::AccountId}/*'
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+                aws:SourceArn: !Sub 'arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/All-API-Commands-across-all-Regions'
+
+  Trail:
+    Type: AWS::CloudTrail::Trail
+    DependsOn: CloudTrailBucketPolicy
+    Properties:
+      TrailName: All-API-Commands-across-all-Regions
+      S3BucketName: !Ref CloudTrailBucket
+      IsLogging: true
+      IsMultiRegionTrail: true
+      IncludeGlobalServiceEvents: true
+      EnableLogFileValidation: true
+      # SSE-KMS 암호화 사용 안 함 (KMSKeyId 미지정)
+      EventSelectors:
+        - ReadWriteType: All
+          IncludeManagementEvents: true
+
+  # ---------------------------------------------------------------------------
+  # 태스크 1.2: AWS Config
+  # ---------------------------------------------------------------------------
+  ConfigBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateConfig
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub 'config-bucket-${BucketSuffix}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  ConfigBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: CreateConfig
+    Properties:
+      Bucket: !Ref ConfigBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSConfigBucketPermissionsCheck
+            Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt ConfigBucket.Arn
+            Condition:
+              StringEquals: { 'AWS:SourceAccount': !Ref 'AWS::AccountId' }
+          - Sid: AWSConfigBucketExistenceCheck
+            Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: s3:ListBucket
+            Resource: !GetAtt ConfigBucket.Arn
+            Condition:
+              StringEquals: { 'AWS:SourceAccount': !Ref 'AWS::AccountId' }
+          - Sid: AWSConfigBucketDelivery
+            Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: s3:PutObject
+            Resource: !Sub '${ConfigBucket.Arn}/AWSLogs/${AWS::AccountId}/Config/*'
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+                'AWS:SourceAccount': !Ref 'AWS::AccountId'
+
+  # "Create AWS Config service-linked role" - 이미 있으면 그대로 사용
+  ConfigServiceLinkedRole:
+    Type: Custom::EnsureServiceLinkedRole
+    Condition: CreateConfig
+    Properties:
+      ServiceToken: !GetAtt LabHelperFunction.Arn
+      Action: EnsureConfigServiceLinkedRole
+
+  ConfigRecorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Condition: CreateConfig
+    DependsOn: ConfigServiceLinkedRole
+    Properties:
+      Name: default
+      RoleARN: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig'
+      # All resource types + 전역 IAM 리소스 재정의 제거 → 전역 리소스도 기록
+      RecordingGroup:
+        AllSupported: true
+        IncludeGlobalResourceTypes: true
+      RecordingMode:
+        RecordingFrequency: CONTINUOUS
+
+  # 전송 채널이 생성되면 CloudFormation이 레코더를 자동으로 시작합니다.
+  ConfigDeliveryChannel:
+    Type: AWS::Config::DeliveryChannel
+    Condition: CreateConfig
+    DependsOn: ConfigBucketPolicy
+    Properties:
+      Name: default
+      S3BucketName: !Ref ConfigBucket
+
+  # ---------------------------------------------------------------------------
+  # 태스크 2: DB 보안 그룹(실습 2의 wa-rds-sg = 실습 3의 wa-database-sg) 세분화된 통신 제어
+  # ---------------------------------------------------------------------------
+  # 26, 33단계: 기존 인바운드/아웃바운드 규칙 모두 삭제
+  # (스택 삭제 시에는 실습 2의 상태 - 3306←wa-asg-sg, 아웃바운드 전체 허용 - 로 복원)
+  ClearDatabaseSgRules:
+    Type: Custom::ClearSecurityGroupRules
+    Properties:
+      ServiceToken: !GetAtt LabHelperFunction.Arn
+      Action: ClearSecurityGroupRules
+      GroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-DatabaseSecurityGroupId'
+      AppGroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-AppSecurityGroupId'
+
+  # 28단계: MYSQL/Aurora(3306) ← wa-asg-sg
+  DatabaseSgIngressFromApp:
+    Type: AWS::EC2::SecurityGroupIngress
+    DependsOn: ClearDatabaseSgRules
+    Properties:
+      GroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-DatabaseSecurityGroupId'
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-AppSecurityGroupId'
+      Description: MYSQL/Aurora from wa-asg-sg
+
+  # 35단계: All traffic → wa-asg-sg
+  DatabaseSgEgressToApp:
+    Type: AWS::EC2::SecurityGroupEgress
+    DependsOn: ClearDatabaseSgRules
+    Properties:
+      GroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-DatabaseSecurityGroupId'
+      IpProtocol: '-1'
+      DestinationSecurityGroupId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-AppSecurityGroupId'
+      Description: All traffic to wa-asg-sg
+
+  # ---------------------------------------------------------------------------
+  # 태스크 3: LoadBalancerIsolation 네트워크 ACL
+  # ---------------------------------------------------------------------------
+  LoadBalancerIsolationNacl:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-VpcId'
+      Tags:
+        - Key: Name
+          Value: LoadBalancerIsolation
+
+  # 50: wa-rds-subnet-1 (10.100.4.0/24) 거부
+  NaclOutboundDenyDb1:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+      Egress: true
+      RuleNumber: 50
+      Protocol: -1
+      RuleAction: deny
+      CidrBlock:
+        Fn::ImportValue: !Sub '${Lab2StackName}-RdsSubnet1Cidr'
+
+  # 60: wa-rds-subnet-2 (10.100.5.0/24) 거부
+  NaclOutboundDenyDb2:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+      Egress: true
+      RuleNumber: 60
+      Protocol: -1
+      RuleAction: deny
+      CidrBlock:
+        Fn::ImportValue: !Sub '${Lab2StackName}-RdsSubnet2Cidr'
+
+  NaclOutboundAllowAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+      Egress: true
+      RuleNumber: 100
+      Protocol: -1
+      RuleAction: allow
+      CidrBlock: 0.0.0.0/0
+
+  NaclInboundAllowAll:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+      Egress: false
+      RuleNumber: 100
+      Protocol: -1
+      RuleAction: allow
+      CidrBlock: 0.0.0.0/0
+
+  # 규칙이 모두 만들어진 뒤에 서브넷을 연결해야 트래픽이 끊기지 않습니다.
+  NaclAssociationPublic1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    DependsOn: [NaclOutboundDenyDb1, NaclOutboundDenyDb2, NaclOutboundAllowAll, NaclInboundAllowAll]
+    Properties:
+      SubnetId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-PublicSubnet1Id'
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+
+  NaclAssociationPublic2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    DependsOn: [NaclOutboundDenyDb1, NaclOutboundDenyDb2, NaclOutboundAllowAll, NaclInboundAllowAll]
+    Properties:
+      SubnetId:
+        Fn::ImportValue: !Sub '${Lab2StackName}-PublicSubnet2Id'
+      NetworkAclId: !Ref LoadBalancerIsolationNacl
+
+  # ---------------------------------------------------------------------------
+  # 헬퍼 Lambda (보안 그룹 규칙 정리/복원, Config 서비스 연결 역할 생성)
+  # ---------------------------------------------------------------------------
+  LabHelperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: LabHelper
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeSecurityGroupRules
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupEgress
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:AuthorizeSecurityGroupEgress
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:CreateServiceLinkedRole
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    iam:AWSServiceName: config.amazonaws.com
+
+  LabHelperFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Lab 3 helper - clears/restores DB SG rules, ensures AWS Config service-linked role
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 120
+      Role: !GetAtt LabHelperRole.Arn
+      Code:
+        ZipFile: |
+          import time
+          import boto3
+          import cfnresponse
+          from botocore.exceptions import ClientError
+
+          ec2 = boto3.client('ec2')
+          iam = boto3.client('iam')
+
+
+          def clear_security_group_rules(group_id):
+              ingress, egress = [], []
+              paginator = ec2.get_paginator('describe_security_group_rules')
+              for page in paginator.paginate(Filters=[{'Name': 'group-id', 'Values': [group_id]}]):
+                  for rule in page['SecurityGroupRules']:
+                      (egress if rule['IsEgress'] else ingress).append(rule['SecurityGroupRuleId'])
+              if ingress:
+                  ec2.revoke_security_group_ingress(GroupId=group_id, SecurityGroupRuleIds=ingress)
+              if egress:
+                  ec2.revoke_security_group_egress(GroupId=group_id, SecurityGroupRuleIds=egress)
+              print(f'{group_id}: revoked {len(ingress)} ingress, {len(egress)} egress rules')
+
+
+          def restore_lab2_rules(group_id, app_group_id):
+              # Restore wa-rds-sg to the state defined in the Lab 2 template.
+              calls = [
+                  (ec2.authorize_security_group_ingress,
+                   {'IpProtocol': 'tcp', 'FromPort': 3306, 'ToPort': 3306,
+                    'UserIdGroupPairs': [{'GroupId': app_group_id}]}),
+                  (ec2.authorize_security_group_egress,
+                   {'IpProtocol': '-1', 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]}),
+              ]
+              for call, permission in calls:
+                  try:
+                      call(GroupId=group_id, IpPermissions=[permission])
+                  except ClientError as e:
+                      if e.response['Error']['Code'] != 'InvalidPermission.Duplicate':
+                          raise
+              print(f'{group_id}: restored lab 2 rules')
+
+
+          def ensure_config_service_linked_role():
+              try:
+                  iam.create_service_linked_role(AWSServiceName='config.amazonaws.com')
+                  time.sleep(15)  # wait for IAM propagation
+              except iam.exceptions.InvalidInputException as e:
+                  if 'has been taken' not in str(e):
+                      raise
+                  print('AWSServiceRoleForConfig already exists')
+
+
+          def handler(event, context):
+              props = event['ResourceProperties']
+              old = event.get('OldResourceProperties', {})
+              action = props['Action']
+              request = event['RequestType']
+              physical_id = f"{action}-{props.get('GroupId', 'config')}"
+
+              if request == 'Delete':
+                  # Always report SUCCESS on delete so a failed restore never blocks stack deletion.
+                  try:
+                      if action == 'ClearSecurityGroupRules':
+                          restore_lab2_rules(props['GroupId'], props['AppGroupId'])
+                  except Exception as e:
+                      print(f'restore skipped: {e}')
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, event['PhysicalResourceId'])
+                  return
+
+              try:
+                  # On Update, only clear again when the target SG changed
+                  # (so the rules this stack added are not wiped).
+                  changed = request == 'Update' and old.get('GroupId') != props.get('GroupId')
+                  if request == 'Create' or changed:
+                      if action == 'ClearSecurityGroupRules':
+                          clear_security_group_rules(props['GroupId'])
+                      elif action == 'EnsureConfigServiceLinkedRole':
+                          ensure_config_service_linked_role()
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, physical_id)
+              except Exception as e:
+                  print(e)
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {}, physical_id, reason=str(e)[:200])
+
+Outputs:
+  ApplicationUrl:
+    Description: Task 3 (step 60) - confirm the app still works after the NACL is applied
+    Value:
+      Fn::ImportValue: !Sub '${Lab2StackName}-AppUrl'
+  TrailName:
+    Value: !Ref Trail
+  CloudTrailBucketName:
+    Description: Task 4.1 - trail log location
+    Value: !Ref CloudTrailBucket
+  CloudTrailURL:
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudtrailv2/home?region=${AWS::Region}#/trails/arn:${AWS::Partition}:cloudtrail:${AWS::Region}:${AWS::AccountId}:trail/All-API-Commands-across-all-Regions'
+  ConfigBucketName:
+    Condition: CreateConfig
+    Value: !Ref ConfigBucket
+  NetworkAclId:
+    Description: Task 4.2 - NACL ID to look up in the AWS Config Resource Timeline
+    Value: !Ref LoadBalancerIsolationNacl

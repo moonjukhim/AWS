@@ -1,0 +1,530 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Well-Architected Lab 2 (Reliability) - final architecture.
+  2 AZ VPC, ALB, EC2 Auto Scaling web tier, RDS MariaDB Multi-AZ,
+  Parameter Store / Secrets Manager, Route 53 health check.
+
+Parameters:
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Amazon Linux 2023 AMI for the web instances
+  WebInstanceType:
+    Type: String
+    Default: t3.micro
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+  DBName:
+    Type: String
+    Default: WaRdsDb
+
+Resources:
+  # ---------------------------------------------------------------
+  # Task 1: 2 AZ network (public / private / DB subnet per AZ)
+  # ---------------------------------------------------------------
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.100.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{ Key: Name, Value: wa-lab-vpc }]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: wa-igw }]
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.0.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-public-subnet-1 }]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-public-subnet-2 }]
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{ Key: Name, Value: wa-private-subnet-1 }]
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.3.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags: [{ Key: Name, Value: wa-private-subnet-2 }]
+
+  RdsSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.4.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{ Key: Name, Value: wa-rds-subnet-1 }]
+
+  RdsSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.100.5.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags: [{ Key: Name, Value: wa-rds-subnet-2 }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: wa-public-rt }]
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # Outbound internet for private instances (package install, SSM).
+  # A single NAT keeps lab cost low; use one NAT per AZ in production.
+  NatEip:
+    Type: AWS::EC2::EIP
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags: [{ Key: Name, Value: wa-nat }]
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: wa-private-rt }]
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  RdsSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref RdsSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  RdsSubnet2RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref RdsSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  # ---------------------------------------------------------------
+  # Security groups: Internet -> ALB(80) -> ASG(80) -> RDS(3306)
+  # ---------------------------------------------------------------
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-alb-sg
+      GroupDescription: ALB Security group
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+
+  AsgSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-asg-sg
+      GroupDescription: Launch Template Security group
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, SourceSecurityGroupId: !Ref AlbSecurityGroup }
+
+  RdsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-rds-sg
+      GroupDescription: RDS Security group
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 3306, ToPort: 3306, SourceSecurityGroupId: !Ref AsgSecurityGroup }
+
+  # ---------------------------------------------------------------
+  # Task 2: RDS for MariaDB, Multi-AZ (credentials in Secrets Manager)
+  # ---------------------------------------------------------------
+  DbSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AWS::StackName}-db-credentials'
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "admin"}'
+        GenerateStringKey: password
+        PasswordLength: 20
+        ExcludePunctuation: true
+
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: wa-rds-subnet-group
+      DBSubnetGroupDescription: WA RDS Subnet Group
+      SubnetIds: [!Ref RdsSubnet1, !Ref RdsSubnet2]
+
+  # MariaDB 11.8 defaults to require_secure_transport=ON, which rejects the
+  # web tier's plain (non-TLS) connections. Relaxed here for the lab only.
+  # Family must match the engine's major version (default mariadb = 11.8).
+  DbParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      DBParameterGroupName: wa-mariadb-params
+      Description: WA lab MariaDB parameters (allow non-TLS connections)
+      Family: mariadb11.8
+      Parameters:
+        require_secure_transport: '0'
+
+  DbInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBInstanceIdentifier: wadbinstance
+      DBName: !Ref DBName
+      Engine: mariadb
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: '20'
+      MultiAZ: true
+      PubliclyAccessible: false
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      DBParameterGroupName: !Ref DbParameterGroup
+      VPCSecurityGroups: [!Ref RdsSecurityGroup]
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DbSecret}:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DbSecret}:SecretString:password}}'
+      DeleteAutomatedBackups: true
+
+  # ---------------------------------------------------------------
+  # Task 3: Parameter Store points the app at the RDS endpoint
+  # ---------------------------------------------------------------
+  DbEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: DbPrivateDns
+      Type: String
+      Value: !GetAtt DbInstance.Endpoint.Address
+      Description: Database endpoint used by the web instances at boot
+
+  # ---------------------------------------------------------------
+  # Task 4: Application Load Balancer, target group, listener
+  # ---------------------------------------------------------------
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: waAlb
+      Type: application
+      Scheme: internet-facing
+      Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      SecurityGroups: [!Ref AlbSecurityGroup]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: waAutoscale-tg
+      Protocol: HTTP
+      Port: 80
+      VpcId: !Ref Vpc
+      TargetType: instance
+      HealthCheckPath: /index.php
+      HealthCheckIntervalSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - { Key: deregistration_delay.timeout_seconds, Value: '30' }
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  # ---------------------------------------------------------------
+  # Task 6: IAM role + launch template for the web tier
+  # (Task 5's data migration is replaced by seeding sample rows
+  #  into RDS from user data, since no source EC2 DB exists here.)
+  # ---------------------------------------------------------------
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'wa-asg-instance-role-${AWS::Region}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Policies:
+        - PolicyName: AsgParamStoreAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/DbPrivateDns'
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DbSecret
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    DependsOn: DbEndpointParameter
+    Properties:
+      LaunchTemplateName: waLaunchTemplate
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref WebInstanceType
+        IamInstanceProfile: { Arn: !GetAtt InstanceProfile.Arn }
+        SecurityGroupIds: [!Ref AsgSecurityGroup]
+        MetadataOptions: { HttpTokens: required, HttpEndpoint: enabled }
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - { Key: Name, Value: wa-auto-scale-group }
+              - { Key: App, Value: Product-Catalog }
+              - { Key: Environment, Value: Production }
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -x
+            dnf install -y httpd php php-mysqli php-fpm mariadb105 jq
+
+            # DB endpoint from Parameter Store, credentials from Secrets Manager
+            DB_HOST=$(aws ssm get-parameter --region ${AWS::Region} --name DbPrivateDns --query Parameter.Value --output text)
+            SECRET=$(aws secretsmanager get-secret-value --region ${AWS::Region} --secret-id ${DbSecret} --query SecretString --output text)
+            DB_USER=$(echo "$SECRET" | jq -r .username)
+            DB_PASS=$(echo "$SECRET" | jq -r .password)
+
+            TOKEN=$(curl -s -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+            INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+            AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+
+            mkdir -p /var/www/inc
+            cat > /var/www/inc/dbinfo.inc <<EOF
+            <?php
+            define('DB_SERVER', '$DB_HOST');
+            define('DB_USERNAME', '$DB_USER');
+            define('DB_PASSWORD', '$DB_PASS');
+            define('DB_DATABASE', '${DBName}');
+            define('INSTANCE_ID', '$INSTANCE_ID');
+            define('INSTANCE_AZ', '$AZ');
+            EOF
+            chown root:apache /var/www/inc/dbinfo.inc
+            chmod 640 /var/www/inc/dbinfo.inc
+
+            cat > /var/www/html/index.php <<'EOF'
+            <?php
+            include "/var/www/inc/dbinfo.inc";
+            // PHP 8.1+ mysqli throws on failure instead of setting connect_error.
+            try {
+              $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+              if ($_SERVER["REQUEST_METHOD"] === "POST" && $_POST["category"] !== "" && $_POST["description"] !== "") {
+                $price = (float)$_POST["price"];
+                $stmt = $conn->prepare("INSERT INTO products (category, description, price) VALUES (?, ?, ?)");
+                $stmt->bind_param("ssd", $_POST["category"], $_POST["description"], $price);
+                $stmt->execute();
+              }
+              $rows = $conn->query("SELECT id, category, description, price FROM products ORDER BY id");
+            } catch (mysqli_sql_exception $e) {
+              error_log("DB error: " . $e->getMessage());
+              http_response_code(500);
+              die("Database connection failed");
+            }
+            ?>
+            <html>
+            <head><title>Product Catalog</title></head>
+            <body style="font-family: Arial, sans-serif; margin: 24px;">
+              <h1 style="font-weight: normal;">Welcome to AWS Well-Architected Best Practices - Labs</h1>
+              <p style="color: #555;">Served by <b><?= INSTANCE_ID ?></b> in <b><?= INSTANCE_AZ ?></b></p>
+              <form method="post">
+                <input name="category" placeholder="Category">
+                <input name="description" placeholder="Enter Description" size="40">
+                <input name="price" placeholder="Enter Price">
+                <button type="submit">Update database</button>
+              </form>
+              <table border="1" cellpadding="4" cellspacing="0">
+                <tr><th>ID</th><th>CATEGORY</th><th>DESCRIPTION</th><th>PRICE</th></tr>
+                <?php while ($r = $rows->fetch_assoc()): ?>
+                <tr>
+                  <td><?= (int)$r["id"] ?></td>
+                  <td><?= htmlspecialchars($r["category"]) ?></td>
+                  <td><?= htmlspecialchars($r["description"]) ?></td>
+                  <td><?= htmlspecialchars($r["price"]) ?></td>
+                </tr>
+                <?php endwhile; ?>
+              </table>
+            </body>
+            </html>
+            EOF
+
+            # Start the web server before seeding so a slow/unreachable DB doesn't
+            # keep port 80 closed past the ASG health check grace period.
+            systemctl enable --now php-fpm httpd
+
+            # Create the table and seed sample rows (stands in for the lab's data migration).
+            # INSERT IGNORE with fixed ids keeps this idempotent across instances.
+            for i in $(seq 1 30); do
+              mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" ${DBName} -e "
+                CREATE TABLE IF NOT EXISTS products (
+                  id INT AUTO_INCREMENT PRIMARY KEY,
+                  category VARCHAR(64) NOT NULL,
+                  description VARCHAR(255) NOT NULL,
+                  price DECIMAL(10,2) NOT NULL);
+                INSERT IGNORE INTO products (id, category, description, price) VALUES
+                  (1,'Computer','Laptop',1000.00),
+                  (2,'Furniture','Chair',400.00),
+                  (3,'Software','OS',200.00);" && break
+              sleep 10
+            done
+
+  # ---------------------------------------------------------------
+  # Task 7: EC2 Auto Scaling group across both private subnets
+  # ---------------------------------------------------------------
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: [PrivateDefaultRoute, PrivateSubnet1RouteAssoc, PrivateSubnet2RouteAssoc]
+    Properties:
+      AutoScalingGroupName: waAutoscaleGroup
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      VPCZoneIdentifier: [!Ref PrivateSubnet1, !Ref PrivateSubnet2]
+      MinSize: '2'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      TargetGroupARNs: [!Ref TargetGroup]
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+
+  # ---------------------------------------------------------------
+  # Task 8: Route 53 health check on the ALB
+  # ---------------------------------------------------------------
+  AppHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        Type: HTTP
+        FullyQualifiedDomainName: !GetAtt Alb.DNSName
+        Port: 80
+        ResourcePath: /index.php
+        RequestInterval: 10
+        FailureThreshold: 1
+      HealthCheckTags:
+        - { Key: Name, Value: wa-app-health }
+
+Outputs:
+  AppUrl:
+    Description: Task 7 - open this to use the app through the ALB
+    Value: !Sub 'http://${Alb.DNSName}'
+    Export: { Name: !Sub '${AWS::StackName}-AppUrl' }
+  RdsEndpoint:
+    Description: Task 2 - Multi-AZ RDS endpoint (also stored in Parameter Store as DbPrivateDns)
+    Value: !GetAtt DbInstance.Endpoint.Address
+  TargetGroupArn:
+    Description: Task 4/9 - watch target health here during the failure test
+    Value: !Ref TargetGroup
+  AutoScalingGroupName:
+    Description: Task 7/9 - check Activity history here after terminating an instance
+    Value: !Ref AutoScalingGroup
+  HealthCheckId:
+    Description: Task 8 - Route 53 health check id (wa-app-health)
+    Value: !Ref AppHealthCheck
+  FailureTestCommand:
+    Description: Task 9 - lists the ASG instances; terminate one with aws ec2 terminate-instances
+    Value: !Sub >-
+      aws ec2 describe-instances --region ${AWS::Region}
+      --filters Name=tag:aws:autoscaling:groupName,Values=${AutoScalingGroup} Name=instance-state-name,Values=running
+      --query "Reservations[].Instances[].[InstanceId,Placement.AvailabilityZone]" --output table
+
+  # ---------------------------------------------------------------
+  # Exports consumed by the Lab 3 (Security) stack via Fn::ImportValue
+  # ---------------------------------------------------------------
+  VpcId:
+    Value: !Ref Vpc
+    Export: { Name: !Sub '${AWS::StackName}-VpcId' }
+  PublicSubnet1Id:
+    Value: !Ref PublicSubnet1
+    Export: { Name: !Sub '${AWS::StackName}-PublicSubnet1Id' }
+  PublicSubnet2Id:
+    Value: !Ref PublicSubnet2
+    Export: { Name: !Sub '${AWS::StackName}-PublicSubnet2Id' }
+  RdsSubnet1Cidr:
+    Value: !GetAtt RdsSubnet1.CidrBlock
+    Export: { Name: !Sub '${AWS::StackName}-RdsSubnet1Cidr' }
+  RdsSubnet2Cidr:
+    Value: !GetAtt RdsSubnet2.CidrBlock
+    Export: { Name: !Sub '${AWS::StackName}-RdsSubnet2Cidr' }
+  AppSecurityGroupId:
+    Value: !Ref AsgSecurityGroup
+    Export: { Name: !Sub '${AWS::StackName}-AppSecurityGroupId' }
+  DatabaseSecurityGroupId:
+    Value: !Ref RdsSecurityGroup
+    Export: { Name: !Sub '${AWS::StackName}-DatabaseSecurityGroupId' }

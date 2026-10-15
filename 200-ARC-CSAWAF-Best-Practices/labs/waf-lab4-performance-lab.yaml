@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Lab 4 - Performance Efficiency. VPC + ALB + EC2 Auto Scaling group (waAutoscaleGroup),
+  target tracking scaling policy (CPU 70%, warmup 60s), CloudWatch dashboard (WA-ASG)
+  and an SSM document for the stress test.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  TargetCpuValue:
+    Type: Number
+    Default: 70
+    Description: Target tracking - Average CPU utilization target (%)
+  InstanceWarmup:
+    Type: Number
+    Default: 60
+    Description: Target tracking - instance warmup (seconds)
+  MinSize:
+    Type: Number
+    Default: 2
+  MaxSize:
+    Type: Number
+    Default: 4
+
+Resources:
+  # ---------------------------------------------------------------- Network
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{ Key: Name, Value: wa-lab-vpc }]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: wa-lab-igw }]
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-lab-public-1 }]
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-lab-public-2 }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: [{ Key: Name, Value: wa-lab-public-rt }]
+
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet1RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # ---------------------------------------------------------------- Security groups
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: ALB - allow HTTP from internet
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Web servers - allow HTTP from ALB only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, SourceSecurityGroupId: !Ref AlbSecurityGroup }
+
+  # ---------------------------------------------------------------- Load balancer
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: wa-lab-alb
+      Scheme: internet-facing
+      Type: application
+      Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      SecurityGroups: [!Ref AlbSecurityGroup]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: wa-lab-tg
+      VpcId: !Ref VPC
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      TargetGroupAttributes:
+        - { Key: deregistration_delay.timeout_seconds, Value: '30' }
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  # ---------------------------------------------------------------- EC2 / Auto Scaling
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref InstanceRole]
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: wa-lab-launch-template
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: !Ref InstanceType
+        IamInstanceProfile: { Arn: !GetAtt InstanceProfile.Arn }
+        SecurityGroupIds: [!Ref WebSecurityGroup]
+        Monitoring: { Enabled: true }   # 1-minute EC2 metrics for the dashboard
+        MetadataOptions: { HttpTokens: required }
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            dnf install -y httpd
+            # stress is used by the Task 3 Run Command; fall back to stress-ng (option compatible)
+            dnf install -y stress || { dnf install -y stress-ng && ln -sf /usr/bin/stress-ng /usr/bin/stress; }
+            TOKEN=$(curl -s -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+            ID=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+            AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+            cat > /var/www/html/index.html <<EOF
+            <html><head><title>AnyCompany Product Catalog</title></head>
+            <body><h1>AnyCompany Product Catalog</h1>
+            <p>Instance: $ID</p><p>Availability Zone: $AZ</p></body></html>
+            EOF
+            systemctl enable --now httpd
+
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: [DefaultRoute, PublicSubnet1RouteAssoc, PublicSubnet2RouteAssoc]
+    Properties:
+      AutoScalingGroupName: waAutoscaleGroup
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      DesiredCapacity: !Ref MinSize
+      VPCZoneIdentifier: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+      TargetGroupARNs: [!Ref TargetGroup]
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 120
+      Tags:
+        - Key: Name
+          Value: wa-auto-scaling-group
+          PropagateAtLaunch: true
+
+  # ---------------------------------------------------------------- Task 1: target tracking policy
+  # A custom resource is used so that the policy gets the exact lab name ("Target Tracking Policy")
+  # and so that the ARNs of the two auto-generated TargetTracking alarms are available to the dashboard.
+  ScalingPolicyFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: manage-scaling-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - autoscaling:PutScalingPolicy
+                  - autoscaling:DeletePolicy
+                  - autoscaling:DescribePolicies
+                  - cloudwatch:PutMetricAlarm
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:DeleteAlarms
+                Resource: '*'
+
+  ScalingPolicyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 60
+      Role: !GetAtt ScalingPolicyFunctionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          asg = boto3.client('autoscaling')
+
+          def handler(event, context):
+              props = event['ResourceProperties']
+              group = props['AutoScalingGroupName']
+              name = props['PolicyName']
+              try:
+                  if event['RequestType'] == 'Delete':
+                      try:
+                          asg.delete_policy(AutoScalingGroupName=group, PolicyName=name)
+                      except Exception as e:
+                          print(f'delete_policy ignored: {e}')
+                      cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, name)
+                      return
+
+                  resp = asg.put_scaling_policy(
+                      AutoScalingGroupName=group,
+                      PolicyName=name,
+                      PolicyType='TargetTrackingScaling',
+                      EstimatedInstanceWarmup=int(props['InstanceWarmup']),
+                      TargetTrackingConfiguration={
+                          'PredefinedMetricSpecification': {
+                              'PredefinedMetricType': 'ASGAverageCPUUtilization'
+                          },
+                          'TargetValue': float(props['TargetValue']),
+                      },
+                  )
+                  alarms = {
+                      ('High' if 'AlarmHigh' in a['AlarmName'] else 'Low'): a['AlarmARN']
+                      for a in resp['Alarms']
+                  }
+                  data = {
+                      'PolicyArn': resp['PolicyARN'],
+                      'AlarmHighArn': alarms['High'],
+                      'AlarmLowArn': alarms['Low'],
+                  }
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, data, name)
+              except Exception as e:
+                  print(e)
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)}, name)
+
+  TargetTrackingPolicy:
+    Type: Custom::TargetTrackingPolicy
+    Properties:
+      ServiceToken: !GetAtt ScalingPolicyFunction.Arn
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyName: Target Tracking Policy
+      TargetValue: !Ref TargetCpuValue
+      InstanceWarmup: !Ref InstanceWarmup
+
+  # ---------------------------------------------------------------- Task 2: CloudWatch dashboard
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: WA-ASG
+      DashboardBody: !Sub
+        - |
+          {
+            "widgets": [
+              {
+                "type": "metric", "x": 0, "y": 0, "width": 6, "height": 6,
+                "properties": {
+                  "title": "Healthy Hosts",
+                  "view": "singleValue",
+                  "region": "${AWS::Region}",
+                  "stat": "Maximum",
+                  "period": 60,
+                  "metrics": [
+                    ["AWS/ApplicationELB", "HealthyHostCount",
+                     "TargetGroup", "${TgName}", "LoadBalancer", "${LbName}"]
+                  ]
+                }
+              },
+              {
+                "type": "metric", "x": 6, "y": 0, "width": 6, "height": 6,
+                "properties": {
+                  "title": "CPU % Average Utilization",
+                  "view": "gauge",
+                  "region": "${AWS::Region}",
+                  "stat": "Average",
+                  "period": 60,
+                  "yAxis": { "left": { "min": 0, "max": 100 } },
+                  "metrics": [
+                    ["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${AsgName}"]
+                  ]
+                }
+              },
+              {
+                "type": "alarm", "x": 12, "y": 0, "width": 12, "height": 6,
+                "properties": {
+                  "title": "My Target Tracking Scaling Alarms",
+                  "alarms": ["${AlarmHigh}", "${AlarmLow}"]
+                }
+              }
+            ]
+          }
+        - TgName: !GetAtt TargetGroup.TargetGroupFullName
+          LbName: !GetAtt LoadBalancer.LoadBalancerFullName
+          AsgName: !Ref AutoScalingGroup
+          AlarmHigh: !GetAtt TargetTrackingPolicy.AlarmHighArn
+          AlarmLow: !GetAtt TargetTrackingPolicy.AlarmLowArn
+
+  # ---------------------------------------------------------------- Task 3: stress test document
+  StressTestDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: WA-StressTest
+      DocumentType: Command
+      Content:
+        schemaVersion: '2.2'
+        description: Lab 4 stress test - CPU and memory load for 300 seconds
+        mainSteps:
+          - action: aws:runShellScript
+            name: stress
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - sudo stress --cpu 8 --vm-bytes $(awk '/MemAvailable/{printf "%d\n", $2 * 0.9;}' < /proc/meminfo)k --vm-keep -m 1 --timeout 300s
+
+Outputs:
+  WebsiteURL:
+    Description: Application URL (through the ALB)
+    Value: !Sub http://${LoadBalancer.DNSName}
+  AutoScalingGroupName:
+    Value: !Ref AutoScalingGroup
+  ScalingPolicyArn:
+    Value: !GetAtt TargetTrackingPolicy.PolicyArn
+  DashboardURL:
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=WA-ASG
+  StressTestCommand:
+    Description: Run the Task 3 stress test from the CLI
+    Value: !Sub >-
+      aws ssm send-command --region ${AWS::Region} --document-name WA-StressTest
+      --targets Key=tag:Name,Values=wa-auto-scaling-group

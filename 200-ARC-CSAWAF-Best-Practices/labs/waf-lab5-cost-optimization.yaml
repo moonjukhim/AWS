@@ -1,0 +1,711 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Well-Architected Lab 5 - Cost Optimization (AWS Config + IAM preventive controls).
+  Builds the pre-lab environment: 2-AZ VPC (6 subnets), ALB + Auto Scaling web tier,
+  Multi-AZ RDS (Secrets Manager password), noncompliant lab5-dev-instance (t3.medium, no tags),
+  ConfigServiceRole + config-bucket-lab5-* S3 bucket, LabAutomationRole for AWS-ResizeInstance,
+  DeveloperGroup (developer-policy) and IAM user developer1 (not yet in the group).
+  Optionally (CreateConfigResources=true) also the Config recorder/delivery channel,
+  RequiredTagsCompliance and DevelopmentInstanceType rules with AWS-ResizeInstance auto-remediation.
+
+Parameters:
+  DeveloperPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 12
+    Description: Console password for IAM user developer1 (min 12 chars, include upper/lower/number/symbol).
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  CreateConfigResources:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: >
+      true = also create the AWS Config recorder, delivery channel, the two rules and the
+      auto-remediation (Tasks 1-2 done by the stack). false = learner creates them in the console.
+      Must be false if this account/region already has a Config recorder.
+
+Conditions:
+  CreateConfig: !Equals [!Ref CreateConfigResources, 'true']
+
+Resources:
+  # ---------------------------------------------------------------------------
+  # Network: wa-lab-vpc, 2 AZs x (public / private / DB private) = 6 subnets
+  # ---------------------------------------------------------------------------
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: [{ Key: Name, Value: wa-lab-vpc }]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: wa-lab-igw }]
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-lab-public-subnet-a }]
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-lab-public-subnet-b }]
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.2.0/23
+      Tags: [{ Key: Name, Value: wa-lab-private-subnet-a }]
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.4.0/23
+      Tags: [{ Key: Name, Value: wa-lab-private-subnet-b }]
+
+  DbSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [0, !GetAZs '']
+      CidrBlock: 10.0.6.0/24
+      Tags: [{ Key: Name, Value: wa-lab-db-subnet-a }]
+
+  DbSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Select [1, !GetAZs '']
+      CidrBlock: 10.0.7.0/24
+      Tags: [{ Key: Name, Value: wa-lab-db-subnet-b }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: wa-lab-public-rt }]
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetARouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  NatEip:
+    Type: AWS::EC2::EIP
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEip.AllocationId
+      SubnetId: !Ref PublicSubnetA
+      Tags: [{ Key: Name, Value: wa-lab-nat }]
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: wa-lab-private-rt }]
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnetARouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBRouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+  DbRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags: [{ Key: Name, Value: wa-lab-db-rt }]
+
+  DbSubnetARouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref DbSubnetA
+      RouteTableId: !Ref DbRouteTable
+
+  DbSubnetBRouteAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref DbSubnetB
+      RouteTableId: !Ref DbRouteTable
+
+  # ---------------------------------------------------------------------------
+  # Security groups
+  # ---------------------------------------------------------------------------
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-lab5-alb-sg
+      GroupDescription: Allow HTTP from the internet to the ALB
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+      Tags: [{ Key: Name, Value: wa-lab5-alb-sg }]
+
+  # Referenced in Task 4.3 (step 86): "Common security groups: wa-lab5-server-sg"
+  ServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-lab5-server-sg
+      GroupDescription: Web servers - allow HTTP from ALB
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, SourceSecurityGroupId: !Ref AlbSecurityGroup }
+      Tags: [{ Key: Name, Value: wa-lab5-server-sg }]
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wa-lab5-db-sg
+      GroupDescription: Allow MySQL from web servers
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 3306, ToPort: 3306, SourceSecurityGroupId: !Ref ServerSecurityGroup }
+      Tags: [{ Key: Name, Value: wa-lab5-db-sg }]
+
+  # ---------------------------------------------------------------------------
+  # Web tier: ALB + Auto Scaling group (private subnets)
+  # Instances are tagged Production/CC2 so they are compliant with both Config rules.
+  # ---------------------------------------------------------------------------
+  WebServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  WebServerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref WebServerRole]
+
+  WebLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: wa-lab5-web-lt
+      LaunchTemplateData:
+        ImageId: !Ref LatestAmiId
+        InstanceType: t3.micro
+        IamInstanceProfile: { Arn: !GetAtt WebServerInstanceProfile.Arn }
+        SecurityGroupIds: [!Ref ServerSecurityGroup]
+        MetadataOptions: { HttpTokens: required }
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            dnf install -y httpd
+            TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+            AZ=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
+            echo "<h1>AnyCompany Product Catalog</h1><p>Served from $AZ</p>" > /var/www/html/index.html
+            systemctl enable --now httpd
+
+  WebTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: wa-lab5-web-tg
+      VpcId: !Ref Vpc
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckPath: /
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: wa-lab5-alb
+      Scheme: internet-facing
+      Type: application
+      Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
+      SecurityGroups: [!Ref AlbSecurityGroup]
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebTargetGroup
+
+  WebAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: PrivateDefaultRoute
+    Properties:
+      AutoScalingGroupName: wa-lab5-web-asg
+      MinSize: '2'
+      MaxSize: '4'
+      DesiredCapacity: '2'
+      VPCZoneIdentifier: [!Ref PrivateSubnetA, !Ref PrivateSubnetB]
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WebLaunchTemplate
+        Version: !GetAtt WebLaunchTemplate.LatestVersionNumber
+      TargetGroupARNs: [!Ref WebTargetGroup]
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      Tags:
+        - { Key: Name, Value: lab5-web-server, PropagateAtLaunch: true }
+        - { Key: CostCenter, Value: CC2, PropagateAtLaunch: true }
+        - { Key: Environment, Value: Production, PropagateAtLaunch: true }
+
+  # ---------------------------------------------------------------------------
+  # Database: Multi-AZ RDS MySQL (primary + standby), password in Secrets Manager
+  # ---------------------------------------------------------------------------
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: wa-lab5-db-subnet-group
+      DBSubnetGroupDescription: DB private subnets
+      SubnetIds: [!Ref DbSubnetA, !Ref DbSubnetB]
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBInstanceIdentifier: wa-lab5-db
+      Engine: mysql
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: '20'
+      StorageType: gp3
+      MultiAZ: true
+      DBName: catalog
+      MasterUsername: admin
+      ManageMasterUserPassword: true
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      VPCSecurityGroups: [!Ref DbSecurityGroup]
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 1
+      DeleteAutomatedBackups: true
+      DeletionProtection: false
+
+  # ---------------------------------------------------------------------------
+  # Noncompliant dev instance (Task 3): t3.medium, only a Name tag
+  # ---------------------------------------------------------------------------
+  DevInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: PrivateDefaultRoute
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t3.medium
+      SubnetId: !Ref PrivateSubnetA
+      SecurityGroupIds: [!Ref ServerSecurityGroup]
+      IamInstanceProfile: !Ref WebServerInstanceProfile
+      MetadataOptions: { HttpTokens: required }
+      Tags:
+        - { Key: Name, Value: lab5-dev-instance }
+
+  # ---------------------------------------------------------------------------
+  # AWS Config prerequisites (Task 1): S3 bucket config-bucket-lab5-* + ConfigServiceRole
+  # The recorder/delivery channel itself is created by the learner in the console.
+  # ---------------------------------------------------------------------------
+  ConfigBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub config-bucket-lab5-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+
+  ConfigBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ConfigBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSConfigBucketPermissionsCheck
+            Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: [s3:GetBucketAcl, s3:ListBucket]
+            Resource: !GetAtt ConfigBucket.Arn
+            Condition:
+              StringEquals: { 'AWS:SourceAccount': !Ref AWS::AccountId }
+          - Sid: AWSConfigBucketDelivery
+            Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: s3:PutObject
+            Resource: !Sub ${ConfigBucket.Arn}/AWSLogs/${AWS::AccountId}/Config/*
+            Condition:
+              StringEquals:
+                's3:x-amz-acl': bucket-owner-full-control
+                'AWS:SourceAccount': !Ref AWS::AccountId
+
+  ConfigServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ConfigServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: config.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWS_ConfigRole
+      Policies:
+        - PolicyName: config-s3-delivery
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub ${ConfigBucket.Arn}/AWSLogs/${AWS::AccountId}/*
+                Condition:
+                  StringLike: { 's3:x-amz-acl': bucket-owner-full-control }
+              - Effect: Allow
+                Action: s3:GetBucketAcl
+                Resource: !GetAtt ConfigBucket.Arn
+
+  # Empties the Config bucket on stack deletion so the stack can be removed cleanly.
+  EmptyBucketFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: empty-config-bucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: [s3:ListBucket, s3:ListBucketVersions]
+                Resource: !GetAtt ConfigBucket.Arn
+              - Effect: Allow
+                Action: [s3:DeleteObject, s3:DeleteObjectVersion]
+                Resource: !Sub ${ConfigBucket.Arn}/*
+
+  EmptyBucketFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 300
+      Role: !GetAtt EmptyBucketFunctionRole.Arn
+      Code:
+        # cfnresponse is not bundled with the python3.12 runtime, so reply to CloudFormation directly.
+        ZipFile: |
+          import json, urllib.request, boto3
+
+          def send(event, context, status, reason=''):
+              body = json.dumps({
+                  'Status': status,
+                  'Reason': reason or 'See CloudWatch Logs: ' + context.log_stream_name,
+                  'PhysicalResourceId': event.get('PhysicalResourceId') or context.log_stream_name,
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId'],
+                  'Data': {},
+              }).encode()
+              req = urllib.request.Request(event['ResponseURL'], data=body, method='PUT',
+                                           headers={'Content-Type': '', 'Content-Length': str(len(body))})
+              urllib.request.urlopen(req)
+
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      bucket = boto3.resource('s3').Bucket(event['ResourceProperties']['BucketName'])
+                      bucket.object_versions.delete()
+                      bucket.objects.all().delete()
+                  send(event, context, 'SUCCESS')
+              except Exception as e:
+                  print(e)
+                  send(event, context, 'FAILED', str(e))
+
+  EmptyConfigBucket:
+    Type: Custom::EmptyBucket
+    Properties:
+      ServiceToken: !GetAtt EmptyBucketFunction.Arn
+      BucketName: !Ref ConfigBucket
+
+  # ---------------------------------------------------------------------------
+  # Task 1: AWS Config recorder + delivery channel
+  #   Recording strategy: Specific resource types = AWS EC2 Instance, Frequency: Continuous
+  #   Data governance: ConfigServiceRole, Delivery channel: config-bucket-lab5-*
+  # CloudFormation starts the recorder once the delivery channel is created.
+  # ---------------------------------------------------------------------------
+  ConfigRecorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Condition: CreateConfig
+    Properties:
+      Name: default
+      RoleARN: !GetAtt ConfigServiceRole.Arn
+      RecordingGroup:
+        AllSupported: false
+        IncludeGlobalResourceTypes: false
+        ResourceTypes: [AWS::EC2::Instance]
+      RecordingMode:
+        RecordingFrequency: CONTINUOUS
+
+  # The recorder only stabilizes once recording has started, which requires this channel,
+  # so the channel must NOT depend on ConfigRecorder (deadlock). The recorder handler keeps
+  # retrying StartConfigurationRecorder until the channel exists.
+  # DependsOn EmptyConfigBucket so that on stack deletion the channel is removed
+  # (no more deliveries) before the bucket is emptied and deleted.
+  ConfigDeliveryChannel:
+    Type: AWS::Config::DeliveryChannel
+    Condition: CreateConfig
+    DependsOn: [ConfigBucketPolicy, EmptyConfigBucket]
+    Properties:
+      Name: default
+      S3BucketName: !Ref ConfigBucket
+
+  # ---------------------------------------------------------------------------
+  # Task 2.1: required-tags -> RequiredTagsCompliance (EC2 instances only)
+  # ---------------------------------------------------------------------------
+  RequiredTagsComplianceRule:
+    Type: AWS::Config::ConfigRule
+    Condition: CreateConfig
+    DependsOn: [ConfigRecorder, ConfigDeliveryChannel]
+    Properties:
+      ConfigRuleName: RequiredTagsCompliance
+      Description: Checks EC2 instances have CostCenter and Environment tags with approved values.
+      Scope:
+        ComplianceResourceTypes: [AWS::EC2::Instance]
+      Source:
+        Owner: AWS
+        SourceIdentifier: REQUIRED_TAGS
+      InputParameters:
+        tag1Key: CostCenter
+        tag1Value: CC1,CC2,CC3
+        tag2Key: Environment
+        tag2Value: Development,Production
+
+  # ---------------------------------------------------------------------------
+  # Task 2.2: desired-instance-type -> DevelopmentInstanceType
+  #   Scope: tag Environment=Development, parameter instanceType=t3.small
+  # ---------------------------------------------------------------------------
+  DevelopmentInstanceTypeRule:
+    Type: AWS::Config::ConfigRule
+    Condition: CreateConfig
+    DependsOn: [ConfigRecorder, ConfigDeliveryChannel]
+    Properties:
+      ConfigRuleName: DevelopmentInstanceType
+      Description: Checks Development EC2 instances use the approved t3.small instance type.
+      Scope:
+        TagKey: Environment
+        TagValue: Development
+      Source:
+        Owner: AWS
+        SourceIdentifier: DESIRED_INSTANCE_TYPE
+      InputParameters:
+        instanceType: t3.small
+
+  # Task 2.2 (steps 30-36): automatic remediation with AWS-ResizeInstance
+  DevelopmentInstanceTypeRemediation:
+    Type: AWS::Config::RemediationConfiguration
+    Condition: CreateConfig
+    Properties:
+      ConfigRuleName: !Ref DevelopmentInstanceTypeRule
+      TargetType: SSM_DOCUMENT
+      TargetId: AWS-ResizeInstance
+      Automatic: true
+      MaximumAutomaticAttempts: 5
+      RetryAttemptSeconds: 60
+      Parameters:
+        InstanceId:
+          ResourceValue:
+            Value: RESOURCE_ID
+        InstanceType:
+          StaticValue:
+            Values: [t3.small]
+        AutomationAssumeRole:
+          StaticValue:
+            Values: [!GetAtt LabAutomationRole.Arn]
+
+  # ---------------------------------------------------------------------------
+  # LabAutomationRole (Task 2.2, step 35): assumed by SSM for AWS-ResizeInstance
+  # ---------------------------------------------------------------------------
+  LabAutomationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LabAutomationRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ssm.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: resize-instance
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                  - ec2:DescribeInstanceAttribute
+                  - ec2:StopInstances
+                  - ec2:StartInstances
+                  - ec2:ModifyInstanceAttribute
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ssm:GetAutomationExecution
+                  - ssm:StartAutomationExecution
+                  - ssm:DescribeAutomationExecutions
+                Resource: '*'
+
+  # ---------------------------------------------------------------------------
+  # IAM preventive controls (Task 4)
+  # ---------------------------------------------------------------------------
+  DeveloperGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: DeveloperGroup
+      Policies:
+        - PolicyName: developer-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: AllowToDescribeAll
+                Effect: Allow
+                Action: ['ec2:Describe*']
+                Resource: '*'
+              - Sid: AllowRunInstances
+                Effect: Allow
+                Action: ['ec2:RunInstances', 'ec2:CreateVolume']
+                Resource:
+                  - 'arn:aws:ec2:*::image/*'
+                  - 'arn:aws:ec2:*::snapshot/*'
+                  - 'arn:aws:ec2:*:*:subnet/*'
+                  - 'arn:aws:ec2:*:*:network-interface/*'
+                  - 'arn:aws:ec2:*:*:security-group/*'
+                  - 'arn:aws:ec2:*:*:key-pair/*'
+                  - 'arn:aws:ec2:*:*:volume/*'
+              - Sid: AllowRunInstancesWithRestrictions
+                Effect: Allow
+                Action: ['ec2:RunInstances']
+                Resource: ['arn:aws:ec2:*:*:instance/*']
+                Condition:
+                  StringEquals:
+                    'aws:RequestTag/CostCenter': CC1
+                    'aws:RequestTag/Environment': Development
+                    'ec2:InstanceType': t3.small
+              - Sid: AllowCreateTagsOnlyLaunching
+                Effect: Allow
+                Action: ['ec2:CreateTags']
+                Resource:
+                  - 'arn:aws:ec2:*:*:volume/*'
+                  - 'arn:aws:ec2:*:*:instance/*'
+                  - 'arn:aws:ec2:*:*:network-interface/*'
+                Condition:
+                  StringEquals:
+                    'ec2:CreateAction': RunInstances
+
+  # developer1 is intentionally NOT a member of DeveloperGroup (added in Task 4.2).
+  # AWSConfigUserAccess lets developer1 view Config rule compliance in steps 92-94.
+  Developer1:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: developer1
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSConfigUserAccess
+      LoginProfile:
+        Password: !Ref DeveloperPassword
+        PasswordResetRequired: false
+
+Outputs:
+  LoginURL:
+    Description: Console sign-in URL for developer1 (Task 4.3, step 72)
+    Value: !Sub https://${AWS::AccountId}.signin.aws.amazon.com/console
+  DeveloperUserName:
+    Value: !Ref Developer1
+  DeveloperPassword:
+    Description: The password you entered as the DeveloperPassword parameter
+    Value: (see DeveloperPassword stack parameter)
+  LabRegion:
+    Value: !Ref AWS::Region
+  LabAutomationRoleArn:
+    Description: Paste into AutomationAssumeRole (Task 2.2, step 35)
+    Value: !GetAtt LabAutomationRole.Arn
+  ConfigBucketName:
+    Description: Select this bucket in Task 1, step 7
+    Value: !Ref ConfigBucket
+  ConfigServiceRoleName:
+    Value: !Ref ConfigServiceRole
+  ConfigRules:
+    Condition: CreateConfig
+    Description: AWS Config rules created by this stack
+    Value: !Sub ${RequiredTagsComplianceRule}, ${DevelopmentInstanceTypeRule}
+  DevInstanceId:
+    Value: !Ref DevInstance
+  AlbDnsName:
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+  DatabaseSecretArn:
+    Value: !GetAtt Database.MasterUserSecret.SecretArn

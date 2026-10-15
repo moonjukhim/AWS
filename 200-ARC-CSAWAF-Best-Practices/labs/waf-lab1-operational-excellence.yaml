@@ -1,0 +1,523 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  AWS Well-Architected Lab 1 (Operational Excellence) - completed state.
+  Product catalog web app (Apache/PHP) + MariaDB on two EC2 instances, tagged
+  (Environment=Production, App=Product-Catalog), grouped in resource group "rg-wa",
+  managed by Systems Manager, with the CloudWatch agent installed and configured
+  from Parameter Store via State Manager (operations as code).
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: { default: Network }
+        Parameters: [VpcCidr, PublicSubnetCidr, PrivateSubnetCidr, AllowedHttpCidr]
+      - Label: { default: Compute }
+        Parameters: [InstanceType, LatestAmiId]
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.0.1.0/24
+  PrivateSubnetCidr:
+    Type: String
+    Default: 10.0.2.0/24
+  AllowedHttpCidr:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR allowed to reach the web app on port 80 (narrow to your IP for better security)
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues: [t3.micro, t3.small, t3.medium]
+    Description: Restricted to approved instance types (cost governance)
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+Resources:
+  # ---------------------------------------------------------------------------
+  # Network: single VPC, public subnet (web) + private subnet (db)
+  # ---------------------------------------------------------------------------
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{ Key: Name, Value: wa-lab-vpc }]
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: wa-lab-igw }]
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetCidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: wa-lab-public-subnet }]
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetCidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags: [{ Key: Name, Value: wa-lab-private-subnet }]
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: [{ Key: Name, Value: wa-lab-public-rt }]
+
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # NAT lets the private DB server reach package repos, SSM, CloudWatch and Secrets Manager
+  NatEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags: [{ Key: Name, Value: wa-lab-nat-eip }]
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatEIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+      Tags: [{ Key: Name, Value: wa-lab-nat }]
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: [{ Key: Name, Value: wa-lab-private-rt }]
+
+  PrivateDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+
+  # ---------------------------------------------------------------------------
+  # Security groups (no SSH - administration via Systems Manager)
+  # ---------------------------------------------------------------------------
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: wa-web-server - HTTP from allowed CIDR
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref AllowedHttpCidr
+      Tags: [{ Key: Name, Value: wa-web-sg }]
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: wa-db-server - MariaDB from web server only
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref WebSecurityGroup
+      Tags: [{ Key: Name, Value: wa-db-sg }]
+
+  # ---------------------------------------------------------------------------
+  # Task 4.1: IAM role wa-lab-ssm-ec2-role / instance profile Ec2SSMServerInstanceProfile
+  # ---------------------------------------------------------------------------
+  SsmEc2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: wa-lab-ssm-ec2-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/CloudWatchAgentServerPolicy
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: read-db-secret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DBSecret
+
+  Ec2SSMServerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: Ec2SSMServerInstanceProfile
+      Roles: [!Ref SsmEc2Role]
+
+  # DB application password (never placed in user data or template)
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: wa-lab product catalog DB password
+      GenerateSecretString:
+        PasswordLength: 24
+        ExcludePunctuation: true
+
+  # IMDSv2 + encrypted root volume for both servers
+  ServerLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        MetadataOptions:
+          HttpTokens: required
+          HttpEndpoint: enabled
+          InstanceMetadataTags: disabled
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: 8
+              VolumeType: gp3
+              Encrypted: true
+              DeleteOnTermination: true
+
+  # ---------------------------------------------------------------------------
+  # Task 1/2: EC2 instances with tags Environment=Production, App=Product-Catalog
+  # ---------------------------------------------------------------------------
+  DBServer:
+    Type: AWS::EC2::Instance
+    DependsOn: PrivateDefaultRoute
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds: [!Ref DBSecurityGroup]
+      IamInstanceProfile: !Ref Ec2SSMServerInstanceProfile
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ServerLaunchTemplate
+        Version: !GetAtt ServerLaunchTemplate.LatestVersionNumber
+      Tags:
+        - { Key: Name, Value: wa-db-server }
+        - { Key: Environment, Value: Production }
+        - { Key: App, Value: Product-Catalog }
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          dnf install -y mariadb105-server rsyslog aws-cfn-bootstrap
+
+          # /var/log/messages for the CloudWatch "messages" log group
+          systemctl enable --now rsyslog
+
+          cat > /etc/my.cnf.d/zz-wa-lab.cnf <<'EOF'
+          [mysqld]
+          bind-address=0.0.0.0
+          general_log=1
+          general_log_file=/var/log/mariadb/wa-db-server.log
+          log-error=/var/log/mariadb/mariadb.log
+          EOF
+          systemctl enable --now mariadb
+
+          PW=$(aws secretsmanager get-secret-value --region ${AWS::Region} \
+                --secret-id ${DBSecret} --query SecretString --output text)
+          mysql <<EOF
+          CREATE DATABASE IF NOT EXISTS catalog;
+          CREATE USER IF NOT EXISTS 'wauser'@'%' IDENTIFIED BY '$PW';
+          GRANT ALL PRIVILEGES ON catalog.* TO 'wauser'@'%';
+          FLUSH PRIVILEGES;
+          CREATE TABLE IF NOT EXISTS catalog.products (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            category VARCHAR(100) NOT NULL,
+            description VARCHAR(255) NOT NULL,
+            price DECIMAL(10,2) NOT NULL
+          );
+          EOF
+
+          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} \
+            --stack ${AWS::StackName} --resource DBServer
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    DependsOn: PublicDefaultRoute
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds: [!Ref WebSecurityGroup]
+      IamInstanceProfile: !Ref Ec2SSMServerInstanceProfile
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ServerLaunchTemplate
+        Version: !GetAtt ServerLaunchTemplate.LatestVersionNumber
+      Tags:
+        - { Key: Name, Value: wa-web-server }
+        - { Key: Environment, Value: Production }
+        - { Key: App, Value: Product-Catalog }
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          dnf install -y httpd php php-fpm php-mysqlnd rsyslog aws-cfn-bootstrap
+          systemctl enable --now rsyslog
+
+          PW=$(aws secretsmanager get-secret-value --region ${AWS::Region} \
+                --secret-id ${DBSecret} --query SecretString --output text)
+          mkdir -p /etc/wa-app
+          cat > /etc/wa-app/db.ini <<EOF
+          host = "${DBServer.PrivateIp}"
+          name = "catalog"
+          user = "wauser"
+          pass = "$PW"
+          EOF
+          chown root:apache /etc/wa-app/db.ini
+          chmod 0640 /etc/wa-app/db.ini
+
+          cat > /var/www/html/index.php <<'EOF'
+          <?php
+          $cfg = parse_ini_file('/etc/wa-app/db.ini');
+          $error = '';
+          $rows = [];
+          try {
+              $pdo = new PDO("mysql:host={$cfg['host']};dbname={$cfg['name']};charset=utf8mb4",
+                             $cfg['user'], $cfg['pass'],
+                             [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+              if ($_SERVER['REQUEST_METHOD'] === 'POST'
+                  && $_POST['category'] !== '' && $_POST['description'] !== ''
+                  && is_numeric($_POST['price'])) {
+                  $stmt = $pdo->prepare('INSERT INTO products (category, description, price) VALUES (?, ?, ?)');
+                  $stmt->execute([$_POST['category'], $_POST['description'], $_POST['price']]);
+                  header('Location: /');
+                  exit;
+              }
+              $rows = $pdo->query('SELECT id, category, description, price FROM products ORDER BY id')->fetchAll();
+          } catch (PDOException $e) {
+              $error = 'Database error: ' . $e->getMessage();
+          }
+          function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+          ?>
+          <!DOCTYPE html>
+          <html><head><meta charset="utf-8"><title>AWS Well-Architected Best Practices - Labs</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { font-weight: normal; color: #444; border-bottom: 1px solid #888; padding-bottom: 8px; width: 620px; }
+            label { display: inline-block; font-size: 13px; }
+            table { border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+            td, th { border: 1px solid #999; padding: 3px 6px; text-align: left; }
+            .err { color: #b00; }
+          </style></head>
+          <body>
+          <h1>Welcome to AWS Well-Architected Best Practices - Labs</h1>
+          <?php if ($error): ?><p class="err"><?= h($error) ?></p><?php endif; ?>
+          <form method="post">
+            <label>Category<br><input name="category" list="cats" placeholder="Select Category from menu" required></label>
+            <datalist id="cats"><option>Computer<option>Refrigerator<option>Chair<option>Automotive</datalist>
+            <label>Description<br><input name="description" size="40" placeholder="Enter Description" required></label>
+            <label>Price<br><input name="price" type="number" step="0.01" min="0" placeholder="Enter Price" required></label>
+            <input type="submit" value="Update database">
+          </form>
+          <table>
+            <tr><th>ID</th><th>CATEGORY</th><th>DESCRIPTION</th><th>PRICE</th></tr>
+            <?php foreach ($rows as $r): ?>
+            <tr><td><?= h($r['id']) ?></td><td><?= h($r['category']) ?></td><td><?= h($r['description']) ?></td><td><?= h($r['price']) ?></td></tr>
+            <?php endforeach; ?>
+          </table>
+          <p style="font-size:11px">Powered by AWS Training &amp; Certification</p>
+          </body></html>
+          EOF
+
+          systemctl enable --now php-fpm httpd
+
+          /opt/aws/bin/cfn-signal -e 0 --region ${AWS::Region} \
+            --stack ${AWS::StackName} --resource WebServer
+
+  # ---------------------------------------------------------------------------
+  # Task 3: Tag-based resource group rg-wa
+  # ---------------------------------------------------------------------------
+  ResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name: rg-wa
+      Description: Resource Group for Well-Architected Labs
+      ResourceQuery:
+        Type: TAG_FILTERS_1_0
+        Query:
+          ResourceTypeFilters: [AWS::EC2::Instance]
+          TagFilters:
+            - Key: App
+              Values: [Product-Catalog]
+            - Key: Environment
+              Values: [Production]
+
+  # ---------------------------------------------------------------------------
+  # Task 6: CloudWatch agent configuration in Parameter Store
+  # ---------------------------------------------------------------------------
+  CloudWatchAgentConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: wa-cw-config-file-httpd-mariadb
+      Type: String
+      Description: CloudWatch agent config for httpd and MariaDB (WA Lab 1)
+      Value: |
+        {
+          "agent": {
+            "metrics_collection_interval": 60,
+            "run_as_user": "root"
+          },
+          "logs": {
+            "logs_collected": {
+              "files": {
+                "collect_list": [
+                  {
+                    "file_path": "/var/log/messages",
+                    "log_group_name": "messages",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/httpd/access_log",
+                    "log_group_name": "httpd_access_log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/mariadb/wa-db-server.log",
+                    "log_group_name": "db_general_query_log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/mariadb/mariadb.log",
+                    "log_group_name": "mariadb_log",
+                    "log_stream_name": "{instance_id}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "append_dimensions": {
+              "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+              "ImageId": "${aws:ImageId}",
+              "InstanceId": "${aws:InstanceId}",
+              "InstanceType": "${aws:InstanceType}"
+            },
+            "metrics_collected": {
+              "disk": {
+                "measurement": ["used_percent"],
+                "metrics_collection_interval": 60,
+                "resources": ["*"]
+              },
+              "mem": {
+                "measurement": ["mem_used_percent"],
+                "metrics_collection_interval": 60
+              },
+              "statsd": {
+                "metrics_aggregation_interval": 60,
+                "metrics_collection_interval": 10,
+                "service_address": ":8125"
+              }
+            }
+          }
+        }
+
+  # ---------------------------------------------------------------------------
+  # Task 5 + 6 as code: install the agent (AWS-ConfigureAWSPackage), then
+  # configure/start it (AmazonCloudWatch-ManageAgent), in order, on rg-wa.
+  # ---------------------------------------------------------------------------
+  InstallAndStartCloudWatchAgentDocument:
+    Type: AWS::SSM::Document
+    Properties:
+      DocumentType: Command
+      DocumentFormat: YAML
+      Content:
+        schemaVersion: '2.2'
+        description: Install the CloudWatch agent and start it with config from Parameter Store
+        parameters:
+          ConfigParameterName:
+            type: String
+            default: wa-cw-config-file-httpd-mariadb
+        mainSteps:
+          - action: aws:runDocument
+            name: InstallCloudWatchAgent
+            inputs:
+              documentType: SSMDocument
+              documentPath: AWS-ConfigureAWSPackage
+              documentParameters:
+                action: Install
+                name: AmazonCloudWatchAgent
+          - action: aws:runDocument
+            name: ConfigureAndStartCloudWatchAgent
+            inputs:
+              documentType: SSMDocument
+              documentPath: AmazonCloudWatch-ManageAgent
+              documentParameters:
+                action: configure
+                mode: ec2
+                optionalConfigurationSource: ssm
+                optionalConfigurationLocation: '{{ ConfigParameterName }}'
+                optionalRestart: 'yes'
+
+  CloudWatchAgentAssociation:
+    Type: AWS::SSM::Association
+    DependsOn: ResourceGroup
+    Properties:
+      AssociationName: wa-lab-cloudwatch-agent
+      Name: !Ref InstallAndStartCloudWatchAgentDocument
+      Parameters:
+        ConfigParameterName: [!Ref CloudWatchAgentConfig]
+      Targets:
+        - Key: resource-groups:Name
+          Values: [rg-wa]
+      MaxConcurrency: '100%'
+      MaxErrors: '0'
+
+Outputs:
+  WebAppURL:
+    Description: Product catalog web application (HTTP only, no TLS)
+    Value: !Sub http://${WebServer.PublicDnsName}
+  WebServerInstanceId:
+    Value: !Ref WebServer
+  DBServerInstanceId:
+    Value: !Ref DBServer
+  ResourceGroupName:
+    Value: !Ref ResourceGroup
+  CloudWatchAgentConfigParameter:
+    Value: !Ref CloudWatchAgentConfig
+  SsmRoleName:
+    Value: !Ref SsmEc2Role
