@@ -11,6 +11,13 @@
     
 ---
 
+### Workshop
+
+- [A2A-multi-agent-incident-response]()
+- []()
+
+---
+
 Generative AI Lens로 검증할 항목
   - GENSEC05: 과도한 대리권 방지
   - GENREL03: 루프·재시도·실패 대응, 타임아웃
