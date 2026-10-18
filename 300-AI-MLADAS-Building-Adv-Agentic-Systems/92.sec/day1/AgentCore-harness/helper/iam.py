@@ -28,3 +28,4 @@ def get_agentcore_control_client():
     if _CP_ENDPOINT:
         kwargs["endpoint_url"] = _CP_ENDPOINT
     return _make_session().client("bedrock-agentcore-control", **kwargs)
+ 
