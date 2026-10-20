@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAF Lecture Guide</title>
+<meta name="description" content="강의 자료: 05-WAF × IT Incident Response Agent">
+<style>
+:root{--bg:#fbfaf7;--fg:#1f2328;--muted:#5b6370;--accent:#c2410c;--accent-2:#0f5f8a;--line:#e3e0d8;
+--code-bg:#f2efe8;--card:#ffffff;--quote-bg:#fff6ec;--th:#f4f1ea}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15171a;--fg:#e6e6e3;--muted:#a3a7ae;
+--accent:#fb923c;--accent-2:#67b7e3;--line:#2c3036;--code-bg:#1e2126;--card:#1b1e22;--quote-bg:#2a1f16;--th:#20242a}}
+:root[data-theme="dark"]{--bg:#15171a;--fg:#e6e6e3;--muted:#a3a7ae;--accent:#fb923c;--accent-2:#67b7e3;
+--line:#2c3036;--code-bg:#1e2126;--card:#1b1e22;--quote-bg:#2a1f16;--th:#20242a}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 "Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);max-width:1320px;margin:0 auto}
+.toc{position:sticky;top:0;height:100vh;overflow:auto;padding:28px 18px 28px 24px;border-right:1px solid var(--line);font-size:14px}
+.toc-title{font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:10px}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc li{margin:2px 0}
+.toc li.l3{padding-left:14px;font-size:13px}
+.toc a{color:var(--fg);text-decoration:none;display:block;padding:3px 8px;border-radius:6px}
+.toc a:hover,.toc a.active{background:var(--code-bg);color:var(--accent)}
+main{padding:40px 48px 96px;min-width:0}
+h1{font-size:2rem;line-height:1.3;margin:0 0 20px;padding-bottom:16px;border-bottom:3px solid var(--accent)}
+h2{font-size:1.45rem;margin:56px 0 16px;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:32px 0 10px;color:var(--accent-2)}
+p,li{max-width:80ch}
+a{color:var(--accent-2)}
+hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+code{font-variant-ligatures:none;font-family:"JetBrains Mono","Cascadia Code",Consolas,monospace;font-size:.88em;background:var(--code-bg);padding:.12em .38em;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow:auto;line-height:1.5}
+pre code{background:none;padding:0;font-size:13.5px}
+blockquote{margin:16px 0;padding:10px 16px;background:var(--quote-bg);border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+blockquote p{margin:6px 0}
+.table-wrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:700;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+ul.task-list,li.task-list-item{list-style:none}
+li.task-list-item input{margin-right:8px;transform:translateY(1px)}
+.theme-btn{position:fixed;right:16px;bottom:16px;border:1px solid var(--line);background:var(--card);color:var(--fg);
+border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit;font-size:13px}
+@media (max-width:900px){.layout{display:block}.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px}
+main{padding:24px 16px 80px}h1{font-size:1.55rem}}
+@media print{.toc,.theme-btn{display:none}.layout{display:block}main{padding:0}h2{break-before:page;border-top:0}
+pre,table{break-inside:avoid}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc"><div class="toc-title">목차</div><ul><li class="l2"><a href="#sec-0">0. 한 장 요약: 슬라이드와 코드 매핑</a></li><li class="l2"><a href="#sec-1">1. 도입: 왜 에이전트에 Well-Architected를 따로 적용하나 (슬라이드 1–3)</a></li><li class="l3"><a href="#sec-2">1.1 시나리오 소개 (3분)</a></li><li class="l3"><a href="#sec-3">1.2 이 샘플을 고른 이유</a></li><li class="l3"><a href="#sec-4">1.3 슬라이드 3의 5가지 고려 사항을 이 시스템에 대입하기 (5분)</a></li><li class="l2"><a href="#sec-5">2. Well-Architected Framework 적용 (슬라이드 4–9)</a></li><li class="l3"><a href="#sec-6">2.1 6개 핵심 요소 (슬라이드 5)</a></li><li class="l3"><a href="#sec-7">2.2 Generative AI Lens: "필요한 경우에만 대리권을 높인다" (슬라이드 6)</a></li><li class="l3"><a href="#sec-8">2.3 Agentic AI Security Scoping Matrix (슬라이드 7)</a></li><li class="l3"><a href="#sec-9">2.4 에이전틱 AI용 Well-Architected 원칙 6가지 (슬라이드 8)</a></li><li class="l3"><a href="#sec-10">2.5 통합 모범 사례 (슬라이드 9)</a></li><li class="l2"><a href="#sec-11">3. 프로덕션 준비 상태 (슬라이드 10–11)</a></li><li class="l3"><a href="#sec-12">3.1 배포 준비 상태 검증 체크리스트를 샘플에 적용하기</a></li><li class="l3"><a href="#sec-13">3.2 개발 설정에서 프로덕션 설정으로: README "Scale for Production"</a></li><li class="l2"><a href="#sec-14">4. 부록: 핵심 요소별 설계 전략을 샘플로 확인하기 (슬라이드 16–22)</a></li><li class="l3"><a href="#sec-15">4.1 운영 우수성 (슬라이드 17)</a></li><li class="l3"><a href="#sec-16">4.2 보안 (슬라이드 18)</a></li><li class="l3"><a href="#sec-17">4.3 신뢰성 (슬라이드 19)</a></li><li class="l3"><a href="#sec-18">4.4 성능 효율성 (슬라이드 20)</a></li><li class="l3"><a href="#sec-19">4.5 비용 최적화 (슬라이드 21)</a></li><li class="l3"><a href="#sec-20">4.6 지속 가능성 (슬라이드 22)</a></li><li class="l2"><a href="#sec-21">5. 아키텍처 설계 활동 (슬라이드 12–13)</a></li><li class="l3"><a href="#sec-22">5.1 진행 방식</a></li><li class="l3"><a href="#sec-23">5.2 마커별로 이 샘플에서 가져올 패턴</a></li><li class="l3"><a href="#sec-24">5.3 활동 4개 영역별 모범 답안 골격</a></li><li class="l3"><a href="#sec-25">5.4 노트의 "일반적인 함정"을 샘플로 설명하기</a></li><li class="l2"><a href="#sec-26">6. 모듈 요약과 지식 확인 (슬라이드 14–15)</a></li><li class="l3"><a href="#sec-27">6.1 요약 (2분)</a></li><li class="l3"><a href="#sec-28">6.2 보충 문제 (질문 시간용)</a></li><li class="l2"><a href="#sec-29">7. 권장 진행 시간표 (75분 기준)</a></li><li class="l2"><a href="#sec-30">8. 데모 준비</a></li><li class="l3"><a href="#sec-31">8.1 배포와 실행 (수업 전날 배포 권장, 약 10–15분 소요)</a></li><li class="l3"><a href="#sec-32">8.2 슬라이드별로 띄워 둘 화면</a></li><li class="l3"><a href="#sec-33">8.3 재발 감지 데모 (Memory + 신뢰성)</a></li><li class="l2"><a href="#sec-34">9. 이 샘플에 없는 것 (슬라이드로만 설명)</a></li></ul></nav>
+<main>
+<h1>강의 자료: 05-WAF × IT Incident Response Agent</h1>
+<blockquote>
+<p><strong>슬라이드:</strong> <code>05-WAF.pptx</code> (Well-Architected 에이전틱 AI 시스템, 22장)
+<strong>실습 코드:</strong> <code>04.it-incident-response-agent</code> (IT 장애 티켓 자동 처리 에이전트)
+<strong>용도:</strong> 슬라이드의 Well-Architected 개념을 이 샘플의 실제 코드·설정에 연결해 설명하기 위한 강사용 자료</p>
+</blockquote>
+<p>이 모듈은 앞 모듈(멀티 에이전트, 컨텍스트, 보안, 관찰성)을 <strong>Well-Architected 6개 핵심 요소</strong>로 다시 묶는 정리 모듈입니다. 그래서 이 샘플은 "기능 하나를 깊게"보다는 <strong>"6개 요소가 한 시스템 안에서 어디에 어떻게 구현되어 있고, 어디가 비어 있는가"</strong> 를 보여 주는 데 씁니다. 샘플은 의도적으로 <em>개발 설정</em>으로 배포되므로, 개발 설정과 프로덕션 설정의 차이가 그대로 강의 소재가 됩니다.</p>
+<hr />
+<h2 id="sec-0">0. 한 장 요약: 슬라이드와 코드 매핑</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드</th>
+<th>개념</th>
+<th>샘플에서 보여줄 곳</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>에이전틱 AI 프로덕션 고려 사항 5가지</td>
+<td>§1.3 표: 거버넌스, 모니터링, 컨텍스트, 통신, 평가를 각각 코드에 대입</td>
+</tr>
+<tr>
+<td>5</td>
+<td>WA 6개 핵심 요소</td>
+<td>§4 부록 매핑 (요소별 "구현됨 / 빈틈 / 개선 과제")</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Gen AI Lens: 필요한 경우에만 대리권을 높인다</td>
+<td><code>main.py:450-623</code>: 가드레일, 메모리, 저장, 이벤트 발행은 <strong>코드</strong>가 하고, 진단과 도구 선택만 <strong>LLM</strong>이 함</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Security Scoping Matrix</td>
+<td>이 샘플은 <strong>감독되는 대리권(Scope 3)</strong>. <code>create_change_request</code>를 사람 승인 없이 실행</td>
+</tr>
+<tr>
+<td>8</td>
+<td>WA 원칙 6가지 (관찰성, 제어 가능성 등)</td>
+<td>§2.4 표: OTEL 스팬 속성, Cedar 정책, 가드레일, 실패 시 사람 검토, ADR 문서</td>
+</tr>
+<tr>
+<td>9</td>
+<td>통합 모범 사례 (MCP, Gateway 허브, 연결 관리)</td>
+<td><code>agentcore.json</code> Gateway + Lambda 대상 4개, SNS → Trigger → DLQ, EventBridge</td>
+</tr>
+<tr>
+<td>11</td>
+<td>배포 준비 상태 검증 체크리스트</td>
+<td>§3 체크리스트 + <code>README.md:736</code> "Scale for Production"</td>
+</tr>
+<tr>
+<td>12–13</td>
+<td>아키텍처 설계 활동 (전자상거래 멀티 에이전트)</td>
+<td>§5: 단일 에이전트 샘플의 패턴을 마커 1~5에 옮겨 적용</td>
+</tr>
+<tr>
+<td>17</td>
+<td>운영 우수성</td>
+<td>선언형 <code>agentcore.json</code> + CDK 단일 배포, 온라인 평가 4종, OTEL</td>
+</tr>
+<tr>
+<td>18</td>
+<td>보안</td>
+<td>Cedar Policy Engine(LOG_ONLY), 3개 인증 경계, Guardrail, 도구별 IAM</td>
+</tr>
+<tr>
+<td>19</td>
+<td>신뢰성</td>
+<td>DLQ + 경보, 멱등 쓰기, 원자적 트랜잭션, 성능 저하 모드(degraded mode)</td>
+</tr>
+<tr>
+<td>20</td>
+<td>성능 효율성</td>
+<td>Gateway 시맨틱 검색, Memory 요약 주입, KB 검색</td>
+</tr>
+<tr>
+<td>21</td>
+<td>비용 최적화</td>
+<td><code>model/load.py</code> 우선순위 기반 모델 라우팅 (LOW는 Haiku)</td>
+</tr>
+<tr>
+<td>22</td>
+<td>지속 가능성</td>
+<td>종량제 Runtime(ARM64), 로그 보존 2주, Memory 30일 만료</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="sec-1">1. 도입: 왜 에이전트에 Well-Architected를 따로 적용하나 (슬라이드 1–3)</h2>
+<h3 id="sec-2">1.1 시나리오 소개 (3분)</h3>
+<p>이 모듈 전체에서 쓸 "평가 대상 시스템"을 먼저 보여 줍니다. <code>images/high-level-arch.png</code>나 <code>images/demo.gif</code>를 띄우고 흐름을 한 줄씩 짚습니다.</p>
+<pre><code>외부 시스템(Jira/PagerDuty 등) ─ 티켓 JSON ─▶ SNS 토픽
+  ─▶ Trigger Lambda (필드 검증 · DDB 멱등 저장 · 실패 시 DLQ)
+  ─▶ AgentCore Runtime (Strands 에이전트, 컨테이너)
+       ① Guardrail로 PII·프롬프트 공격 정제
+       ② Memory에서 이 요청자의 과거 장애 요약 조회
+       ③ 우선순위로 모델 선택 (LOW → Haiku, 그 외 → Sonnet)
+       ④ Gateway(MCP)로 도구 연결
+       ⑤ LLM이 진단: lookup_user → get_process_info → query_kb → create_change_request
+       ⑥ 결과를 DynamoDB에 기록  ⑦ EventBridge로 TicketResolved 발행
+  ─▶ AgentCore Gateway (IAM 인증 · 시맨틱 검색 · Cedar Policy Engine)
+       ─▶ Lambda 도구 4개 ─▶ DynamoDB 4개 테이블 / Bedrock Knowledge Base(S3 Vectors)
+</code></pre>
+<p><strong>강조할 점:</strong> 이 에이전트는 <strong>사람이 보지 않는 상태에서 이벤트 하나로 시작해, 변경 요청(Change Request)을 실제로 기록하는 시스템</strong>입니다. 채팅봇보다 자율성이 높고, 그래서 Well-Architected 관점의 점검이 필요합니다.</p>
+<h3 id="sec-3">1.2 이 샘플을 고른 이유</h3>
+<ul>
+<li>README가 직접 "AgentCore 서비스 6종"(Runtime, Gateway+Policy, Memory, Identity, Observability, Evaluations)과 "복원력 기능 10종"을 표로 정리해 둡니다(<code>README.md:160-184</code>).</li>
+<li><code>docs/design-decisions.md</code>에 <strong>ADR 10개</strong>가 있습니다. 각 ADR에 "왜"와 "트레이드오프"가 적혀 있어서, Well-Architected 리뷰에서 "이 결정의 트레이드오프는?"을 물을 때 근거로 쓸 수 있습니다.</li>
+<li>README의 "Scale for Production" 절(<code>README.md:736</code>)이 <strong>개발 설정에서 프로덕션 설정으로 바꿀 항목</strong>을 나열해 두었습니다. 슬라이드 11의 체크리스트와 바로 연결됩니다.</li>
+</ul>
+<h3 id="sec-4">1.3 슬라이드 3의 5가지 고려 사항을 이 시스템에 대입하기 (5분)</h3>
+<p>수강생에게 "이 시스템에서 각 항목은 어디에 해당하는가?"를 먼저 묻고 아래 표로 정리합니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 3 고려 사항</th>
+<th>이 샘플에서의 모습</th>
+<th>구현 위치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>자율적 의사 결정 → <strong>강력한 거버넌스</strong></td>
+<td>LLM이 스스로 <code>create_change_request</code>를 호출할지 결정</td>
+<td>Cedar 정책 <code>RequireReasonForChangeRequest</code> (<code>agentcore/agentcore.json</code>의 <code>policyEngines</code>)</td>
+</tr>
+<tr>
+<td>비결정적 행동 → <strong>포괄적 모니터링</strong></td>
+<td>같은 티켓이라도 도구 호출 순서·횟수가 달라질 수 있음</td>
+<td>OTEL 자동 계측(<code>Dockerfile</code> CMD), 티켓 ID 스팬 속성(<code>main.py:427-440</code>)</td>
+</tr>
+<tr>
+<td>컨텍스트 관리 → <strong>성능과 비용</strong></td>
+<td>과거 장애를 전부 넣지 않고 <strong>요약 상위 5개</strong>만 프롬프트에 주입</td>
+<td><code>memory/enrichment.py:36</code> <code>top_k=5</code>, SUMMARIZATION 전략(ADR-4)</td>
+</tr>
+<tr>
+<td>다중 구성 요소 조정 → <strong>복원력 있는 통신</strong></td>
+<td>SNS → Lambda → Runtime → Gateway → Lambda로 이어지는 여러 단계</td>
+<td>DLQ, 멱등 쓰기, Gateway 실패 시 성능 저하 모드(<code>mcp_client/client.py:150</code>)</td>
+</tr>
+<tr>
+<td>지속적 학습 → <strong>평가 프레임워크</strong></td>
+<td>정답이 하나로 정해지지 않는 진단 결과</td>
+<td>온라인 평가 4종, 샘플링 100%(<code>agentcore.json</code>의 <code>onlineEvalConfigs</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>참고:</strong> 이 샘플은 <strong>단일 에이전트</strong>입니다. "다중 에이전트 조정" 항목은 여기서는 "다중 <em>구성 요소</em> 조정"으로 바꿔 설명하고, 본격적인 멀티 에이전트는 §5 설계 활동에서 다룹니다.</p>
+</blockquote>
+<hr />
+<h2 id="sec-5">2. Well-Architected Framework 적용 (슬라이드 4–9)</h2>
+<h3 id="sec-6">2.1 6개 핵심 요소 (슬라이드 5)</h3>
+<p>슬라이드 5에서는 WA 문서 링크를 보여 준 뒤, 이 샘플의 <strong>요소별 "가장 대표적인 한 줄"</strong> 만 미리 보여 주고 상세 내용은 부록(§4)으로 넘깁니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>핵심 요소</th>
+<th>이 샘플의 대표 구현 한 줄</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>운영 우수성</td>
+<td><code>agentcore.json</code> 하나에 Runtime·Memory·Gateway·Policy·Eval을 선언하고 <code>agentcore deploy</code> 한 번으로 배포</td>
+</tr>
+<tr>
+<td>보안</td>
+<td>Gateway 앞단의 Cedar Policy Engine + 진입점 Guardrail + 도구 Lambda별 최소 권한 IAM</td>
+</tr>
+<tr>
+<td>신뢰성</td>
+<td>Trigger Lambda의 DLQ + DLQ 적체 경보, 도구 연결 실패 시 LLM 단독 모드로 성능 저하</td>
+</tr>
+<tr>
+<td>성능 효율성</td>
+<td>Gateway 시맨틱 검색(<code>enableSemanticSearch: true</code>), 과거 장애는 요약만 주입</td>
+</tr>
+<tr>
+<td>비용 최적화</td>
+<td>티켓 우선순위로 모델 선택: LOW는 Haiku, MEDIUM 이상은 Sonnet (ADR-8)</td>
+</tr>
+<tr>
+<td>지속 가능성</td>
+<td>활성 시간만 과금되는 Runtime, DynamoDB 온디맨드, 로그 2주 보존, Memory 30일 만료</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="sec-7">2.2 Generative AI Lens: "필요한 경우에만 대리권을 높인다" (슬라이드 6)</h3>
+<p>이 원칙을 코드로 보여 주기 가장 좋은 곳은 <code>main.py</code>의 메인 흐름입니다. <strong>무엇을 LLM에게 맡기고 무엇을 코드로 고정했는지</strong> 나눠 보면 원칙이 바로 보입니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>누가 하나</th>
+<th>위치</th>
+<th>이유</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>입력 검증, DDB 저장</td>
+<td>코드 (Trigger Lambda)</td>
+<td><code>ticket_event_handler.py:52-107</code></td>
+<td>판단이 필요 없는 일</td>
+</tr>
+<tr>
+<td>PII·프롬프트 공격 정제</td>
+<td>코드 (Guardrail API)</td>
+<td><code>main.py:262-291</code>, <code>:460-467</code></td>
+<td>보안 경계는 결정적이어야 함</td>
+</tr>
+<tr>
+<td>과거 장애 조회</td>
+<td>코드 (Memory API)</td>
+<td><code>main.py:475-478</code></td>
+<td>항상 실행해야 하는 단계</td>
+</tr>
+<tr>
+<td>모델 선택</td>
+<td>코드 (규칙)</td>
+<td><code>model/load.py:15-30</code></td>
+<td>우선순위라는 명시적 신호가 있음</td>
+</tr>
+<tr>
+<td><strong>진단, 도구 선택, 조치 여부 판단</strong></td>
+<td><strong>LLM</strong></td>
+<td><code>main.py:561-570</code></td>
+<td>여기만 추론이 필요함</td>
+</tr>
+<tr>
+<td>결과 저장, 이벤트 발행</td>
+<td>코드</td>
+<td><code>main.py:590-604</code></td>
+<td>LLM이 "저장했다"고 말하는 것을 믿지 않음</td>
+</tr>
+<tr>
+<td>결과가 비면 실패 처리</td>
+<td>코드</td>
+<td><code>main.py:575-581</code></td>
+<td>자동 종결 대신 사람 검토로 넘김</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>핵심 메시지:</strong> 에이전트라고 해서 모든 단계를 LLM에게 맡기지 않습니다. 이 샘플에서 LLM이 정하는 것은 <strong>"어떤 도구를 어떤 순서로 호출하고, 조치를 할지 말지"</strong> 뿐입니다. 나머지는 워크플로처럼 코드로 고정되어 있습니다.</p>
+<blockquote>
+<p><strong>토론 질문:</strong> "<code>SYSTEM_PROMPT</code>(<code>main.py:93-115</code>)가 도구 호출 순서 1→2→3→4를 이미 지시하고 있습니다. 그렇다면 이것은 에이전트입니까, 워크플로입니까?"
+답의 방향: 순서는 프롬프트로 <em>권장</em>할 뿐 강제하지 않습니다. <code>get_process_info</code>는 "티켓에 서비스 이름이 있을 때만", <code>create_change_request</code>는 "런북이 근거가 될 때만" 호출하는 <strong>조건부 판단</strong>이 LLM에게 남아 있습니다. 이 정도가 "필요한 만큼의 대리권"입니다.</p>
+</blockquote>
+<h3 id="sec-8">2.3 Agentic AI Security Scoping Matrix (슬라이드 7)</h3>
+<p><strong>이 샘플의 위치: 감독되는 대리권 (Scope 3)</strong></p>
+<ul>
+<li>실행은 외부 이벤트(SNS 티켓)가 시작합니다. 에이전트가 스스로 작업을 만들지는 않으므로 Scope 4(전체 대리권)는 아닙니다.</li>
+<li>그런데 시작된 뒤에는 <code>create_change_request</code>라는 <strong>쓰기 작업을 사람 승인 없이</strong> 실행합니다. 그래서 Scope 2(규정된 대리권)도 아닙니다.</li>
+</ul>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>수준을 바꾸려면</th>
+<th>필요한 변경</th>
+<th>샘플 기준 구체적 방법</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope 3 → <strong>Scope 2</strong>로 낮추기</td>
+<td>쓰기 작업 전에 사람 승인</td>
+<td><code>create_change_request.py</code>가 <code>status: "applied"</code> 대신 <code>"pending_approval"</code>을 기록하고, 승인 시스템이 EventBridge 이벤트를 받아 처리</td>
+</tr>
+<tr>
+<td>Scope 3 안에서 통제 강화</td>
+<td>정책을 실제로 적용</td>
+<td><code>agentcore.json</code>의 <code>policyEngineConfiguration.mode</code>를 <code>LOG_ONLY</code> → <code>ENFORCE</code></td>
+</tr>
+<tr>
+<td>Scope 4로 높인다면 필요한 것</td>
+<td>자체 시작, 지속 모니터링</td>
+<td>이상 탐지 시 에이전트가 스스로 티켓 생성 → 이때는 행동 드리프트 탐지, 속도 제한, 킬 스위치가 필수</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>핵심 메시지:</strong> 슬라이드 노트대로 "대부분의 프로덕션 시스템은 Scope 2나 3에서 시작"합니다. 이 샘플이 Policy Engine을 <code>LOG_ONLY</code>로 두는 이유(ADR-7: "막기 전에 무엇이 막힐지 먼저 본다")도 같은 맥락입니다.</p>
+<h3 id="sec-9">2.4 에이전틱 AI용 Well-Architected 원칙 6가지 (슬라이드 8)</h3>
+<p>슬라이드 노트의 마지막 질문("관찰할 수 있습니까? 제어할 수 있습니까? …")을 이 샘플에 그대로 던집니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>원칙</th>
+<th>질문</th>
+<th>샘플의 답</th>
+<th>빈틈</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>관찰성</strong></td>
+<td>관찰할 수 있는가?</td>
+<td>OTEL 자동 계측 + <code>ticket.id</code>, <code>ticket.priority</code>, <code>ticket.requester_id</code>, <code>ticket.mode</code> 스팬 속성(<code>main.py:430-438</code>). 단계별 SSE 이벤트(<code>_stage_event</code>, <code>main.py:313</code>)</td>
+<td>도구 실행 시간 훅(<code>main.py:66-81</code>)이 <strong>프롬프트 모드에서만</strong> 등록됨(<code>:383-384</code>). 티켓 처리 경로(<code>:515</code>)에는 없음</td>
+</tr>
+<tr>
+<td><strong>제어 가능성</strong></td>
+<td>제어할 수 있는가?</td>
+<td>Cedar 정책, Gateway를 거치지 않으면 도구 호출 불가, 도구 Lambda의 입력 검증(<code>create_change_request.py:56-90</code>)</td>
+<td>정책이 <code>LOG_ONLY</code>라 실제로 막지는 않음</td>
+</tr>
+<tr>
+<td><strong>진실성·강건성</strong></td>
+<td>정확하고, 이상 입력에 견디는가?</td>
+<td>런북(KB) 근거가 있을 때만 조치하도록 지시. 잘못된 페이로드는 구조화된 실패 응답(<code>main.py:417-423</code>). 결과가 비면 자동 종결하지 않고 <code>Failed</code> 처리(<code>:577-581</code>)</td>
+<td>응답이 런북 내용과 일치하는지 검증하는 단계 없음 (온라인 평가 <code>Correctness</code>로 사후 확인만 가능)</td>
+</tr>
+<tr>
+<td><strong>공정성</strong></td>
+<td>사용자 그룹별로 다르게 대하지 않는가?</td>
+<td>모델 라우팅 기준이 <strong>사용자가 아니라 티켓 우선순위</strong></td>
+<td><code>priority</code>를 요청자가 직접 넣음 → 우선순위를 부풀리면 더 좋은 모델을 받게 됨. 반대로 LOW로 분류된 사용자 그룹이 체계적으로 낮은 품질을 받는지 모니터링 필요</td>
+</tr>
+<tr>
+<td><strong>투명성</strong></td>
+<td>동작이 문서화되어 있는가?</td>
+<td>ADR 10개(<code>docs/design-decisions.md</code>), 단계별 아키텍처 문서(<code>docs/ARCHITECTURE.md</code>), 변경 요청에 <code>reason</code> 필드 기록</td>
+<td>최종 해결 코멘트는 사고 과정을 빼도록 지시함 → 감사용 근거는 트레이스에서 확인해야 함</td>
+</tr>
+<tr>
+<td><strong>거버넌스</strong></td>
+<td>관리되고 있는가?</td>
+<td>정책을 코드로 선언(<code>policyEngines</code>), <code>validationMode</code> 설정, 온라인 평가로 지속 모니터링</td>
+<td>정책 변경 승인 절차나 AWS Config 규칙은 없음</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>강사 팁:</strong> "공정성" 행은 수강생이 잘 떠올리지 못합니다. "우선순위 필드를 누가 채우는가?"라고 물으면, 비용 최적화 설계(ADR-8)가 공정성 문제와 연결된다는 점을 스스로 찾아냅니다. 해결책은 우선순위를 요청자 입력 대신 <strong>분류기(Haiku)가 다시 판정</strong>하게 하는 것입니다.</p>
+</blockquote>
+<h3 id="sec-10">2.5 통합 모범 사례 (슬라이드 9)</h3>
+<p>슬라이드 9의 다섯 항목을 이 샘플의 구성 요소에 하나씩 대응시킵니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 9 항목</th>
+<th>샘플 구현</th>
+<th>위치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>처음부터 관찰성을 고려하여 설계</td>
+<td>컨테이너 CMD가 처음부터 <code>opentelemetry-instrument</code>로 시작. Trigger Lambda도 X-Ray <code>ACTIVE</code></td>
+<td><code>Dockerfile</code> 마지막 줄, <code>infra-construct.ts:441</code></td>
+</tr>
+<tr>
+<td>모든 통합 계층에 WA 원칙 적용</td>
+<td>모든 DynamoDB 테이블에 PITR·암호화, S3에 <code>enforceSSL</code>·퍼블릭 차단</td>
+<td><code>infra-construct.ts:89-133</code></td>
+</tr>
+<tr>
+<td>MCP로 에이전트-도구 통신 표준화</td>
+<td>내부 도구는 Gateway(MCP), Jira는 Atlassian Remote MCP. 에이전트는 둘 다 같은 <code>MCPClient</code>로 사용</td>
+<td><code>mcp_client/client.py</code>, <code>mcp_client/jira.py</code></td>
+</tr>
+<tr>
+<td>Gateway를 중앙 통합 허브로</td>
+<td>Lambda 4개를 Gateway 대상으로 등록. 도구 추가는 스키마 + <code>agentcore add gateway-target</code></td>
+<td><code>agentcore.json</code>의 <code>agentCoreGateways</code>, <code>tool-schemas/</code></td>
+</tr>
+<tr>
+<td>적절한 연결 관리</td>
+<td>SNS(수신) + SQS DLQ(비동기 실패 보관) + EventBridge(결과 라우팅). DB는 DynamoDB라 연결 풀 관리가 필요 없음</td>
+<td>ADR-3, ADR-5</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>연결 관리 보충:</strong> 슬라이드는 "데이터베이스에는 RDS Proxy"를 말합니다. 이 샘플은 ADR-5에서 DynamoDB를 골라 <strong>연결 관리 문제를 아예 없앴습니다.</strong> "만약 사내 CMDB가 RDS라면?"을 물으면, 도구 Lambda 앞에 RDS Proxy를 두는 구성으로 자연스럽게 이어집니다.</p>
+<p><strong>Gateway 허브의 확장 예 (<code>README.md:746-767</code>):</strong> Jira MCP 서버도 Gateway 대상(<code>--type mcp-server</code>)으로 등록하면 정책·시맨틱 검색·인증이 한 곳에 모입니다. 단, Gateway의 MCP 서버 대상은 2LO(client credentials)만 지원하므로 <strong>사용자 위임(3LO)이 필요한 Jira는 이 샘플처럼 에이전트에서 직접 연결</strong>합니다. "허브가 항상 정답은 아니다"라는 트레이드오프 사례로 쓰기 좋습니다.</p>
+<hr />
+<h2 id="sec-11">3. 프로덕션 준비 상태 (슬라이드 10–11)</h2>
+<h3 id="sec-12">3.1 배포 준비 상태 검증 체크리스트를 샘플에 적용하기</h3>
+<p>슬라이드 11의 4개 열을 그대로 쓰고, 각 칸에 샘플의 현재 상태를 표시합니다. ✅ 구현됨, ⚠️ 부분 구현 또는 개발 설정, ❌ 없음.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>영역</th>
+<th>항목</th>
+<th>상태</th>
+<th>샘플 근거 / 해야 할 일</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>성능</strong></td>
+<td>부하 테스트</td>
+<td>❌</td>
+<td><code>scripts/e2e_test.py</code>는 티켓 1건의 기능 테스트. 동시 티켓 N건을 SNS에 발행하는 부하 테스트 필요</td>
+</tr>
+<tr>
+<td></td>
+<td>기준 설정</td>
+<td>⚠️</td>
+<td>도구 Lambda 타임아웃 15초, KB 30초, Trigger 30초(<code>infra-construct.ts</code>). 에이전트 전체 처리 시간 목표(SLO)는 정의되지 않음</td>
+</tr>
+<tr>
+<td></td>
+<td>벤치마킹</td>
+<td>⚠️</td>
+<td>Haiku/Sonnet 라우팅은 있으나 두 모델의 품질·지연 비교 데이터 없음 → 온라인 평가 점수를 <code>priority</code>별로 나눠 비교</td>
+</tr>
+<tr>
+<td><strong>보안</strong></td>
+<td>정책 테스트</td>
+<td>⚠️</td>
+<td>Cedar 정책 2개가 <code>LOG_ONLY</code>. ENFORCE 전 로그에서 "막혔을 호출"을 확인해야 함</td>
+</tr>
+<tr>
+<td></td>
+<td>IAM 검토</td>
+<td>⚠️</td>
+<td>도구별 최소 권한은 ✅. 그러나 <code>GuardrailAccess</code>가 <code>guardrail/*</code>, Logs가 <code>log-group:*</code>, Jira Identity가 <code>*</code> (<code>cdk-stack.ts:302-345</code>, 코드에 TODO 주석 있음)</td>
+</tr>
+<tr>
+<td></td>
+<td>취약성 스캔</td>
+<td>❌</td>
+<td>컨테이너 이미지 스캔(ECR/Inspector), 의존성 스캔 설정 없음</td>
+</tr>
+<tr>
+<td><strong>모니터링</strong></td>
+<td>CloudWatch 대시보드</td>
+<td>⚠️</td>
+<td>GenAI Observability 콘솔은 자동 제공. 경보는 DLQ 적체·Trigger 오류 2개뿐(<code>infra-construct.ts:459-477</code>), 알림(SNS) 연결 없음</td>
+</tr>
+<tr>
+<td></td>
+<td>X-Ray 추적</td>
+<td>✅</td>
+<td>Trigger Lambda <code>ACTIVE</code>, Runtime OTEL + X-Ray 전파(<code>OTEL_PROPAGATORS=baggage,tracecontext,xray</code>)</td>
+</tr>
+<tr>
+<td></td>
+<td>AgentCore Evaluations</td>
+<td>✅</td>
+<td>내장 평가기 4개, 샘플링 100%</td>
+</tr>
+<tr>
+<td></td>
+<td>AgentCore Observability</td>
+<td>✅</td>
+<td>Transaction Search를 커스텀 리소스로 자동 활성화(<code>cdk-stack.ts:368</code>, <code>lambdas/infra/transaction_search.py</code>)</td>
+</tr>
+<tr>
+<td><strong>규정 준수</strong></td>
+<td>규제 요구 사항</td>
+<td>⚠️</td>
+<td>Guardrail로 PII 익명화·차단. 다만 <code>OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true</code>라 <strong>프롬프트 원문이 트레이스에 남음</strong></td>
+</tr>
+<tr>
+<td></td>
+<td>데이터 레지던시</td>
+<td>⚠️</td>
+<td>모델 ID가 <code>us.</code> 교차 리전 추론 프로필 → 요청이 미국 내 여러 리전에서 처리될 수 있음</td>
+</tr>
+<tr>
+<td></td>
+<td>AWS Config</td>
+<td>❌</td>
+<td>규칙 없음</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p><strong>강사 팁:</strong> "규제 요구 사항" 행의 메시지 내용 캡처는 꼭 짚습니다. 관찰성(전부 남기기)과 개인정보 보호(남기지 않기)가 충돌하는 지점입니다. 이 샘플은 Guardrail이 <strong>모델 입력 전에</strong> 먼저 정제하므로 트레이스에는 정제된 내용이 남지만, 도구 응답(사용자 프로필 등)은 Guardrail을 거치지 않습니다(ADR-10의 트레이드오프).</p>
+</blockquote>
+<h3 id="sec-13">3.2 개발 설정에서 프로덕션 설정으로: README "Scale for Production"</h3>
+<p><code>README.md:736-744</code>의 목록을 WA 요소별로 다시 분류하면 체크리스트가 됩니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>README 항목</th>
+<th>WA 요소</th>
+<th>바꿀 곳</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DESTROY_ON_DELETE=false</code></td>
+<td>신뢰성</td>
+<td><code>.env</code> → <code>infra-construct.ts</code>의 <code>removalPolicy</code></td>
+</tr>
+<tr>
+<td><code>exceptionLevel: DEBUG</code> → <code>NONE</code></td>
+<td>보안</td>
+<td><code>agentcore.json</code> Gateway 설정 (오류 상세를 에이전트에 노출하지 않음)</td>
+</tr>
+<tr>
+<td>온라인 평가 샘플링 100% → 10%</td>
+<td>비용 최적화</td>
+<td><code>agentcore.json</code>의 <code>samplingRate</code></td>
+</tr>
+<tr>
+<td>VPC 모드 (<code>networkMode: "VPC"</code>)</td>
+<td>보안</td>
+<td><code>agentcore.json</code> Runtime 설정 + 서브넷·보안 그룹</td>
+</tr>
+<tr>
+<td>경보에 SNS 알림 추가</td>
+<td>운영 우수성</td>
+<td><code>infra-construct.ts</code>의 <code>cloudwatch.Alarm</code>에 <code>addAlarmAction</code></td>
+</tr>
+<tr>
+<td>Policy Engine <code>ENFORCE</code></td>
+<td>보안</td>
+<td><code>agentcore.json</code>의 <code>policyEngineConfiguration.mode</code></td>
+</tr>
+<tr>
+<td>라우팅 기준 조정 (MEDIUM도 Haiku)</td>
+<td>비용 최적화</td>
+<td><code>model/load.py</code></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>핵심 메시지:</strong> 프로덕션 전환의 대부분이 <strong>코드 변경이 아니라 선언형 설정(<code>agentcore.json</code>, <code>.env</code>) 변경</strong>입니다. 이것이 운영 우수성 슬라이드 17의 "코드가 아닌 아티팩트도 버전 관리하라"와 연결됩니다.</p>
+<hr />
+<h2 id="sec-14">4. 부록: 핵심 요소별 설계 전략을 샘플로 확인하기 (슬라이드 16–22)</h2>
+<p>각 슬라이드의 "AWS를 사용한 접근 방식" 열을 그대로 따라가며, 샘플에 구현된 것과 빈틈을 구분합니다. 설계 활동(§5) 중에 필요한 요소만 골라 써도 됩니다.</p>
+<h3 id="sec-15">4.1 운영 우수성 (슬라이드 17)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>다중 구성 요소 배포</td>
+<td>Runtime 변경 불가 버전, Memory로 상태 유지, 코드 외 아티팩트 관리</td>
+<td>에이전트 코드·프롬프트·모델 ID·메모리 전략·평가 설정이 <strong>모두 리포지토리 안 선언 파일</strong>에 있음(<code>agentcore.json</code>, <code>main.py</code>). CDK 단일 스택으로 원자적 배포(ADR-9)</td>
+<td>Runtime 엔드포인트를 버전별로 나눈 점진적 롤아웃 없음. 프롬프트가 코드 안 상수라 프롬프트만 따로 바꿀 수 없음</td>
+</tr>
+<tr>
+<td>지속적 품질 평가</td>
+<td>AgentCore Evaluations (LLM 심판)</td>
+<td><code>Builtin.Correctness</code>, <code>Helpfulness</code>, <code>ToolSelectionAccuracy</code>, <code>GoalSuccessRate</code>. 결과 조회는 <code>scripts/evaluate.py</code></td>
+<td>점수 하락 시 경보·롤백 같은 <strong>품질 게이트</strong> 없음</td>
+</tr>
+<tr>
+<td>다중 계층 관찰성</td>
+<td>AgentCore Observability + CloudWatch</td>
+<td>OTEL 자동 계측, 비즈니스 속성 스팬, X-Ray 전파, Transaction Search 자동 활성화</td>
+<td>비즈니스 지표(해결률, 재발률)를 지표로 내보내지 않음. <code>recurring_incident_count</code>(<code>main.py:611-621</code>)는 응답에만 있음</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>보여 줄 코드: 비즈니스 ID를 트레이스에 연결</strong> (<code>main.py:430-438</code>)</p>
+<pre><code class="language-python">current_span = otel_trace.get_current_span()
+if current_span and current_span.is_recording():
+    current_span.set_attribute(&quot;ticket.id&quot;, ticket_id)
+    current_span.set_attribute(&quot;ticket.priority&quot;, priority)
+    current_span.set_attribute(&quot;ticket.requester_id&quot;, requester_id)
+</code></pre>
+<p>"티켓 INC-001이 왜 실패했나?"라는 운영 질문을 Transaction Search에서 <code>ticket.id</code>로 바로 찾을 수 있게 해 줍니다. 슬라이드의 "인프라 지표 + AI 품질 + 비즈니스 결과를 연결"하는 가장 작은 단위입니다.</p>
+<p><strong>개선 과제 (5분 토론):</strong> "온라인 평가 <code>GoalSuccessRate</code>가 0.7 아래로 떨어지면 무엇이 일어나야 합니까?" → 평가 결과 로그 그룹(<code>/aws/bedrock-agentcore/evaluations/results/...</code>)에 지표 필터 + 경보 → 배포 파이프라인이 직전 Runtime 버전으로 되돌림.</p>
+<h3 id="sec-16">4.2 보안 (슬라이드 18)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>정책 우선 액세스 제어</td>
+<td>AgentCore Policy (Cedar), 로그 전용 모드로 먼저 검증</td>
+<td><code>ITIncidentPolicyEngine</code>이 Gateway에 <code>LOG_ONLY</code>로 연결. 정책 2개</td>
+<td>ENFORCE 전환. 정책이 도구 이름 수준에 머물러 있음(예: CRITICAL 티켓만 변경 허용 같은 조건 없음)</td>
+</tr>
+<tr>
+<td>다중 계층 자격 증명 전파</td>
+<td>Cognito(사용자), AgentCore Identity(에이전트), IAM(리소스)</td>
+<td>3개 인증 경계: ① Runtime 인바운드 SigV4, ② Gateway 아웃바운드 <code>AWS_IAM</code> 또는 <code>CUSTOM_JWT</code>(Identity M2M), ③ Jira <code>USER_FEDERATION</code>(3LO) (<code>docs/authentication-guide.md</code>)</td>
+<td>요청자(<code>requester_id</code>)는 페이로드 값일 뿐 <strong>인증된 신원이 아님</strong> → 권한 교집합(사용자 ∩ 에이전트) 계산 불가</td>
+</tr>
+<tr>
+<td>프라이빗 네트워크 연결</td>
+<td>VPC, PrivateLink, 엔드포인트 정책</td>
+<td>없음 (기본 PUBLIC)</td>
+<td><code>networkMode: "VPC"</code> + Gateway·Bedrock·DynamoDB VPC 엔드포인트</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>보여 줄 설정: Cedar 정책</strong> (<code>agentcore/agentcore.json</code>)</p>
+<pre><code class="language-cedar">// 모든 도구 호출 허용 (기본 허용 + 로그)
+permit(principal, action, resource is AgentCore::Gateway);
+
+// 사유(reason) 없이 변경 요청을 만들면 거부
+forbid(principal, action, resource is AgentCore::Gateway)
+when { context has &quot;toolName&quot; &amp;&amp; context.toolName == &quot;create-change-request&quot;
+       &amp;&amp; !(context has &quot;reason&quot;) };
+</code></pre>
+<p>설명 순서:
+1. <code>forbid</code>는 <code>permit</code>보다 우선합니다. 그래서 "기본 허용 + 위험 작업만 거부" 패턴이 됩니다.
+2. <code>reason</code> 필드는 도구 스키마(<code>tool-schemas/create-change-request.json</code>)에서는 <strong>선택 항목</strong>입니다. 스키마는 느슨하게, 정책은 엄격하게 두어 "거버넌스 규칙을 도구 코드가 아니라 정책 계층에서 관리"하는 예입니다.
+3. 지금은 <code>LOG_ONLY</code>라 위반이 로그에만 남습니다. 동시에 도구 Lambda마다 IAM 권한이 따로 있어서(<code>lookup_user</code>는 읽기 전용, <code>create_change_request</code>만 쓰기) 정책이 꺼져 있어도 <strong>심층 방어</strong>가 유지됩니다(ADR-7).</p>
+<p><strong>보여 줄 코드: 아웃바운드 인증 전환</strong> (<code>mcp_client/client.py:124-147</code>)</p>
+<pre><code class="language-python">if GATEWAY_AUTH_MODE == &quot;CUSTOM_JWT&quot;:
+    return _create_custom_jwt_client()   # @requires_access_token(auth_flow=&quot;M2M&quot;)
+# 기본: 요청마다 SigV4 서명 (자격 증명이 교체되어도 동작)
+return MCPClient(lambda: streamablehttp_client(GATEWAY_URL, auth=_create_sigv4_auth()))
+</code></pre>
+<p><strong>핵심 메시지:</strong> 에이전트 코드는 <code>client_secret</code>을 보지 않습니다. AgentCore Identity가 토큰을 발급하고 데코레이터가 주입합니다. 슬라이드의 "에이전트별 자격 증명에 AgentCore Identity 사용"이 이것입니다.</p>
+<p><strong>보안 보충: Guardrail은 어디에 걸려 있나</strong> (<code>infra-construct.ts:303-335</code>, <code>main.py:460-467</code>)</p>
+<ul>
+<li>이메일·전화·이름·IP는 <code>ANONYMIZE</code>, 주민번호·카드번호·AWS 키는 <code>BLOCK</code>, 프롬프트 공격 필터 <code>HIGH</code>.</li>
+<li>티켓의 <strong>제목과 설명 둘 다</strong> 정제합니다. 주석(<code>main.py:451-454</code>)에 "제목에 PII가 있으면 우회된다"는 이유가 적혀 있습니다. 작은 부분이지만 "모든 입력 경로를 확인하라"는 좋은 예입니다.</li>
+<li>Guardrail 호출이 실패하면 <strong>원문을 그대로 통과</strong>시킵니다(<code>main.py:289-291</code>). 가용성을 택한 설계(fail-open)입니다. "보안 경계가 fail-open이어도 되는가?"를 토론 주제로 던지세요.</li>
+</ul>
+<h3 id="sec-17">4.3 신뢰성 (슬라이드 19)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>다중 에이전트 장애 격리</td>
+<td>Runtime 세션 격리, 다중 AZ, 회로 차단기</td>
+<td>Runtime이 호출마다 고유 세션 ID(<code>event-{id}-{uuid}</code>, <code>ticket_event_handler.py:113</code>)로 격리. 도구는 Lambda별로 격리(ADR-2). 동시 요청 간 타이밍 데이터 섞임 방지에 <code>ContextVar</code> 사용(<code>main.py:53</code>)</td>
+<td>회로 차단기 없음</td>
+</tr>
+<tr>
+<td>지능형 오류 복구</td>
+<td>타임아웃 계층, 점진적 복구 (재시도 → 대체 → 캐시 → 사람)</td>
+<td>아래 "점진적 복구 4단계" 표 참고</td>
+<td>에이전트 실행 전체의 타임아웃 없음</td>
+</tr>
+<tr>
+<td>프로덕션 복원력 모니터링</td>
+<td>가드레일, 트레이스 디버깅, 오류율·지연·이상 도구 순서 경보</td>
+<td>DLQ 적체 경보, Trigger 오류 경보, 트레이스</td>
+<td>에이전트 <code>Failed</code> 비율, p95 지연, 비정상 도구 순서에 대한 경보 없음</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>슬라이드의 점진적 복구 4단계를 샘플에서 찾기</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 단계</th>
+<th>샘플 구현</th>
+<th>위치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(1) 재시도</td>
+<td>SNS → Lambda 비동기 호출의 자동 재시도, 이후 DLQ</td>
+<td><code>infra-construct.ts:423-444</code></td>
+</tr>
+<tr>
+<td>(2) 대체 도구</td>
+<td>Gateway 또는 Jira 연결이 실패해도 <strong>살아 있는 도구만으로</strong> 진행</td>
+<td><code>mcp_client/client.py:150-198</code></td>
+</tr>
+<tr>
+<td>(3) 캐시·대체 데이터</td>
+<td>도구 초기화가 완전히 실패하면 <strong>LLM 단독 모드</strong>로 계속</td>
+<td><code>main.py:521-538</code></td>
+</tr>
+<tr>
+<td>(4) 사람에게 에스컬레이션</td>
+<td>결과가 비면 <code>Failed</code>로 기록, 자동 종결 금지. 재발 장애(30일 내 2건 이상)는 해결 코멘트에서 에스컬레이션</td>
+<td><code>main.py:577-581</code>, <code>SYSTEM_PROMPT</code> 1번 항목</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>보여 줄 코드: 멱등성과 원자성</strong> — 신뢰성은 "실패해도 상태가 깨지지 않는 것"입니다.</p>
+<pre><code class="language-python"># Trigger: 같은 티켓이 두 번 와도 한 번만 저장 (ticket_event_handler.py:101-106)
+tickets_table.put_item(Item=sanitized,
+                       ConditionExpression=&quot;attribute_not_exists(ticket_id)&quot;)
+
+# 도구: 변경 기록과 사용자 카운터를 한 트랜잭션으로 (create_change_request.py:102)
+_ddb.transact_write_items(TransactItems=[{&quot;Put&quot;: ...}, {&quot;Update&quot;: ...}])
+</code></pre>
+<p><code>create_change_request.py:95-101</code>의 주석이 "두 번 나눠 쓰면 일부만 성공할 수 있고, 모델이 재시도하면 변경 기록이 중복된다"고 이유를 설명합니다. <strong>LLM은 같은 도구를 다시 호출할 수 있다</strong>는 점이 일반 애플리케이션과 다른 신뢰성 고려 사항입니다.</p>
+<p><strong>개선 과제: 타임아웃 계층 추가.</strong> 슬라이드는 도구 5–30초, 추론 30–60초, 턴 2–5분, 세션 15분을 제시합니다. 샘플은 도구(Lambda 15/30초)만 있습니다. 에이전트 실행 전체에 상한을 두는 예:</p>
+<pre><code class="language-python">import asyncio
+
+async with asyncio.timeout(300):   # 대화 턴 상한 5분 (Python 3.11+)
+    async for event in agent.stream_async(user_query):
+        ...
+# TimeoutError → 기존 except 블록이 _fail_ticket()으로 사람 검토에 넘김
+</code></pre>
+<blockquote>
+<p><strong>토론 질문:</strong> "SNS → Lambda 재시도는 Runtime 호출이 실패했을 때 일어납니다. DDB 저장은 멱등이지만 Runtime 호출은 멱등입니까?" → 재시도 시 에이전트가 같은 티켓을 두 번 처리할 수 있습니다. <code>create_change_request</code> 앞에서 "이 티켓에 이미 변경 요청이 있는가"를 확인하거나, 티켓 상태를 <code>Processing</code>으로 조건부 갱신한 뒤 시작하는 방법을 토론합니다.</p>
+</blockquote>
+<h3 id="sec-18">4.4 성능 효율성 (슬라이드 20)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>컨텍스트 윈도우 최적화</td>
+<td>Memory로 대화 기록 외부화, 프롬프트 캐싱, Strands 대화 관리자</td>
+<td>과거 장애 <strong>전체 대화가 아니라 요약 상위 5개</strong>만 시스템 프롬프트에 주입(ADR-4, <code>enrichment.py:36</code>). 티켓 1건 = 세션 1개라 대화가 길어지지 않음</td>
+<td>프롬프트 캐싱 없음. 대화 관리자는 Strands 기본값</td>
+</tr>
+<tr>
+<td>다중 에이전트 성능 분산</td>
+<td>Runtime 종량제·자동 확장, 전문가 에이전트 독립 확장</td>
+<td>단일 에이전트. Runtime이 세션 단위로 확장</td>
+<td>분류(Haiku) → 해결(Sonnet) 에이전트 분리 시 독립 확장 가능</td>
+</tr>
+<tr>
+<td>도구 설계 효율성</td>
+<td>Gateway 시맨틱 검색, 정보 집약형 도구, 중앙화, Lambda 프로비저닝 동시성</td>
+<td><code>enableSemanticSearch: true</code>. <code>lookup_user</code>가 <strong>프로필 + 쿼터 + 최근 30일 티켓을 한 번에</strong> 반환(정보 집약형)</td>
+<td>프로비저닝 동시성 없음 (비동기 처리라 콜드 스타트 영향 작음, ADR-2)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>보여 줄 코드: 정보 집약형 도구</strong> (<code>lambdas/tools/lookup_user.py</code> 반환값)</p>
+<pre><code class="language-python">{&quot;user_id&quot;: ..., &quot;profile&quot;: user, &quot;quotas&quot;: ...,
+ &quot;recent_tickets&quot;: [...], &quot;recent_incident_count_30d&quot;: len(recent)}
+</code></pre>
+<p>도구를 <code>get_profile</code>, <code>get_quotas</code>, <code>get_recent_tickets</code> 3개로 쪼갰다면 LLM 왕복이 3번 필요하고, 매 왕복마다 컨텍스트 전체를 다시 처리합니다. <strong>도구 하나가 판단에 필요한 정보를 한 번에 주는 것</strong>이 슬라이드의 "단일 상호 작용에서 계층적 JSON 반환"입니다.</p>
+<p><strong>메모리 설계 보충 (<code>memory/enrichment.py</code>)</strong>
+- SUMMARIZATION 전략은 <code>incidents/{actorId}/{sessionId}</code>에 저장하고, 조회는 <code>incidents/{requester_id}</code> <strong>접두사</strong>로 합니다. 그래서 한 사용자의 모든 세션 요약이 검색됩니다.
+- 요약은 <strong>비동기</strong>로 만들어지므로 방금 제출한 티켓은 바로 보이지 않습니다. 그래서 <code>main.py:149-179</code>의 <code>_count_recent_incidents</code>가 DynamoDB를 직접 조회해 재발 횟수를 보완합니다. "Memory는 의미 검색용, 강한 일관성이 필요한 숫자는 DB"라는 역할 분담입니다.</p>
+<p><strong>개선 과제: 프롬프트 캐싱.</strong> 이 에이전트의 시스템 프롬프트와 도구 정의는 티켓마다 같으므로 캐싱 효과가 큽니다. Strands에서는 시스템 프롬프트를 콘텐츠 블록 목록으로 주고 캐시 지점을 표시하는 방식이 있습니다. 파라미터 이름은 Strands 버전마다 다를 수 있으니 수업 전에 설치된 버전(<code>uv.lock</code> 기준 <code>strands-agents 1.42.0</code>)의 문서를 확인하세요.</p>
+<pre><code class="language-python">agent = Agent(
+    model=load_model(priority),
+    system_prompt=[{&quot;text&quot;: SYSTEM_PROMPT}, {&quot;cachePoint&quot;: {&quot;type&quot;: &quot;default&quot;}}],
+    tools=tools,
+)
+</code></pre>
+<p>주의: 이 샘플은 과거 장애 요약을 시스템 프롬프트 <strong>뒤에 붙입니다</strong>(<code>main.py:494</code>). 사용자마다 달라지는 부분이므로 캐시 지점은 <strong>고정 부분과 가변 부분 사이</strong>에 두어야 합니다. 컨텍스트 엔지니어링 모듈의 "정적 컨텍스트를 앞에" 원칙과 연결하세요.</p>
+<h3 id="sec-19">4.5 비용 최적화 (슬라이드 21)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>토큰 소비 관리</td>
+<td>프롬프트 캐싱, 슬라이딩 윈도우/요약, CloudWatch 지표와 예산 경보</td>
+<td><strong>모델 라우팅</strong>: LOW는 Haiku, 그 외는 Sonnet. 메모리는 요약만 주입. 최종 응답은 3–6문장으로 제한(<code>SYSTEM_PROMPT</code>)</td>
+<td>토큰 사용량 경보, 예산 경보 없음</td>
+</tr>
+<tr>
+<td>적절한 크기 조정</td>
+<td>Runtime 종량제, 계층형 보존, 테일 기반 샘플링</td>
+<td>Runtime 종량제, DynamoDB <code>PAY_PER_REQUEST</code>, Lambda 256MB, 로그 2주</td>
+<td>온라인 평가 샘플링 <strong>100%</strong>, Transaction Search 인덱싱 <strong>100%</strong>(<code>cdk-stack.ts:427</code>)</td>
+</tr>
+<tr>
+<td>캐싱 및 재사용</td>
+<td>Gateway로 도구 중앙화, ElastiCache, CloudFront</td>
+<td>Gateway에 도구를 모아 다른 에이전트도 재사용 가능(ADR-2)</td>
+<td>도구 결과 캐시 없음 (<code>get_process_info</code>는 자주 바뀌지 않으므로 후보)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>보여 줄 코드: 비용 라우팅</strong> (<code>model/load.py:15-30</code>)</p>
+<pre><code class="language-python">def load_model(priority: str = &quot;MEDIUM&quot;) -&gt; BedrockModel:
+    model_id = AGENT_MODEL_ID          # Sonnet
+    if priority == &quot;LOW&quot;:
+        model_id = FAST_MODEL_ID       # Haiku
+    return BedrockModel(model_id=model_id)
+</code></pre>
+<p>설명 포인트:
+1. ADR-8은 "단순 티켓을 약 10배 저렴하게"를 근거로 듭니다. 숫자보다 <strong>"비싼 추론은 필요할 때만"</strong> 이라는 원칙이 슬라이드 6(대리권은 필요할 때만)과 같은 구조라는 점을 짚습니다.
+2. 라우팅 신호(<code>priority</code>)를 누가 정하는지가 공정성 문제와 연결됩니다(§2.4).
+3. 모델 ID가 <code>agentcore.json</code>의 <code>envVars</code>에 있어서 <strong>코드 수정 없이</strong> 바꿀 수 있습니다.</p>
+<p><strong>개선 과제: 슬라이드의 "테일 기반 샘플링"을 샘플에 적용하면?</strong>
+- 지금은 온라인 평가가 모든 트레이스를 LLM 심판으로 채점합니다(100%). 평가 비용이 에이전트 실행 비용에 비례해 커집니다.
+- 1단계: <code>samplingRate</code>를 10–20%로 낮춤.
+- 2단계: <code>Failed</code> 티켓과 재발 티켓은 항상 평가하고 싶다면? 온라인 평가는 비율 샘플링이므로, 실패 트레이스는 <code>ticket.id</code>로 찾아 <strong>온디맨드 평가</strong>로 따로 돌리는 구성을 토론합니다.
+- 슬라이드의 계층형 보존(트레이스 7일, 지표 30일, 요약 1년)과 비교: 샘플은 Lambda 로그 2주, Memory 이벤트 30일, DLQ 14일입니다.</p>
+<h3 id="sec-20">4.6 지속 가능성 (슬라이드 22)</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드 고려 사항</th>
+<th>슬라이드의 접근 방식</th>
+<th>샘플 구현</th>
+<th>빈틈 / 개선 과제</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>리전 선택</td>
+<td>탄소 집약도 낮은 리전, 고객 탄소 발자국 도구</td>
+<td>기본 <code>us-west-2</code> (<code>.env</code>, <code>config.py</code>)</td>
+<td>리전 선택 근거 문서화 없음</td>
+</tr>
+<tr>
+<td>리소스 최적화</td>
+<td>Runtime 종량제, 미사용 리소스 파악, 비프로덕션 환경 중지</td>
+<td>유휴 시 비용이 거의 없는 서버리스 구성(Runtime, Lambda, DynamoDB 온디맨드). <code>scripts/destroy.sh</code>로 전체 삭제</td>
+<td>도구 Lambda가 기본 x86_64 아키텍처</td>
+</tr>
+<tr>
+<td>수명 주기 관리</td>
+<td>데이터 수명 주기 정책, 압축, Glacier 보관</td>
+<td>Memory 이벤트 30일 만료(<code>eventExpiryDuration: 30</code>), 로그 2주, DLQ 14일</td>
+<td>KB 버킷이 <code>versioned: true</code>인데 이전 버전 정리 규칙 없음(<code>infra-construct.ts:129-136</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>연결 포인트:</strong> AgentCore Runtime 컨테이너는 ARM64(Graviton)에서 실행됩니다. 그런데 도구 Lambda는 아키텍처를 지정하지 않아 x86_64입니다. 한 줄로 바꿀 수 있는 개선 과제입니다.</p>
+<pre><code class="language-typescript">const lookupUserFn = new lambda_.Function(this, 'LookupUserFn', {
+  runtime: lambda_.Runtime.PYTHON_3_11,
+  architecture: lambda_.Architecture.ARM_64,   // 추가
+  ...
+});
+</code></pre>
+<p><strong>핵심 메시지:</strong> 지속 가능성 요소의 개선은 대부분 <strong>비용 최적화와 같은 방향</strong>입니다(유휴 자원 제거, 보존 기간 단축, 작은 모델 사용). Haiku 라우팅도 같은 작업을 더 적은 연산으로 하므로 지속 가능성 개선입니다.</p>
+<hr />
+<h2 id="sec-21">5. 아키텍처 설계 활동 (슬라이드 12–13)</h2>
+<h3 id="sec-22">5.1 진행 방식</h3>
+<p>슬라이드 노트대로 <strong>코딩이 아닌 설계 실습</strong>입니다. 이 샘플은 단일 에이전트이므로 정답지로 쓰지 말고, <strong>"이미 검증된 패턴의 재료 상자"</strong> 로 씁니다. 수강생이 각 마커에서 막히면 "IT 장애 에이전트에서는 이 문제를 어떻게 풀었나요?"라고 되묻습니다.</p>
+<p>시나리오 요구 사항(슬라이드 13 노트): 감독되는 대리권, 멀티 에이전트(주문·추천·기술 지원·청구), PII·결제 정보, 가용성 99.9%, PCI-DSS.</p>
+<h3 id="sec-23">5.2 마커별로 이 샘플에서 가져올 패턴</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>마커</th>
+<th>논의 주제 (슬라이드 노트)</th>
+<th>이 샘플에서 가져올 패턴</th>
+<th>전자상거래로 옮길 때 바꿀 점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong> 사용자 → 오케스트레이터</td>
+<td>인증, 입력 검증, 속도 제한</td>
+<td>Trigger의 필수 필드 검증 + <strong>허용 필드 목록</strong>(<code>ticket_event_handler.py:79-89</code>), 진입점 Guardrail</td>
+<td>이벤트가 아니라 사용자 채팅 → Runtime 인바운드 <code>CUSTOM_JWT</code>(Cognito). <code>requester_id</code>를 페이로드가 아니라 <strong>JWT의 <code>sub</code></strong> 에서 가져와야 함</td>
+</tr>
+<tr>
+<td><strong>2</strong> 오케스트레이터 처리</td>
+<td>컨텍스트 관리, 결정 로직, 정책, 관찰성</td>
+<td>메모리 요약 상위 N개 주입, 우선순위 기반 모델 라우팅, 비즈니스 ID 스팬 속성</td>
+<td>라우팅 대상이 모델이 아니라 <strong>전문가 에이전트</strong>. 라우팅 결정 근거를 스팬 속성(예: <code>route.agent</code>)으로 기록</td>
+</tr>
+<tr>
+<td><strong>3</strong> 오케스트레이터 → 사용자</td>
+<td>응답 검증, 콘텐츠 필터, 감사, SLA</td>
+<td>결과가 비면 자동 종결 금지(<code>main.py:577-581</code>), 단계별 SSE 스트리밍(<code>_stage_event</code>)</td>
+<td>출력 쪽 Guardrail 추가(샘플은 입력만). 카드 번호 등 PCI 데이터는 <code>BLOCK</code></td>
+</tr>
+<tr>
+<td><strong>4</strong> 오케스트레이터 → 전문가</td>
+<td>에이전트 간 통신, 장애 처리</td>
+<td>도구 연결 실패 시 성능 저하 모드(<code>get_all_mcp_clients_safe</code>)</td>
+<td>전문가 에이전트 하나가 죽어도 나머지로 응답(예: 추천 에이전트 장애 시 주문 조회는 계속). 회로 차단기</td>
+</tr>
+<tr>
+<td><strong>5</strong> 전문가 → 도구</td>
+<td>도구 액세스 정책, VPC, 데이터 분류</td>
+<td>도구별 Lambda + 최소 권한 IAM, Cedar 정책, 도구 입력 검증</td>
+<td>Cedar로 "청구 에이전트는 <code>billing_tool</code>만" 정책. 결제 도구는 VPC 내부 + PrivateLink</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="sec-24">5.3 활동 4개 영역별 모범 답안 골격</h3>
+<p>강사용 정리입니다. 수강생 발표 뒤 빠진 항목을 채워 주는 용도로 씁니다.</p>
+<p><strong>① 다중 에이전트 및 컨텍스트 설계</strong>
+- 오케스트레이터는 분류만 하는 가벼운 모델(Haiku), 청구·기술 지원처럼 추론이 필요한 전문가는 Sonnet. 샘플의 <code>load_model(priority)</code>를 에이전트 단위로 확장한 형태입니다.
+- 컨텍스트 전략: <strong>기록</strong>(Memory 요약, 샘플 ADR-4), <strong>선택</strong>(Gateway 시맨틱 검색으로 필요한 도구만), <strong>압축</strong>(요약 상위 N개), <strong>분리</strong>(전문가마다 자기 도구와 자기 컨텍스트만).</p>
+<p><strong>② 프로덕션 아키텍처</strong>
+- 에이전트별 Runtime(독립 확장, 세션 격리). 공통 도구는 하나의 Gateway에 모음.
+- 비동기 작업(환불 처리 등)은 샘플처럼 이벤트로 분리: SNS/SQS + DLQ, 결과는 EventBridge로 발행.
+- 선언형 구성(<code>agentcore.json</code>) + CDK 단일 배포로 시작하고, 규모가 커지면 공유 인프라 스택과 에이전트 스택을 분리(ADR-9의 트레이드오프).</p>
+<p><strong>③ 보안 설계</strong>
+- 3개 인증 경계(샘플 <code>docs/authentication-guide.md</code>)를 그대로 적용: 사용자 → 오케스트레이터(Cognito JWT), 에이전트 → Gateway(Identity M2M), 외부 SaaS(3LO).
+- Cedar 정책은 <code>LOG_ONLY</code>로 시작해 위반 로그 확인 후 <code>ENFORCE</code>(ADR-7).
+- 감사 로그 1년 보존(PCI-DSS) → 샘플의 2주 보존과 대비해 "규정이 보존 기간을 결정한다"는 점을 강조.</p>
+<p><strong>④ 관찰성 및 평가</strong>
+- 세션 수준 <code>GoalSuccessRate</code>(문제가 해결됐나), 트레이스 수준 <code>Correctness</code>·<code>Helpfulness</code>, 스팬 수준 <code>ToolSelectionAccuracy</code>(마커 5). 샘플의 평가기 4개가 이 세 수준을 모두 덮고 있습니다.
+- 샘플링은 10–20% + 실패·불만 세션은 온디맨드 평가.
+- 경보: 샘플의 DLQ 경보 외에 에이전트별 오류율, p95 지연, 토큰 사용량.</p>
+<h3 id="sec-25">5.4 노트의 "일반적인 함정"을 샘플로 설명하기</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>함정</th>
+<th>샘플에서 피한 방법 또는 남은 위험</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>초기 과도 엔지니어링 / 확장 고려 부족</td>
+<td>단일 스택·단일 에이전트로 시작하고, 확장 경로를 ADR에 명시(ADR-9)</td>
+</tr>
+<tr>
+<td>보안을 나중에 추가</td>
+<td>Guardrail, 도구별 IAM, 정책 엔진이 첫 배포부터 포함</td>
+</tr>
+<tr>
+<td>멀티 에이전트 관찰성 격차</td>
+<td>단일 에이전트라도 Trigger Lambda부터 X-Ray로 이어 트레이스가 끊기지 않게 함</td>
+</tr>
+<tr>
+<td>비용을 고려하지 않은 컨텍스트 관리</td>
+<td>전체 대화 대신 요약 주입. 다만 프롬프트 캐싱은 빠짐</td>
+</tr>
+<tr>
+<td>오케스트레이션의 단일 장애점</td>
+<td>Gateway가 사실상 단일 경로 → 장애 시 LLM 단독 모드로 내려가지만, 이때는 도구 없이 답하므로 품질이 떨어짐</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="sec-26">6. 모듈 요약과 지식 확인 (슬라이드 14–15)</h2>
+<h3 id="sec-27">6.1 요약 (2분)</h3>
+<p>학습 목표 2개를 이 샘플로 다시 말합니다.
+1. <strong>WA에 부합하는 설계 전략을 사용한다:</strong> 이 샘플의 ADR 10개가 각각 어느 WA 요소의 결정인지 말할 수 있다.
+2. <strong>WA 핵심 요소로 에이전틱 아키텍처를 평가한다:</strong> §3 체크리스트로 이 샘플의 빈틈(정책 LOG_ONLY, VPC 없음, 평가 100%, 실행 타임아웃 없음 등)을 찾을 수 있다.</p>
+<h3 id="sec-28">6.2 보충 문제 (질문 시간용)</h3>
+<p><strong>Q1.</strong> 이 샘플은 Policy Engine을 <code>LOG_ONLY</code>로 배포합니다. 그런데도 <code>lookup_user</code> 도구가 사용자 테이블에 쓰기를 할 수 없는 이유는?</p>
+<blockquote>
+<p>정답: 도구 Lambda마다 IAM 역할이 따로 있고 <code>lookup_user</code>에는 <code>grantReadData</code>만 있기 때문(<code>infra-construct.ts:360-361</code>). 정책 계층과 IAM 계층이 겹치는 심층 방어. (보안)</p>
+</blockquote>
+<p><strong>Q2.</strong> 티켓 우선순위로 모델을 고르는 설계가 비용 외에 영향을 주는 WA 원칙은?</p>
+<blockquote>
+<p>정답: 공정성. 요청자가 우선순위를 정하므로 부풀리거나, LOW 사용자 그룹이 체계적으로 낮은 품질을 받을 수 있음. 지속 가능성에도 긍정적 영향. (비용 최적화, 공정성)</p>
+</blockquote>
+<p><strong>Q3.</strong> 에이전트가 해결 코멘트를 만들지 못하면 이 샘플은 티켓을 어떻게 처리합니까? 왜 그렇게 합니까?</p>
+<blockquote>
+<p>정답: <code>Failed</code>로 기록(<code>main.py:577-581</code>). 자리표시자 문구로 자동 종결하면 사람 검토가 필요한 티켓이 조용히 닫히기 때문. (신뢰성, 제어 가능성)</p>
+</blockquote>
+<p><strong>Q4.</strong> 과거 장애 수를 Memory 요약에서만 세지 않고 DynamoDB도 조회하는 이유는?</p>
+<blockquote>
+<p>정답: SUMMARIZATION 요약은 비동기로 만들어져 직후 재제출된 티켓을 반영하지 못함. 강한 일관성이 필요한 수치는 DB에서 가져옴(<code>main.py:149-179</code>). (성능 효율성, 진실성)</p>
+</blockquote>
+<p><strong>Q5.</strong> 이 샘플을 Scoping Matrix의 Scope 2로 바꾸려면 가장 먼저 무엇을 바꿔야 합니까?</p>
+<blockquote>
+<p>정답: <code>create_change_request</code>가 바로 적용(<code>status: applied</code>)하지 않고 승인 대기로 기록, 사람이 승인한 뒤 적용. (보안, 거버넌스)</p>
+</blockquote>
+<hr />
+<h2 id="sec-29">7. 권장 진행 시간표 (75분 기준)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>시간</th>
+<th>슬라이드</th>
+<th>내용</th>
+<th>자료</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–8분</td>
+<td>1–3</td>
+<td>도입, 시나리오 소개, 5가지 고려 사항 대입</td>
+<td>§1, 데모 GIF</td>
+</tr>
+<tr>
+<td>8–25분</td>
+<td>4–9</td>
+<td>6개 요소 미리 보기, 대리권 원칙(코드 vs LLM 표), Scoping Matrix, 원칙 6가지, 통합 모범 사례</td>
+<td>§2</td>
+</tr>
+<tr>
+<td>25–35분</td>
+<td>10–11</td>
+<td>배포 준비 체크리스트를 샘플에 채우기 (수강생 참여)</td>
+<td>§3</td>
+</tr>
+<tr>
+<td>35–60분</td>
+<td>12–13</td>
+<td>설계 활동 (마커별 토론, 필요할 때 부록 슬라이드 참조)</td>
+<td>§5, §4</td>
+</tr>
+<tr>
+<td>60–70분</td>
+<td>16–22</td>
+<td>설계 활동에서 덜 다룬 요소 위주로 부록 정리</td>
+<td>§4</td>
+</tr>
+<tr>
+<td>70–75분</td>
+<td>14–15</td>
+<td>요약, 보충 문제, 질문</td>
+<td>§6</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>시간이 부족하면 §4는 설계 활동 중 질문이 나올 때마다 해당 요소만 펼치고, 따로 시간을 잡지 않습니다(슬라이드 16 노트의 사용법과 같음).</p>
+</blockquote>
+<hr />
+<h2 id="sec-30">8. 데모 준비</h2>
+<h3 id="sec-31">8.1 배포와 실행 (수업 전날 배포 권장, 약 10–15분 소요)</h3>
+<pre><code class="language-bash">cp .env.example .env              # CDK_DEFAULT_ACCOUNT 설정
+cd agentcore/cdk &amp;&amp; npm install &amp;&amp; cd ../..
+./scripts/deploy.sh
+
+./scripts/publish_ticket.sh                     # 샘플 티켓 (U-1003, HIGH)
+agentcore logs --since 5m                       # 단계별 로그
+./scripts/show_ticket.sh INC-20260604-001       # status=Resolved 확인
+python scripts/evaluate.py --hours 24           # 온라인 평가 점수
+</code></pre>
+<h3 id="sec-32">8.2 슬라이드별로 띄워 둘 화면</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>슬라이드</th>
+<th>화면</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6, 8</td>
+<td><code>main.py:450-623</code> (메인 흐름), <code>images/demo.gif</code></td>
+</tr>
+<tr>
+<td>7, 18</td>
+<td><code>agentcore/agentcore.json</code>의 <code>policyEngines</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>agentcore/agentcore.json</code>의 <code>agentCoreGateways</code>, <code>tool-schemas/</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>CloudWatch GenAI Observability 콘솔 (트레이스에서 <code>ticket.id</code>로 검색)</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>scripts/evaluate.py</code> 출력</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>infra-construct.ts:423-477</code> (DLQ, 경보)</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>model/load.py</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="sec-33">8.3 재발 감지 데모 (Memory + 신뢰성)</h3>
+<p>같은 요청자로 티켓을 두세 번 보내면 에이전트가 재발로 판단해 에스컬레이션합니다. <code>ticket_id</code>만 바꿔 다시 발행하세요.</p>
+<pre><code class="language-bash">sed 's/INC-20260604-001/INC-20260604-002/' seed-data/sample_ticket.json &gt; /tmp/t2.json
+./scripts/publish_ticket.sh /tmp/t2.json
+</code></pre>
+<blockquote>
+<p><strong>리허설 팁:</strong> Memory 요약은 비동기로 만들어집니다. 바로 재제출하면 메모리 요약 수는 0일 수 있지만, <code>lookup_user</code>의 최근 30일 티켓 수와 <code>_count_recent_incidents</code>가 재발을 잡습니다. 데모 중 "Memory가 비어 있는데 왜 재발로 판단했나?"라는 질문이 나오면 §4.4의 역할 분담을 설명할 기회로 쓰세요.</p>
+</blockquote>
+<hr />
+<h2 id="sec-34">9. 이 샘플에 없는 것 (슬라이드로만 설명)</h2>
+<p>아래 항목은 샘플 코드에 구현이 없습니다. 슬라이드와 이 문서의 개선 과제 스니펫으로 설명합니다.</p>
+<ul>
+<li>Runtime 버전·엔드포인트를 나눈 점진적 롤아웃, 평가 점수 기반 자동 롤백 (슬라이드 17)</li>
+<li>VPC 배포, PrivateLink, 엔드포인트 정책 (슬라이드 18)</li>
+<li>회로 차단기, 다중 AZ 상태 확인 설정, 다중 리전 모델 배포 (슬라이드 19)</li>
+<li>Bedrock 프롬프트 캐싱, Strands 대화 관리자 직접 설정, Lambda 프로비저닝 동시성 (슬라이드 20)</li>
+<li>토큰·예산 경보, ElastiCache, CloudFront, 테일 기반 샘플링 (슬라이드 21)</li>
+<li>고객 탄소 발자국 도구, S3 Glacier 보관 (슬라이드 22)</li>
+<li>부하 테스트, 취약성 스캔, AWS Config 규칙 (슬라이드 11)</li>
+<li>실제 멀티 에이전트 오케스트레이션 (슬라이드 13): 이 샘플은 단일 에이전트입니다. 멀티 에이전트 비교가 필요하면 같은 폴더의 <code>01.A2A-multi-agent-incident-response</code>(A2A)나 <code>02.SRE-agent</code>(supervisor + 전문가 4개)를 함께 보여 주세요.</li>
+</ul>
+</main>
+</div>
+<button class="theme-btn" type="button" aria-label="테마 전환">◐ 테마</button>
+<script>
+(function(){
+  var root=document.documentElement,btn=document.querySelector('.theme-btn');
+  try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t);}catch(e){}
+  btn.addEventListener('click',function(){
+    var dark=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    var n=dark?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n);}catch(e){}
+  });
+  var links=[].slice.call(document.querySelectorAll('.toc a'));
+  var heads=links.map(function(a){return document.getElementById(a.getAttribute('href').slice(1));});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
+    links.forEach(function(l){l.classList.remove('active')});
+    var i=heads.indexOf(e.target);if(i>=0)links[i].classList.add('active');}})},{rootMargin:'0px 0px -75% 0px'});
+  heads.forEach(function(h){if(h)obs.observe(h)});
+})();
+</script>
+</body>
+</html>
