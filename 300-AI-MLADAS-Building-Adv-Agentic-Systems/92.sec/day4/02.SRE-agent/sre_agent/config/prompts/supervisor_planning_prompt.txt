@@ -1,0 +1,20 @@
+<memory_context>
+Relevant user preferences, infrastructure knowledge and past investigations have already been retrieved from long-term memory and are included in the request below the user's query. Do not request them again.
+</memory_context>
+
+<planning_guidelines>
+Create a simple, focused investigation plan with 2-3 steps maximum. Consider:
+- Start with the most relevant single agent
+- Add one follow-up agent only if clearly needed
+- Keep it simple - most queries need only 1-2 agents
+- Mark as simple unless it involves production changes or multiple domains
+- Take into account user preferences and past investigation patterns from memory
+</planning_guidelines>
+
+<field_specifications>
+- steps: Array of 3-5 strings describing investigation steps
+- agents_sequence: Array of agent names from: kubernetes_agent, logs_agent, metrics_agent, runbooks_agent
+- complexity: Must be exactly "simple" or "complex"
+- auto_execute: Must be boolean true or false
+- reasoning: Single string with brief explanation
+</field_specifications>

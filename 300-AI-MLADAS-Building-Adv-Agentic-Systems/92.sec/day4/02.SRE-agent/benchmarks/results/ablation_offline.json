@@ -1,0 +1,508 @@
+{
+  "generated_at": "2026-10-10T21:22:58",
+  "mode": "offline",
+  "changes": [
+    {
+      "key": "planning",
+      "label": "계획 단계 재구성",
+      "detail": "플래너 ReAct 루프·메모리 재조회 제거, 구조화 출력 1회 호출, 정적 system 분리, 압축 이력 전달"
+    },
+    {
+      "key": "memory",
+      "label": "메모리 선택",
+      "detail": "인프라 지식 topK 50→10, 관련도 0.5 미만 제외, 응답마다 하던 선호 메모리 100건×2 조회 제거"
+    },
+    {
+      "key": "isolation",
+      "label": "에이전트 컨텍스트 격리",
+      "detail": "전문 에이전트에 전체 대화 대신 system + 과제 메시지만 전달, 도구 트래픽을 공유 대화에 넣지 않음"
+    },
+    {
+      "key": "tool_cap",
+      "label": "도구 결과 상한",
+      "detail": "ReAct 루프의 도구 결과를 4,000자로 제한 (pre_model_hook)"
+    },
+    {
+      "key": "tool_name",
+      "label": "검색 도구 이름 수정",
+      "detail": "전역 검색 도구가 실제로 에이전트에 붙도록 이름 오타 수정"
+    },
+    {
+      "key": "caching",
+      "label": "프롬프트 캐싱",
+      "detail": "정적 system에 cache_control 체크포인트"
+    }
+  ],
+  "cumulative": [
+    {
+      "reverted": [
+        "caching",
+        "isolation",
+        "memory",
+        "planning",
+        "tool_cap",
+        "tool_name"
+      ],
+      "llm_calls": 21,
+      "input_tokens_est": 149650,
+      "max_input_tokens_est": 16597,
+      "tool_result_tokens_est": 25700,
+      "memory_retrieve_calls": 30,
+      "memory_records_returned": 327,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 91695,
+        "metrics_agent": 6462,
+        "logs_agent": 20673,
+        "kubernetes_agent": 18080,
+        "executive_summary": 3852,
+        "runbooks_agent": 8888
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": null
+    },
+    {
+      "reverted": [
+        "caching",
+        "isolation",
+        "memory",
+        "tool_cap",
+        "tool_name"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 79440,
+      "max_input_tokens_est": 7505,
+      "tool_result_tokens_est": 18443,
+      "memory_retrieve_calls": 21,
+      "memory_records_returned": 255,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 21474,
+        "metrics_agent": 6463,
+        "logs_agent": 20679,
+        "kubernetes_agent": 18083,
+        "executive_summary": 3852,
+        "runbooks_agent": 8889
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "planning"
+    },
+    {
+      "reverted": [
+        "caching",
+        "isolation",
+        "tool_cap",
+        "tool_name"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 76861,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 18443,
+      "memory_retrieve_calls": 21,
+      "memory_records_returned": 135,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 6465,
+        "logs_agent": 20683,
+        "kubernetes_agent": 18091,
+        "executive_summary": 3852,
+        "runbooks_agent": 8888
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "memory"
+    },
+    {
+      "reverted": [
+        "caching",
+        "tool_cap",
+        "tool_name"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 66865,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 8217,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 6900,
+        "logs_agent": 16449,
+        "kubernetes_agent": 13022,
+        "executive_summary": 3852,
+        "runbooks_agent": 7760
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "isolation"
+    },
+    {
+      "reverted": [
+        "caching",
+        "tool_name"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 66484,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 6903,
+        "logs_agent": 16446,
+        "kubernetes_agent": 13019,
+        "executive_summary": 3852,
+        "runbooks_agent": 7382
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "tool_cap"
+    },
+    {
+      "reverted": [
+        "caching"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 67691,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 7098,
+        "logs_agent": 16852,
+        "kubernetes_agent": 13424,
+        "executive_summary": 3852,
+        "runbooks_agent": 7583
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "tool_name"
+    },
+    {
+      "reverted": [],
+      "llm_calls": 18,
+      "input_tokens_est": 67684,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 9584,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 7100,
+        "logs_agent": 16849,
+        "kubernetes_agent": 13420,
+        "executive_summary": 3852,
+        "runbooks_agent": 7581
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "added": "caching"
+    }
+  ],
+  "leave_one_out": [
+    {
+      "reverted": [
+        "planning"
+      ],
+      "llm_calls": 21,
+      "input_tokens_est": 112036,
+      "max_input_tokens_est": 11848,
+      "tool_result_tokens_est": 15095,
+      "memory_retrieve_calls": 18,
+      "memory_records_returned": 135,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 63221,
+        "metrics_agent": 7103,
+        "logs_agent": 16853,
+        "kubernetes_agent": 13423,
+        "executive_summary": 3852,
+        "runbooks_agent": 7584
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "planning"
+    },
+    {
+      "reverted": [
+        "memory"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 80655,
+      "max_input_tokens_est": 7505,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 21,
+      "memory_records_returned": 255,
+      "est_cache_read_tokens": 9584,
+      "input_by_role": {
+        "supervisor_planning": 21474,
+        "metrics_agent": 8828,
+        "logs_agent": 20311,
+        "kubernetes_agent": 16878,
+        "executive_summary": 3852,
+        "runbooks_agent": 9312
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "memory"
+    },
+    {
+      "reverted": [
+        "isolation"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 77668,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 18064,
+      "memory_retrieve_calls": 21,
+      "memory_records_returned": 135,
+      "est_cache_read_tokens": 9584,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 6662,
+        "logs_agent": 21074,
+        "kubernetes_agent": 18482,
+        "executive_summary": 3852,
+        "runbooks_agent": 8716
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "isolation"
+    },
+    {
+      "reverted": [
+        "tool_cap"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 68073,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 8217,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 9584,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 7105,
+        "logs_agent": 16855,
+        "kubernetes_agent": 13418,
+        "executive_summary": 3852,
+        "runbooks_agent": 7961
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "tool_cap"
+    },
+    {
+      "reverted": [
+        "tool_name"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 66480,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 9584,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 6901,
+        "logs_agent": 16447,
+        "kubernetes_agent": 13018,
+        "executive_summary": 3852,
+        "runbooks_agent": 7380
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "tool_name"
+    },
+    {
+      "reverted": [
+        "caching"
+      ],
+      "llm_calls": 18,
+      "input_tokens_est": 67697,
+      "max_input_tokens_est": 6641,
+      "tool_result_tokens_est": 7838,
+      "memory_retrieve_calls": 9,
+      "memory_records_returned": 63,
+      "est_cache_read_tokens": 0,
+      "input_by_role": {
+        "supervisor_planning": 18882,
+        "metrics_agent": 7097,
+        "logs_agent": 16856,
+        "kubernetes_agent": 13425,
+        "executive_summary": 3852,
+        "runbooks_agent": 7585
+      },
+      "agents_invoked": [
+        [
+          "Performance Metrics Agent",
+          "Application Logs Agent",
+          "Kubernetes Infrastructure Agent"
+        ],
+        [
+          "Kubernetes Infrastructure Agent",
+          "Application Logs Agent"
+        ],
+        [
+          "Operational Runbooks Agent"
+        ]
+      ],
+      "removed": "caching"
+    }
+  ]
+}

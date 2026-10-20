@@ -1,0 +1,816 @@
+{
+  "mode": "offline",
+  "runs": {
+    "sre_agent_before": {
+      "version": "sre_agent_before",
+      "package_path": "C:\\Users\\moonj\\Desktop\\agent-core-sample\\02.SRE-agent\\sre_agent_before",
+      "mode": "offline",
+      "elapsed_seconds": 0.3,
+      "calls": [
+        {
+          "turn": 1,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12059,
+          "message_tokens": 27,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 13984,
+          "cache_marked": false,
+          "prefix_hash": "dd4c39920f3b",
+          "prefix_tokens_est": 13957,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "supervisor_planning",
+          "n_messages": 6,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12059,
+          "message_tokens": 2637,
+          "tool_result_tokens": 2419,
+          "input_tokens_est": 16594,
+          "cache_marked": false,
+          "prefix_hash": "dd4c39920f3b",
+          "prefix_tokens_est": 13957,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "metrics_agent",
+          "n_messages": 3,
+          "tools": 5,
+          "tools_tokens": 676,
+          "system_tokens": 1778,
+          "message_tokens": 85,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 2539,
+          "cache_marked": false,
+          "prefix_hash": "9a5ef7dd7bbd",
+          "prefix_tokens_est": 2454,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "metrics_agent",
+          "n_messages": 7,
+          "tools": 5,
+          "tools_tokens": 676,
+          "system_tokens": 1778,
+          "message_tokens": 1467,
+          "tool_result_tokens": 1262,
+          "input_tokens_est": 3921,
+          "cache_marked": false,
+          "prefix_hash": "9a5ef7dd7bbd",
+          "prefix_tokens_est": 2454,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "logs_agent",
+          "n_messages": 8,
+          "tools": 5,
+          "tools_tokens": 619,
+          "system_tokens": 1754,
+          "message_tokens": 1679,
+          "tool_result_tokens": 1262,
+          "input_tokens_est": 4052,
+          "cache_marked": false,
+          "prefix_hash": "9b829629b243",
+          "prefix_tokens_est": 2373,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "logs_agent",
+          "n_messages": 12,
+          "tools": 5,
+          "tools_tokens": 619,
+          "system_tokens": 1754,
+          "message_tokens": 3299,
+          "tool_result_tokens": 2768,
+          "input_tokens_est": 5672,
+          "cache_marked": false,
+          "prefix_hash": "9b829629b243",
+          "prefix_tokens_est": 2373,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "kubernetes_agent",
+          "n_messages": 13,
+          "tools": 5,
+          "tools_tokens": 449,
+          "system_tokens": 1274,
+          "message_tokens": 3510,
+          "tool_result_tokens": 2768,
+          "input_tokens_est": 5233,
+          "cache_marked": false,
+          "prefix_hash": "4c78eee1dd7c",
+          "prefix_tokens_est": 1723,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "kubernetes_agent",
+          "n_messages": 17,
+          "tools": 5,
+          "tools_tokens": 449,
+          "system_tokens": 1274,
+          "message_tokens": 4723,
+          "tool_result_tokens": 3851,
+          "input_tokens_est": 6446,
+          "cache_marked": false,
+          "prefix_hash": "4c78eee1dd7c",
+          "prefix_tokens_est": 1723,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 942,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1509,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12053,
+          "message_tokens": 21,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 13972,
+          "cache_marked": false,
+          "prefix_hash": "8650cb506b4c",
+          "prefix_tokens_est": 13951,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "supervisor_planning",
+          "n_messages": 6,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12053,
+          "message_tokens": 2628,
+          "tool_result_tokens": 2419,
+          "input_tokens_est": 16579,
+          "cache_marked": false,
+          "prefix_hash": "8650cb506b4c",
+          "prefix_tokens_est": 13951,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "kubernetes_agent",
+          "n_messages": 5,
+          "tools": 5,
+          "tools_tokens": 449,
+          "system_tokens": 1274,
+          "message_tokens": 870,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 2593,
+          "cache_marked": false,
+          "prefix_hash": "4c78eee1dd7c",
+          "prefix_tokens_est": 1723,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "kubernetes_agent",
+          "n_messages": 9,
+          "tools": 5,
+          "tools_tokens": 449,
+          "system_tokens": 1274,
+          "message_tokens": 2080,
+          "tool_result_tokens": 1083,
+          "input_tokens_est": 3803,
+          "cache_marked": false,
+          "prefix_hash": "4c78eee1dd7c",
+          "prefix_tokens_est": 1723,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "logs_agent",
+          "n_messages": 10,
+          "tools": 5,
+          "tools_tokens": 619,
+          "system_tokens": 1754,
+          "message_tokens": 2288,
+          "tool_result_tokens": 1083,
+          "input_tokens_est": 4661,
+          "cache_marked": false,
+          "prefix_hash": "9b829629b243",
+          "prefix_tokens_est": 2373,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "logs_agent",
+          "n_messages": 14,
+          "tools": 5,
+          "tools_tokens": 619,
+          "system_tokens": 1754,
+          "message_tokens": 3908,
+          "tool_result_tokens": 2589,
+          "input_tokens_est": 6281,
+          "cache_marked": false,
+          "prefix_hash": "9b829629b243",
+          "prefix_tokens_est": 2373,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 706,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1273,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12055,
+          "message_tokens": 23,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 13976,
+          "cache_marked": false,
+          "prefix_hash": "e918869d43dc",
+          "prefix_tokens_est": 13953,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "supervisor_planning",
+          "n_messages": 6,
+          "tools": 4,
+          "tools_tokens": 1898,
+          "system_tokens": 12055,
+          "message_tokens": 2629,
+          "tool_result_tokens": 2419,
+          "input_tokens_est": 16582,
+          "cache_marked": false,
+          "prefix_hash": "e918869d43dc",
+          "prefix_tokens_est": 13953,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "runbooks_agent",
+          "n_messages": 7,
+          "tools": 5,
+          "tools_tokens": 510,
+          "system_tokens": 1557,
+          "message_tokens": 1430,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 3497,
+          "cache_marked": false,
+          "prefix_hash": "beefcf166b2a",
+          "prefix_tokens_est": 2067,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "runbooks_agent",
+          "n_messages": 11,
+          "tools": 5,
+          "tools_tokens": 510,
+          "system_tokens": 1557,
+          "message_tokens": 3324,
+          "tool_result_tokens": 1777,
+          "input_tokens_est": 5391,
+          "cache_marked": false,
+          "prefix_hash": "beefcf166b2a",
+          "prefix_tokens_est": 2067,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 503,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1070,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "agents_invoked": [
+            "Performance Metrics Agent",
+            "Application Logs Agent",
+            "Kubernetes Infrastructure Agent"
+          ],
+          "final_response_chars": 3678
+        },
+        {
+          "turn": 2,
+          "agents_invoked": [
+            "Kubernetes Infrastructure Agent",
+            "Application Logs Agent"
+          ],
+          "final_response_chars": 2562
+        },
+        {
+          "turn": 3,
+          "agents_invoked": [
+            "Operational Runbooks Agent"
+          ],
+          "final_response_chars": 939
+        }
+      ],
+      "memory": {
+        "retrieve_calls": 30,
+        "records_returned": 327,
+        "create_event_calls": 15
+      },
+      "generated_at": "2026-10-10T10:32:40",
+      "summary": {
+        "llm_calls": 21,
+        "input_tokens_est": 149628,
+        "max_input_tokens_est": 16594,
+        "tool_result_tokens_est": 25700,
+        "cache_marked_calls": 0,
+        "est_cache_read_tokens": 0,
+        "memory_retrieve_calls": 30,
+        "memory_records_returned": 327,
+        "memory_create_events": 15,
+        "by_turn_role": {
+          "T1 supervisor_planning": {
+            "calls": 2,
+            "input_tokens_est": 30578,
+            "max_input_est": 16594
+          },
+          "T1 metrics_agent": {
+            "calls": 2,
+            "input_tokens_est": 6460,
+            "max_input_est": 3921
+          },
+          "T1 logs_agent": {
+            "calls": 2,
+            "input_tokens_est": 9724,
+            "max_input_est": 5672
+          },
+          "T1 kubernetes_agent": {
+            "calls": 2,
+            "input_tokens_est": 11679,
+            "max_input_est": 6446
+          },
+          "T1 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1509,
+            "max_input_est": 1509
+          },
+          "T2 supervisor_planning": {
+            "calls": 2,
+            "input_tokens_est": 30551,
+            "max_input_est": 16579
+          },
+          "T2 kubernetes_agent": {
+            "calls": 2,
+            "input_tokens_est": 6396,
+            "max_input_est": 3803
+          },
+          "T2 logs_agent": {
+            "calls": 2,
+            "input_tokens_est": 10942,
+            "max_input_est": 6281
+          },
+          "T2 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1273,
+            "max_input_est": 1273
+          },
+          "T3 supervisor_planning": {
+            "calls": 2,
+            "input_tokens_est": 30558,
+            "max_input_est": 16582
+          },
+          "T3 runbooks_agent": {
+            "calls": 2,
+            "input_tokens_est": 8888,
+            "max_input_est": 5391
+          },
+          "T3 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1070,
+            "max_input_est": 1070
+          }
+        }
+      }
+    },
+    "sre_agent": {
+      "version": "sre_agent",
+      "package_path": "C:\\Users\\moonj\\Desktop\\agent-core-sample\\02.SRE-agent\\sre_agent",
+      "mode": "offline",
+      "elapsed_seconds": 0.1,
+      "calls": [
+        {
+          "turn": 1,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 1,
+          "tools_tokens": 226,
+          "system_tokens": 4566,
+          "message_tokens": 1048,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 5840,
+          "cache_marked": true,
+          "prefix_hash": "f8dc85951200",
+          "prefix_tokens_est": 4792,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "metrics_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 777,
+          "system_tokens": 1778,
+          "message_tokens": 303,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 2858,
+          "cache_marked": true,
+          "prefix_hash": "a816fa7c614c",
+          "prefix_tokens_est": 2555,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "metrics_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 777,
+          "system_tokens": 1778,
+          "message_tokens": 1691,
+          "tool_result_tokens": 1262,
+          "input_tokens_est": 4246,
+          "cache_marked": true,
+          "prefix_hash": "a816fa7c614c",
+          "prefix_tokens_est": 2555,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "logs_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 720,
+          "system_tokens": 1754,
+          "message_tokens": 530,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 3004,
+          "cache_marked": true,
+          "prefix_hash": "8dd07cd25e2c",
+          "prefix_tokens_est": 2474,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "logs_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 720,
+          "system_tokens": 1754,
+          "message_tokens": 2148,
+          "tool_result_tokens": 1506,
+          "input_tokens_est": 4622,
+          "cache_marked": true,
+          "prefix_hash": "8dd07cd25e2c",
+          "prefix_tokens_est": 2474,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "kubernetes_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 550,
+          "system_tokens": 1274,
+          "message_tokens": 747,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 2571,
+          "cache_marked": true,
+          "prefix_hash": "9b7b1ff783c5",
+          "prefix_tokens_est": 1824,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "kubernetes_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 550,
+          "system_tokens": 1274,
+          "message_tokens": 1955,
+          "tool_result_tokens": 1083,
+          "input_tokens_est": 3779,
+          "cache_marked": true,
+          "prefix_hash": "9b7b1ff783c5",
+          "prefix_tokens_est": 1824,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 1,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 942,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1509,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 1,
+          "tools_tokens": 226,
+          "system_tokens": 4566,
+          "message_tokens": 1849,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 6641,
+          "cache_marked": true,
+          "prefix_hash": "f8dc85951200",
+          "prefix_tokens_est": 4792,
+          "est_cache_read": 4792
+        },
+        {
+          "turn": 2,
+          "role": "kubernetes_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 550,
+          "system_tokens": 1274,
+          "message_tokens": 1106,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 2930,
+          "cache_marked": true,
+          "prefix_hash": "9b7b1ff783c5",
+          "prefix_tokens_est": 1824,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "kubernetes_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 550,
+          "system_tokens": 1274,
+          "message_tokens": 2317,
+          "tool_result_tokens": 1083,
+          "input_tokens_est": 4141,
+          "cache_marked": true,
+          "prefix_hash": "9b7b1ff783c5",
+          "prefix_tokens_est": 1824,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "logs_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 720,
+          "system_tokens": 1754,
+          "message_tokens": 1326,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 3800,
+          "cache_marked": true,
+          "prefix_hash": "8dd07cd25e2c",
+          "prefix_tokens_est": 2474,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "logs_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 720,
+          "system_tokens": 1754,
+          "message_tokens": 2952,
+          "tool_result_tokens": 1506,
+          "input_tokens_est": 5426,
+          "cache_marked": true,
+          "prefix_hash": "8dd07cd25e2c",
+          "prefix_tokens_est": 2474,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 2,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 706,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1273,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "supervisor_planning",
+          "n_messages": 2,
+          "tools": 1,
+          "tools_tokens": 226,
+          "system_tokens": 4566,
+          "message_tokens": 1609,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 6401,
+          "cache_marked": true,
+          "prefix_hash": "f8dc85951200",
+          "prefix_tokens_est": 4792,
+          "est_cache_read": 4792
+        },
+        {
+          "turn": 3,
+          "role": "runbooks_agent",
+          "n_messages": 2,
+          "tools": 6,
+          "tools_tokens": 611,
+          "system_tokens": 1557,
+          "message_tokens": 866,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 3034,
+          "cache_marked": true,
+          "prefix_hash": "f00148d52504",
+          "prefix_tokens_est": 2168,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "runbooks_agent",
+          "n_messages": 6,
+          "tools": 6,
+          "tools_tokens": 611,
+          "system_tokens": 1557,
+          "message_tokens": 2382,
+          "tool_result_tokens": 1398,
+          "input_tokens_est": 4550,
+          "cache_marked": true,
+          "prefix_hash": "f00148d52504",
+          "prefix_tokens_est": 2168,
+          "est_cache_read": 0
+        },
+        {
+          "turn": 3,
+          "role": "executive_summary",
+          "n_messages": 2,
+          "tools": 0,
+          "tools_tokens": 0,
+          "system_tokens": 567,
+          "message_tokens": 503,
+          "tool_result_tokens": 0,
+          "input_tokens_est": 1070,
+          "cache_marked": false,
+          "prefix_hash": "8f909c3cf9a0",
+          "prefix_tokens_est": 567,
+          "est_cache_read": 0
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "agents_invoked": [
+            "Performance Metrics Agent",
+            "Application Logs Agent",
+            "Kubernetes Infrastructure Agent"
+          ],
+          "final_response_chars": 3678
+        },
+        {
+          "turn": 2,
+          "agents_invoked": [
+            "Kubernetes Infrastructure Agent",
+            "Application Logs Agent"
+          ],
+          "final_response_chars": 2562
+        },
+        {
+          "turn": 3,
+          "agents_invoked": [
+            "Operational Runbooks Agent"
+          ],
+          "final_response_chars": 939
+        }
+      ],
+      "memory": {
+        "retrieve_calls": 9,
+        "records_returned": 63,
+        "create_event_calls": 15
+      },
+      "generated_at": "2026-10-10T10:32:40",
+      "summary": {
+        "llm_calls": 18,
+        "input_tokens_est": 67695,
+        "max_input_tokens_est": 6641,
+        "tool_result_tokens_est": 7838,
+        "cache_marked_calls": 15,
+        "est_cache_read_tokens": 9584,
+        "memory_retrieve_calls": 9,
+        "memory_records_returned": 63,
+        "memory_create_events": 15,
+        "by_turn_role": {
+          "T1 supervisor_planning": {
+            "calls": 1,
+            "input_tokens_est": 5840,
+            "max_input_est": 5840
+          },
+          "T1 metrics_agent": {
+            "calls": 2,
+            "input_tokens_est": 7104,
+            "max_input_est": 4246
+          },
+          "T1 logs_agent": {
+            "calls": 2,
+            "input_tokens_est": 7626,
+            "max_input_est": 4622
+          },
+          "T1 kubernetes_agent": {
+            "calls": 2,
+            "input_tokens_est": 6350,
+            "max_input_est": 3779
+          },
+          "T1 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1509,
+            "max_input_est": 1509
+          },
+          "T2 supervisor_planning": {
+            "calls": 1,
+            "input_tokens_est": 6641,
+            "max_input_est": 6641
+          },
+          "T2 kubernetes_agent": {
+            "calls": 2,
+            "input_tokens_est": 7071,
+            "max_input_est": 4141
+          },
+          "T2 logs_agent": {
+            "calls": 2,
+            "input_tokens_est": 9226,
+            "max_input_est": 5426
+          },
+          "T2 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1273,
+            "max_input_est": 1273
+          },
+          "T3 supervisor_planning": {
+            "calls": 1,
+            "input_tokens_est": 6401,
+            "max_input_est": 6401
+          },
+          "T3 runbooks_agent": {
+            "calls": 2,
+            "input_tokens_est": 7584,
+            "max_input_est": 4550
+          },
+          "T3 executive_summary": {
+            "calls": 1,
+            "input_tokens_est": 1070,
+            "max_input_est": 1070
+          }
+        }
+      }
+    }
+  }
+}

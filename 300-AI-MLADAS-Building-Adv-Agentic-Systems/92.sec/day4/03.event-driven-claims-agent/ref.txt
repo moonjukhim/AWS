@@ -1,0 +1,49 @@
+
+이 모듈은 크게 세 부분입니다: ① 자격 증명·액세스·정책(p.7–24), ② VPC·네트워크 보안(p.25–33), ③ 규정 준수·감사(p.34–41). 세 부분을 모두 구현한 샘플은 없어서, 부분별로 가장 잘 맞는 샘플을 하나씩 골랐습니다.
+
+1. Identity와 Policy: 01-conversational-agents/healthcare-appointment-agent
+
+슬라이드 18–21의 권한 부여 흐름(JWT 클레임 → OAuthUser 태그 → Cedar 평가)이 이 샘플에 그대로 구현되어 있습니다.
+
+┌───────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────┐
+│       슬라이드        │                                   샘플에서 해당하는 부분                                    │
+├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ p.18–20: JWT 클레임이 │ policy/setup_cognito_claims.py가 Cognito pre-token-generation Lambda로 role, patient_id     │
+│  엔터티 태그로 저장됨 │ 클레임을 토큰에 넣습니다. Cedar는 이 값을 principal.getTag("role")로 읽습니다.              │
+├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ p.17, 23: permit +    │ policy/cedar/1_identity_based.cedar: 환자는 context.input.patient_id ==                     │
+│ 조건                  │ principal.getTag("patient_id")일 때만, 즉 본인 기록만 조회할 수 있습니다.                   │
+├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ p.24: forbid          │ policy/cedar/4_forbid_patient_booking.cedar: 환자의 예약 도구 호출을 막습니다. forbid가     │
+│                       │ permit보다 우선한다는 점이 주석으로 설명되어 있습니다.                                      │
+├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 정책 유형 확장        │ 2_scope_based_rw.cedar(OAuth scope 기반 읽기/쓰기), 3_time_based.cedar(시간 기반)           │
+├───────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┤
+│ p.16: 정책 엔진       │ setup_policy.py, attach_policy.py(ENFORCE와 LOG_ONLY 모드), detach_policy.py,               │
+│ 수명주기              │ test_policy.py                                                                              │
+└───────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+의료(PHI) 도메인이라 지식 확인 문제 2번의 시나리오와도 연결됩니다.
+
+2. VPC와 네트워크 보안: 01-conversational-agents/customer-support-assistant-vpc
+
+슬라이드 28–33과 거의 그대로 대응합니다.
+
+- p.28, 30 (Runtime VPC 연결): cloudformation/agent-server-stack.yaml:860과 mcp-server-stack.yaml:826에서 NetworkMode: "VPC"를 설정합니다. 프라이빗 서브넷 3개를 쓰고, 에이전트와 MCP 런타임에 각각 보안 그룹이 있습니다(vpc-stack.yaml:643,664).
+- p.31 (AgentCore용 인터페이스 엔드포인트): vpc-stack.yaml:568에 bedrock-agentcore, :594에 bedrock-agentcore.gateway 엔드포인트가 있습니다.
+- p.33 (필수 엔드포인트): ECR(api, dkr), S3, CloudWatch(logs, monitoring), X-Ray, Bedrock runtime, KMS, Secrets Manager 엔드포인트가 모두 정의되어 있습니다.
+- p.12 (2LO, M2M): agent/main.py:74-90에서 @requires_access_token(auth_flow="M2M")로 Gateway와 MCP에 접근합니다.
+
+3. 엔드투엔드 흐름과 감사: 02-workflow-automation-agents/event-driven-claims-agent
+
+한 샘플로 보안 흐름 전체를 보여주고 싶을 때 쓰기 좋습니다.
+
+- p.11 (SigV4 인바운드): 트리거 Lambda가 SigV4로 Runtime을 호출합니다.
+- p.14 (Gateway 인바운드와 아웃바운드 인증): Gateway는 Cognito CUSTOM_JWT로 인바운드를 인증하고, 아웃바운드는 @requires_access_token으로 Identity 볼트에서 토큰을 받아 처리합니다.
+- p.17 (금액 조건 Cedar 정책): agentcore/agentcore.json:222에 청구액 10만 달러 이상이면 forbid하는 정책이 있습니다. 슬라이드의 "500달러 미만 환급" 예제와 같은 패턴입니다. scripts/test_cedar.py로 실제 차단을 시연할 수 있습니다.
+- p.39, 41 (감사 추적, 실시간 모니터링): CloudWatch Transaction Search, Gateway와 Memory의 trace·log 전송, 온라인 평가가 들어 있고, scripts/analyze_traces.py로 정책 평가 추적을 분석합니다.
+- p.4 (대리권 범위): 신뢰도 점수에 따라 자동 처리할지 사람 검토로 넘길지 정합니다. 범위 2와 3의 차이를 설명할 때 쓸 수 있습니다.
+
+수업 흐름 제안: Policy 실습은 healthcare 샘플, 네트워크 아키텍처는 VPC 샘플, 전체 흐름과 감사는 claims 샘플로 진행하면 됩니다. 시간이 한 샘플만큼만 있다면, 정책·인증·감사를 모두 다루는 event-driven-claims-agent가 가장 넓게 커버합니다.
+
+참고: OAuth 3LO(p.13, 사용자 동의 흐름)는 AWS-operations-agent에 관련 키워드가 걸렸지만 구현 내용은 확인하지 않았습니다. 3LO 데모가 필요하면 확인해 드리겠습니다
