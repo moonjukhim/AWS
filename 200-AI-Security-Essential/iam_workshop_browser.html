@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SageMaker · Bedrock IAM 정책 실습</title>
+<style>
+:root{--navy:#132d42;--blue:#176b96;--ink:#172c3d;--muted:#627384;--line:#dbe3e9;--paper:#fff;--back:#f3f6f8;--green:#14735a;--red:#b23932;--amber:#8c611c}*{box-sizing:border-box}body{margin:0;background:var(--back);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif;font-size:14px;line-height:1.65}button,input,select,textarea{font:inherit}button,select{cursor:pointer}button{border:1px solid var(--line);border-radius:7px;background:white;color:var(--ink);padding:8px 12px;font-weight:600}button:hover{background:#edf4f8;border-color:#a8bccb}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #70b4d7;outline-offset:3px}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.primary:hover{background:#115775}button:disabled{opacity:.45;cursor:not-allowed}button.small{padding:5px 9px;font-size:12px}a{color:#166a95}.shell{min-height:100vh;display:grid;grid-template-columns:225px minmax(0,1fr)}aside{background:var(--navy);color:#c8d5df;padding:30px 20px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}.brand{font-size:13px;font-weight:800;letter-spacing:.12em;color:#fff}.brand-sub{font-size:12px;color:#aabfce;margin-top:5px}.nav-label{font-size:11px;letter-spacing:.1em;margin:35px 0 10px;color:#89a6ba}nav{display:grid;gap:6px}nav button{color:#c8d5df;text-align:left;background:transparent;border-color:transparent;display:flex;gap:12px;align-items:center;padding:11px 10px}nav button:hover{background:#203e55;border-color:transparent}nav button[aria-current="step"]{background:#25475f;color:#fff}.step-num{width:23px;height:23px;display:grid;place-content:center;border:1px solid #547287;border-radius:50%;font-size:11px;flex-shrink:0}.side-bottom{margin-top:auto;font-size:12px;color:#aabfce}.offline-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#70cbb4;margin-right:7px}main{padding:30px 34px 24px;max-width:1700px;width:100%;margin:0 auto;min-width:0}.topline{display:flex;justify-content:space-between;align-items:center;gap:15px;font-size:12px;color:var(--muted)}.top-actions{display:flex;gap:8px;flex-wrap:wrap}.eyebrow{letter-spacing:.12em;font-size:11px;color:var(--blue);font-weight:800;margin:28px 0 7px}h1{font-size:29px;line-height:1.35;letter-spacing:-.035em;margin:0 0 9px}h2{font-size:20px;line-height:1.45;letter-spacing:-.025em;margin:0 0 12px}h3{font-size:14px;margin:0 0 7px}.lede{margin:0;color:var(--muted);max-width:850px;font-size:14px}.intro{margin-top:25px;background:white;padding:25px 28px;border:1px solid var(--line);border-radius:10px}.intro-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;margin-top:16px}.intro p{margin:0 0 12px}.intro ul{padding-left:19px;margin:0 0 15px}.tag{display:inline-block;background:#eaf2f7;color:#3d627c;border-radius:4px;padding:2px 7px;font-size:11px;margin-left:7px;font-weight:600}.muted{color:var(--muted)}.tiny{font-size:12px}.notice{margin:15px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.workspace{margin-top:25px;display:grid;grid-template-columns:minmax(340px,1fr) minmax(380px,1.1fr);gap:20px;align-items:start}.panel{background:white;border:1px solid var(--line);border-radius:10px;min-width:0;overflow:hidden}.panel-head{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}.panel-head h2{font-size:16px;margin:0}.editor-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);background:#f8fafb}.editor-tabs button{border:0;border-radius:0;border-bottom:3px solid transparent;background:transparent;padding:12px 17px;font-size:12px}.editor-tabs button.active{border-bottom-color:var(--blue);color:var(--blue);background:#fff}.task{padding:18px 20px 15px;border-bottom:1px solid var(--line);background:#fcfdfe}.task h3{font-size:14px}.task ul{padding-left:18px;margin:7px 0 0;font-size:12px}.task code,.hint code{font-size:11px;background:#edf3f7;padding:1px 3px;border-radius:3px;overflow-wrap:anywhere}.task details{margin-top:10px;font-size:12px}.task summary{cursor:pointer;color:var(--blue)}.arn{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#3c5364;font-size:10.5px;display:block;word-break:break-all;margin-top:6px}.editor-meta{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;font-size:11px;color:var(--muted);gap:12px}.editor-wrap{padding:0 12px 12px}.policy-editor{width:100%;height:390px;resize:vertical;border:1px solid #d5e1ea;border-radius:6px;background:#102738;color:#d9e9f2;font:12px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;padding:17px;tab-size:2;white-space:pre;overflow:auto;outline:none}.policy-editor:focus{border:2px solid #55a4cf;padding:16px}.editor-buttons{display:flex;gap:7px;flex-wrap:wrap;padding:0 14px 13px}.lesson-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding:15px}.help{padding:0 16px 17px;font-size:12px}.help summary{cursor:pointer;color:var(--muted)}.help select{width:100%;margin:12px 0 8px;padding:8px;border:1px solid var(--line);border-radius:5px;background:#fff}.help p{margin:6px 0}.run-scope{font-size:11px;color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(3,1fr);padding:18px 20px;gap:10px;border-bottom:1px solid var(--line)}.metric{border-right:1px solid var(--line)}.metric:last-child{border:0}.metric strong{font-size:29px;line-height:1.3;display:block;font-weight:650;font-variant-numeric:tabular-nums}.metric span{font-size:11px;color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}.status-message{padding:12px 20px;font-size:12px;border-bottom:1px solid var(--line);background:#f9fbfc}.status-message.error{color:var(--red);background:#fff4f2}.filterbar{padding:12px 17px;display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:12px}.filterbar select{padding:5px 9px;border:1px solid var(--line);background:white;border-radius:5px}.result-scroll{max-height:460px;overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th{color:var(--muted);font-size:11px;font-weight:600;background:#f5f8fa}th,td{border-bottom:1px solid #e7edf1;padding:10px 12px;vertical-align:middle}tbody tr.clickable{cursor:pointer}tbody tr.clickable:hover{background:#f0f7fa}tbody tr.selected{background:#eaf3f8}.result-id{font:11px ui-monospace,Consolas,monospace;color:#7d8b97}.badge{font-size:10px;font-weight:700;display:inline-block;white-space:nowrap;border-radius:4px;padding:2px 6px;background:#eef1f4;color:#647583}.badge.pass{background:#e6f4ee;color:var(--green)}.badge.fail{background:#fcece8;color:var(--red)}.badge.denied{background:#f5f0e6;color:var(--amber)}.badge.allow{background:#e7f2fa;color:#206c93}.empty{padding:48px 24px;text-align:center;color:var(--muted);font-size:13px}.empty strong{display:block;color:var(--ink);margin-bottom:8px;font-size:15px}.detail{padding:19px 20px;border-top:1px solid var(--line);font-size:12px}.detail h3{font-size:14px}.detail pre{font:11px/1.7 ui-monospace,Consolas,monospace;background:#f3f6f8;border-radius:5px;padding:12px;white-space:pre-wrap;word-break:break-all;margin:12px 0}.trace-list{padding-left:17px;margin:10px 0}.trace-list li{margin-bottom:6px}.detail .expected{font-size:11px;color:var(--muted)}.footer{margin-top:22px;font-size:11px;color:var(--muted)}.scope-section{margin-top:20px;padding:20px 24px;background:#fff;border:1px solid var(--line);border-radius:9px}.scope-section summary{cursor:pointer;font-weight:650}.scope-section p{font-size:12px}.scope-section table{margin-top:12px}.scope-section td:first-child{width:22%;font-weight:600}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#173448;color:white;padding:11px 18px;border-radius:7px;box-shadow:0 8px 25px #132d4225;font-size:13px;z-index:15;max-width:90vw}.toast[hidden]{display:none}dialog{border:0;border-radius:12px;max-width:460px;width:calc(100% - 40px);padding:28px;color:var(--ink);box-shadow:0 20px 70px #0003}dialog::backdrop{background:#10263880}dialog h2{font-size:19px}dialog p{font-size:13px;color:var(--muted)}dialog .actions{display:flex;justify-content:flex-end;gap:9px;margin-top:23px}.no-js{padding:24px;margin:20px;background:#fff0e9}#print-area{display:none}ul{line-height:1.8}#guide[hidden],.workspace[hidden]{display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(min-width:1450px){.policy-editor{height:450px}.result-scroll{max-height:520px}}
+@media(max-width:1100px){.shell{grid-template-columns:180px minmax(0,1fr)}aside{padding:25px 12px}main{padding:24px 20px}.workspace{grid-template-columns:1fr}.intro-grid{grid-template-columns:1fr;gap:16px}.result-scroll{max-height:430px}}
+@media(max-width:650px){.shell{display:block}aside{position:static;height:auto;padding:17px}.brand-sub,.nav-label,.side-bottom{display:none}nav{display:flex;overflow:auto;gap:3px;margin-top:13px}nav button{padding:8px;font-size:11px;white-space:nowrap}.step-num{display:none}main{padding:20px 13px}.topline{align-items:flex-start;flex-direction:column}h1{font-size:25px}.intro{padding:20px}.panel-head{padding:15px}th,td{padding:9px 8px}.editor-tabs button{padding:12px}.policy-editor{font-size:11px}.top-actions button{font-size:11px;padding:6px 9px}.workspace{margin-top:18px}.task{padding:15px}.eyebrow{margin-top:23px}}
+@media print{body{background:#fff}.shell,dialog,.toast{display:none!important}#print-area{display:block;margin:22px;font-size:10pt;color:#111}#print-area h1{font-size:20pt}#print-area h2{font-size:14pt;margin-top:20px}#print-area pre{font:8pt/1.5 monospace;white-space:pre-wrap;overflow-wrap:anywhere}#print-area table{font-size:9pt}#print-area tr{break-inside:avoid}}
+</style>
+</head>
+<body>
+<noscript><div class="no-js">이 파일의 실습 기능에는 JavaScript가 필요합니다. 브라우저에서 JavaScript 실행을 허용하고 다시 열어 주세요.</div></noscript>
+<div class="shell">
+<aside>
+ <div class="brand">IAM WORKSHOP</div><div class="brand-sub">SageMaker &amp; Bedrock</div>
+ <div class="nav-label">LEARNING PATH</div>
+ <nav aria-label="실습 단계">
+  <button data-step="intro" aria-current="step"><span class="step-num">01</span>실습 안내</button>
+  <button data-step="execution"><span class="step-num">02</span>실행 역할 · S3</button>
+  <button data-step="developer"><span class="step-num">03</span>개발자 · PassRole</button>
+  <button data-step="bedrock"><span class="step-num">04</span>Bedrock 모델</button>
+  <button data-step="results"><span class="step-num">05</span>전체 검증 · 제출</button>
+ </nav>
+ <div class="side-bottom"><p><span class="offline-dot"></span>완전 오프라인 실습</p><p>AWS 계정 · Python 설치 없이<br>이 파일 하나로 진행합니다.</p><p>교육용 정책 평가<br>90분 워크숍</p></div>
+</aside>
+<main>
+ <div class="topline"><span>DAY 01 / WORKSHOP 01</span><div class="top-actions"><button id="import-session" class="small">답안 불러오기</button><button id="export-session" class="small">답안 저장</button><button id="print" class="small">인쇄 / PDF</button><button id="reset" class="small">초기화</button></div></div>
+ <div class="eyebrow">DESIGN · TEST · EXPLAIN</div>
+ <h1>SageMaker · Bedrock IAM 정책 설계</h1>
+ <p class="lede">역할별 권한을 직접 작성하고, 허용해야 할 요청과 거부해야 할 요청을 함께 검증하세요.</p>
+ <section id="guide" class="intro" aria-labelledby="guide-title">
+  <h2 id="guide-title">권한을 나누고, 요청으로 확인합니다.</h2>
+  <div class="intro-grid"><div><p>AI 개발자가 학습 작업을 요청하고 승인된 Bedrock 모델을 호출하는 상황입니다. 개발자 역할과 SageMaker 실행 역할의 권한을 분리해 두 개의 JSON 정책을 완성합니다.</p><ul><li><b>개발자 역할</b>: 실습 작업 생성·조회·중지, 지정 역할 전달, 승인 모델 호출</li><li><b>SageMaker 실행 역할</b>: 학습 데이터 읽기, 결과 저장</li><li><b>24개 요청</b>: 정상 요청의 허용과 범위 밖 요청의 거부를 함께 확인</li></ul><button id="start" class="primary">미션 1 시작하기 →</button></div><div><h3>90분 진행안</h3><table aria-label="진행 시간"><thead><tr><th>분량</th><th>활동</th></tr></thead><tbody><tr><td>20분</td><td>역할 구분 · 환경과 ARN 이해</td></tr><tr><td>20분</td><td>미션 1 · 실행 역할의 데이터 권한</td></tr><tr><td>5분</td><td>휴식</td></tr><tr><td>15분</td><td>미션 2 · 개발자와 PassRole</td></tr><tr><td>15분</td><td>미션 3 · Bedrock 모델 제한</td></tr><tr><td>15분</td><td>전체 검증 · 오류 수정 · 제출</td></tr></tbody></table></div></div>
+  <div class="notice">HTML 파일을 내려받아 브라우저에서 여세요. 외부 라이브러리·서버·인터넷을 사용하지 않습니다. 이 파일은 정답과 오류 예제를 포함한 학습용 자료입니다.</div>
+ </section>
+ <div id="workspace" class="workspace" hidden>
+  <section class="panel" aria-labelledby="editor-title">
+   <div class="panel-head"><h2 id="editor-title">정책 편집</h2><span id="lesson-label" class="tag">미션 1</span></div>
+   <div class="editor-tabs" role="tablist" aria-label="정책 파일"><button id="tab-execution" role="tab" class="active" aria-selected="true" aria-controls="editor-execution" tabindex="0">실행 역할 데이터 정책</button><button id="tab-developer" role="tab" aria-selected="false" aria-controls="editor-developer" tabindex="-1">개발자 정책</button></div>
+   <div class="task"><h3 id="task-title"></h3><div id="task-body"></div><details><summary>실습 환경과 ARN 보기</summary><div id="environment"></div></details></div>
+   <div class="editor-meta"><span id="file-label">execution-data.json</span><span id="save-status" role="status">이 브라우저에 임시 저장</span></div>
+   <div class="editor-wrap"><label class="sr-only" for="editor-execution">실행 역할 데이터 정책 JSON</label><textarea id="editor-execution" class="policy-editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="실행 역할 데이터 정책 JSON"></textarea><label class="sr-only" for="editor-developer">개발자 정책 JSON</label><textarea id="editor-developer" class="policy-editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="개발자 정책 JSON" hidden></textarea></div>
+   <div class="editor-buttons"><button id="format" class="small">JSON 정렬</button><button id="download-policy" class="small">현재 정책 내려받기</button><button id="import-policy" class="small">정책 파일 열기</button></div>
+   <div class="lesson-actions"><button id="run-stage" class="primary">미션 1 검증 · 10개</button><button id="next-step">다음 미션 →</button></div>
+   <details class="help"><summary>학습용 정답과 오류 예제</summary><p class="muted">선택한 정책의 편집 내용을 덮어씁니다. 정답을 보기 전에 먼저 작성해 보세요.</p><select id="preset" aria-label="불러올 정책 예제"><option value="solution-current">현재 정책 정답</option><option value="solution-all">두 정책 정답 모두</option><option value="missing-passrole">오류 · PassRole 누락</option><option value="wildcard-bedrock">오류 · Bedrock 범위 과다</option><option value="bucket-object-arn">오류 · 버킷과 객체 ARN 혼동</option><option value="missing-service-condition">오류 · 전달 대상 서비스 조건 누락</option><option value="starter-current">현재 정책 빈 뼈대</option></select><button id="load-preset" class="small">선택한 예제 불러오기</button></details>
+  </section>
+  <section class="panel" aria-labelledby="result-title">
+   <div class="panel-head"><div><h2 id="result-title">요청 검증</h2><span id="run-scope" class="run-scope">현재 정책으로 평가해 보세요</span></div><button id="run-all" class="primary">전체 24개 검증</button></div>
+   <div class="metrics"><div class="metric"><strong id="count-total">—</strong><span>평가한 요청</span></div><div class="metric"><strong id="count-pass" class="green">—</strong><span>기대와 일치</span></div><div class="metric"><strong id="count-fail" class="red">—</strong><span>수정할 요청</span></div></div>
+   <div id="status" class="status-message" role="status">작성 후 검증 버튼을 누르면 결과와 매칭 근거를 볼 수 있습니다.</div>
+   <div class="filterbar"><span id="result-caption">허용과 거부를 함께 확인합니다</span><select id="filter" aria-label="결과 필터"><option value="all">모든 결과</option><option value="fail">수정 필요</option><option value="pass">일치한 결과</option></select></div>
+   <div class="result-scroll"><table id="results-table" hidden aria-label="요청 평가 결과"><thead><tr><th>ID</th><th>요청</th><th>기대</th><th>판정</th><th>일치</th></tr></thead><tbody id="results-body"></tbody></table><div id="empty" class="empty"><strong>정책의 범위를 확인할 준비가 됐나요?</strong>정상 요청이 허용되는지 확인한 뒤<br>범위 밖 요청의 거부도 확인하세요.</div></div>
+   <div id="request-detail" class="detail" hidden></div>
+   <div class="lesson-actions"><button id="download-report" disabled>검증 보고서 저장</button><span class="tiny muted">교육용 로컬 평가 · AWS 검증 결과 아님</span></div>
+  </section>
+ </div>
+ <details class="scope-section" id="scope"><summary>평가 범위와 정책 설계 참고</summary><p>이 파일은 이번 실습에 필요한 자격 증명 기반 정책의 일부 문법을 평가합니다. 실제 SageMaker 학습, Bedrock 모델 호출, AWS IAM 전체 평가를 수행하지 않습니다.</p><table><tbody><tr><td>지원 문법</td><td>Effect, Action, Resource, Sid, Condition의 StringEquals·StringLike. *와 ? 와일드카드.</td></tr><tr><td>조건과 우선순위</td><td>단일 문자열 요청 문맥. 키·연산자 사이는 AND, 한 키의 정책 값 배열은 OR. 매칭된 명시적 Deny가 Allow보다 우선하며, 허용이 없으면 암시적 거부.</td></tr><tr><td>평가하지 않는 범위</td><td>신뢰·리소스 정책, SCP·RCP·권한 경계, 실제 STS와 PassRole 종속 검사, 서비스 작업·리소스 명세, 모델·리전의 실제 가용성.</td></tr><tr><td>미지원 문법</td><td>NotAction·NotResource·Principal·정책 변수, 다른 조건 연산자·다중 값 요청 문맥은 추측하지 않고 오류로 표시합니다.</td></tr><tr><td>실제 적용 전</td><td>AWS 공식 정책 검증과 실제 계정 테스트를 수행하세요. 24개 통과가 모든 요청의 최소 권한을 증명하지는 않습니다.</td></tr></tbody></table><h3 style="margin-top:18px">공식 문서 · 인터넷 연결 시 열림</h3><p><a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html" target="_blank" rel="noopener noreferrer">IAM 정책 평가 논리</a> · <a href="https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html" target="_blank" rel="noopener noreferrer">SageMaker 실행 역할</a> · <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html" target="_blank" rel="noopener noreferrer">PassRole</a> · <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/inference-prereq.html" target="_blank" rel="noopener noreferrer">Bedrock 추론 권한</a></p></details>
+ <footer class="footer">입력은 서버로 전송되지 않습니다. 브라우저의 파일별 저장 동작이 다를 수 있으므로, 종료 전에 「답안 저장」으로 파일을 보관하세요.</footer>
+</main>
+</div>
+<input type="file" id="file-input" accept=".json,application/json" hidden>
+<dialog id="confirm-dialog" aria-labelledby="confirm-title"><h2 id="confirm-title">편집 내용을 바꿀까요?</h2><p id="confirm-text"></p><div class="actions"><button id="confirm-cancel">취소</button><button id="confirm-ok" class="primary">불러오기</button></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div><div id="print-area"></div>
+<script id="workshop-data" type="application/json">{"config": {"account_id": "111122223333", "region": "us-east-1", "team_id": "team01", "bucket_name": "workshop-ai-111122223333-team01", "model_id": "amazon.nova-lite-v1:0", "denied_model_id": "amazon.nova-micro-v1:0", "caller_principal_arn": "arn:aws:iam::111122223333:role/WorkshopOperator"}, "cases": [{"id": "E01", "stage": "execution", "policy": "execution-data.json", "description": "학습 데이터 읽기", "action": "s3:GetObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/training/train.csv", "expected": "allowed"}, {"id": "E02", "stage": "execution", "policy": "execution-data.json", "description": "결과 데이터 저장", "action": "s3:PutObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/outputs/model.tar.gz", "expected": "allowed"}, {"id": "E03", "stage": "execution", "policy": "execution-data.json", "description": "제한 데이터 읽기 차단", "action": "s3:GetObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/restricted/finance.csv", "expected": "denied"}, {"id": "E04", "stage": "execution", "policy": "execution-data.json", "description": "학습 원본 덮어쓰기 차단", "action": "s3:PutObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/training/train.csv", "expected": "denied"}, {"id": "E05", "stage": "execution", "policy": "execution-data.json", "description": "학습 원본 삭제 차단", "action": "s3:DeleteObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/training/train.csv", "expected": "denied"}, {"id": "E06", "stage": "execution", "policy": "execution-data.json", "description": "학습 경로 목록 조회", "action": "s3:ListBucket", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "expected": "allowed", "context": [{"ContextKeyName": "s3:prefix", "ContextKeyType": "string", "ContextKeyValues": ["training/"]}]}, {"id": "E07", "stage": "execution", "policy": "execution-data.json", "description": "제한 경로 목록 조회 차단", "action": "s3:ListBucket", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "expected": "denied", "context": [{"ContextKeyName": "s3:prefix", "ContextKeyType": "string", "ContextKeyValues": ["restricted/"]}]}, {"id": "E08", "stage": "execution", "policy": "execution-data.json", "description": "버킷 전체 목록 조회 차단", "action": "s3:ListBucket", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "expected": "denied", "context": [{"ContextKeyName": "s3:prefix", "ContextKeyType": "string", "ContextKeyValues": [""]}]}, {"id": "E09", "stage": "execution", "policy": "execution-data.json", "description": "다른 버킷 읽기 차단", "action": "s3:GetObject", "resource": "arn:aws:s3:::workshop-other-example-bucket/training/train.csv", "expected": "denied"}, {"id": "E10", "stage": "execution", "policy": "execution-data.json", "description": "버킷 위치 확인", "action": "s3:GetBucketLocation", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "expected": "allowed"}, {"id": "D01", "stage": "developer", "policy": "developer.json", "description": "실습 작업 생성", "action": "sagemaker:CreateTrainingJob", "resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-001", "expected": "allowed"}, {"id": "D02", "stage": "developer", "policy": "developer.json", "description": "실습 작업 조회", "action": "sagemaker:DescribeTrainingJob", "resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-001", "expected": "allowed"}, {"id": "D03", "stage": "developer", "policy": "developer.json", "description": "실습 작업 중지", "action": "sagemaker:StopTrainingJob", "resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-001", "expected": "allowed"}, {"id": "D04", "stage": "developer", "policy": "developer.json", "description": "운영 작업 생성 차단", "action": "sagemaker:CreateTrainingJob", "resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/prod-job-001", "expected": "denied"}, {"id": "D05", "stage": "developer", "policy": "developer.json", "description": "지정 역할을 SageMaker로 전달", "action": "iam:PassRole", "resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "expected": "allowed", "context": [{"ContextKeyName": "iam:PassedToService", "ContextKeyType": "string", "ContextKeyValues": ["sagemaker.amazonaws.com"]}]}, {"id": "D06", "stage": "developer", "policy": "developer.json", "description": "다른 역할 전달 차단", "action": "iam:PassRole", "resource": "arn:aws:iam::111122223333:role/WorkshopOtherExecution", "expected": "denied", "context": [{"ContextKeyName": "iam:PassedToService", "ContextKeyType": "string", "ContextKeyValues": ["sagemaker.amazonaws.com"]}]}, {"id": "D07", "stage": "developer", "policy": "developer.json", "description": "같은 역할을 Lambda로 전달 차단", "action": "iam:PassRole", "resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "expected": "denied", "context": [{"ContextKeyName": "iam:PassedToService", "ContextKeyType": "string", "ContextKeyValues": ["lambda.amazonaws.com"]}]}, {"id": "D08", "stage": "developer", "policy": "developer.json", "description": "전달 대상 조건 누락 시 허용 안 됨", "action": "iam:PassRole", "resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "expected": "denied"}, {"id": "D09", "stage": "developer", "policy": "developer.json", "description": "승인 모델 일반 호출", "action": "bedrock:InvokeModel", "resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0", "expected": "allowed"}, {"id": "D10", "stage": "developer", "policy": "developer.json", "description": "승인 모델 스트리밍 호출", "action": "bedrock:InvokeModelWithResponseStream", "resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0", "expected": "allowed"}, {"id": "D11", "stage": "developer", "policy": "developer.json", "description": "미승인 모델 호출 차단", "action": "bedrock:InvokeModel", "resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0", "expected": "denied"}, {"id": "D12", "stage": "developer", "policy": "developer.json", "description": "다른 리전 동일 모델 호출 차단", "action": "bedrock:InvokeModel", "resource": "arn:aws:bedrock:us-west-2::foundation-model/amazon.nova-lite-v1:0", "expected": "denied"}, {"id": "D13", "stage": "developer", "policy": "developer.json", "description": "개발자 직접 S3 읽기 차단", "action": "s3:GetObject", "resource": "arn:aws:s3:::workshop-ai-111122223333-team01/training/train.csv", "expected": "denied"}, {"id": "D14", "stage": "developer", "policy": "developer.json", "description": "개발자 IAM 정책 수정 차단", "action": "iam:PutRolePolicy", "resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "expected": "denied"}], "solutions": {"execution-data.json": {"Version": "2012-10-17", "Statement": [{"Sid": "LocateTrainingBucket", "Effect": "Allow", "Action": "s3:GetBucketLocation", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01"}, {"Sid": "ListTrainingAndOutputPrefixes", "Effect": "Allow", "Action": "s3:ListBucket", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "Condition": {"StringLike": {"s3:prefix": ["training/", "training/*", "outputs/", "outputs/*"]}}}, {"Sid": "ReadTrainingData", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01/training/*"}, {"Sid": "WriteTrainingOutputs", "Effect": "Allow", "Action": "s3:PutObject", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01/outputs/*"}]}, "developer.json": {"Version": "2012-10-17", "Statement": [{"Sid": "ManageWorkshopTrainingJobs", "Effect": "Allow", "Action": ["sagemaker:CreateTrainingJob", "sagemaker:DescribeTrainingJob", "sagemaker:StopTrainingJob"], "Resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-*"}, {"Sid": "PassOnlyWorkshopExecutionRole", "Effect": "Allow", "Action": "iam:PassRole", "Resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "Condition": {"StringEquals": {"iam:PassedToService": "sagemaker.amazonaws.com"}}}, {"Sid": "InvokeApprovedFoundationModel", "Effect": "Allow", "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"], "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"}]}}, "faults": {"missing-passrole": {"developer.json": {"Version": "2012-10-17", "Statement": [{"Sid": "ManageWorkshopTrainingJobs", "Effect": "Allow", "Action": ["sagemaker:CreateTrainingJob", "sagemaker:DescribeTrainingJob", "sagemaker:StopTrainingJob"], "Resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-*"}, {"Sid": "InvokeApprovedFoundationModel", "Effect": "Allow", "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"], "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"}]}}, "wildcard-bedrock": {"developer.json": {"Version": "2012-10-17", "Statement": [{"Sid": "ManageWorkshopTrainingJobs", "Effect": "Allow", "Action": ["sagemaker:CreateTrainingJob", "sagemaker:DescribeTrainingJob", "sagemaker:StopTrainingJob"], "Resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-*"}, {"Sid": "PassOnlyWorkshopExecutionRole", "Effect": "Allow", "Action": "iam:PassRole", "Resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01", "Condition": {"StringEquals": {"iam:PassedToService": "sagemaker.amazonaws.com"}}}, {"Sid": "InvokeApprovedFoundationModel", "Effect": "Allow", "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"], "Resource": "*"}]}}, "bucket-object-arn": {"execution-data.json": {"Version": "2012-10-17", "Statement": [{"Sid": "LocateTrainingBucket", "Effect": "Allow", "Action": "s3:GetBucketLocation", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01"}, {"Sid": "ListTrainingAndOutputPrefixes", "Effect": "Allow", "Action": "s3:ListBucket", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01", "Condition": {"StringLike": {"s3:prefix": ["training/", "training/*", "outputs/", "outputs/*"]}}}, {"Sid": "ReadTrainingData", "Effect": "Allow", "Action": "s3:GetObject", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01"}, {"Sid": "WriteTrainingOutputs", "Effect": "Allow", "Action": "s3:PutObject", "Resource": "arn:aws:s3:::workshop-ai-111122223333-team01/outputs/*"}]}}, "missing-service-condition": {"developer.json": {"Version": "2012-10-17", "Statement": [{"Sid": "ManageWorkshopTrainingJobs", "Effect": "Allow", "Action": ["sagemaker:CreateTrainingJob", "sagemaker:DescribeTrainingJob", "sagemaker:StopTrainingJob"], "Resource": "arn:aws:sagemaker:us-east-1:111122223333:training-job/workshop-team01-*"}, {"Sid": "PassOnlyWorkshopExecutionRole", "Effect": "Allow", "Action": "iam:PassRole", "Resource": "arn:aws:iam::111122223333:role/WorkshopSageMaker-team01"}, {"Sid": "InvokeApprovedFoundationModel", "Effect": "Allow", "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"], "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0"}]}}}, "trust": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "sagemaker.amazonaws.com"}, "Action": "sts:AssumeRole"}]}}</script>
+<script id="workshop-engine">/* Educational identity-policy subset. No AWS calls or network dependencies. */
+(function(root){
+  'use strict';
+  const fail = message => {throw new Error(message);};
+  const object = v => v!==null && typeof v==='object' && !Array.isArray(v);
+  const strings = (v,label) => {
+    if(typeof v==='string')return [v];
+    if(Array.isArray(v)&&v.length&&v.every(x=>typeof x==='string'))return v;
+    return fail(label+'에는 문자열 또는 비어 있지 않은 문자열 배열을 입력하세요.');
+  };
+  function wildcard(pattern,value,insensitive=false){
+    const expression=pattern.replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'[\\s\\S]*').replace(/\?/g,'[\\s\\S]');
+    return new RegExp('^'+expression+'$',insensitive?'i':'').test(value);
+  }
+  function validate(policy){
+    if(!object(policy)||Object.keys(policy).some(k=>!['Version','Statement','Id'].includes(k)))fail('정책 최상위에는 Version, Statement, Id만 지원합니다.');
+    if(policy.Version!=='2012-10-17')fail('Version을 2012-10-17로 지정하세요.');
+    if(!Array.isArray(policy.Statement)||!policy.Statement.length)fail('빈 Statement를 실습 요구사항에 맞는 정책 문장으로 채워 주세요.');
+    policy.Statement.forEach((s,i)=>{
+      const label='Statement['+i+']';
+      if(!object(s))fail(label+'는 객체여야 합니다.');
+      const unknown=Object.keys(s).filter(k=>!['Sid','Effect','Action','Resource','Condition'].includes(k));
+      if(unknown.length)fail(label+'의 미지원 필드: '+unknown.join(', ')+'. 신뢰·리소스 정책은 평가하지 않습니다.');
+      if(!['Allow','Deny'].includes(s.Effect))fail(label+'의 Effect는 Allow 또는 Deny여야 합니다.');
+      if(s.Sid!==undefined && typeof s.Sid!=='string')fail(label+'의 Sid는 문자열이어야 합니다.');
+      strings(s.Action,label+'.Action');strings(s.Resource,label+'.Resource');
+      const condition=s.Condition===undefined?{}:s.Condition;
+      if(!object(condition))fail(label+'.Condition은 객체여야 합니다.');
+      for(const [operator,terms] of Object.entries(condition)){
+        if(!['StringEquals','StringLike'].includes(operator))fail(label+'의 '+operator+'는 지원하지 않습니다. StringEquals·StringLike만 지원합니다.');
+        if(!object(terms)||!Object.keys(terms).length)fail(label+'.'+operator+'에 조건 키를 입력하세요.');
+        for(const [key,value] of Object.entries(terms))strings(value,label+'.'+operator+'.'+key);
+      }
+    });
+    if(/__[A-Z_]+__|\$\{/.test(JSON.stringify(policy)))fail('미치환 값 또는 IAM 정책 변수가 있습니다. 이 파일의 예시 ARN을 사용하세요.');
+    return policy;
+  }
+  function decide(policy,request){
+    validate(policy);
+    const context=Object.create(null),missing=new Set(),matching=[];
+    for(const entry of request.context||[]){
+      if(entry.ContextKeyType!=='string'||!Array.isArray(entry.ContextKeyValues)||entry.ContextKeyValues.length!==1||typeof entry.ContextKeyValues[0]!=='string')fail('요청 문맥은 키별 단일 문자열만 지원합니다.');
+      const key=entry.ContextKeyName.toLowerCase();
+      if(Object.hasOwn(context,key))fail('중복 문맥 키는 지원하지 않습니다.');
+      context[key]=entry.ContextKeyValues[0];
+    }
+    const trace=[];
+    policy.Statement.forEach((s,i)=>{
+      const actionMatch=strings(s.Action,'Action').some(p=>wildcard(p,request.action,true));
+      const resourceMatch=strings(s.Resource,'Resource').some(p=>wildcard(p,request.resource));
+      let conditionMatch=true;const checks=[];
+      if(actionMatch&&resourceMatch){
+        for(const [operator,terms] of Object.entries(s.Condition||{})){
+          for(const [key,patterns] of Object.entries(terms)){
+            const exists=Object.hasOwn(context,key.toLowerCase());
+            const value=context[key.toLowerCase()];
+            if(!exists){missing.add(key);conditionMatch=false;checks.push(key+' 문맥값 없음');continue;}
+            const pass=strings(patterns,'Condition').some(p=>operator==='StringEquals'?p===value:wildcard(p,value));
+            conditionMatch=conditionMatch&&pass;checks.push(key+': '+(pass?'일치':'불일치'));
+          }
+        }
+      }
+      const sid=s.Sid||'Statement'+i;
+      trace.push({sid,actionMatch,resourceMatch,conditionMatch:actionMatch&&resourceMatch?conditionMatch:null,checks});
+      if(actionMatch&&resourceMatch&&conditionMatch)matching.push({sid,effect:s.Effect});
+    });
+    const decision=matching.some(s=>s.effect==='Deny')?'explicitDeny':matching.length?'allowed':'implicitDeny';
+    return {decision,matching_statements:matching,missing_context:[...missing].sort(),trace};
+  }
+  function evaluate(policies,cases){
+    return cases.map(c=>{
+      if(!['allowed','denied'].includes(c.expected))fail('기대 결과는 allowed 또는 denied여야 합니다.');
+      const result=decide(policies[c.policy],c);
+      const passed=c.expected==='allowed'?result.decision==='allowed':['implicitDeny','explicitDeny'].includes(result.decision);
+      return {...c,...result,passed};
+    });
+  }
+  root.IAMWorkshop={wildcard,validate,decide,evaluate};
+})(globalThis);
+</script>
+<script id="workshop-app">(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id), DATA=JSON.parse($('workshop-data').textContent), E=globalThis.IAMWorkshop;
+ const clone=x=>JSON.parse(JSON.stringify(x)), pretty=x=>JSON.stringify(x,null,2);
+ const STORE='iam-workshop-html-v1', editors={execution:$('editor-execution'),developer:$('editor-developer')};
+ const policyName={execution:'execution-data.json',developer:'developer.json'};
+ let step='intro',active='execution',results=null,lastPolicies=null,selectedId=null,lastScope=null,importMode='session',toastTimer=null,confirmResolve=null;
+ const starter=pretty({Version:'2012-10-17',Statement:[]});
+ for(const editor of Object.values(editors))editor.value=starter;
+ const config=DATA.config, bucket='arn:aws:s3:::'+config.bucket_name;
+ const role='arn:aws:iam::'+config.account_id+':role/WorkshopSageMaker-'+config.team_id;
+ const job='arn:aws:sagemaker:'+config.region+':'+config.account_id+':training-job/workshop-'+config.team_id+'-*';
+ const model='arn:aws:bedrock:'+config.region+'::foundation-model/'+config.model_id;
+ const tasks={
+  execution:{label:'미션 1 · 20분',title:'실행 역할의 S3 데이터 접근',html:'<ul><li><code>s3:GetBucketLocation</code>: 지정 버킷만</li><li><code>s3:ListBucket</code>: <code>s3:prefix</code>가 training/·training/*·outputs/·outputs/*인 요청만</li><li><code>s3:GetObject</code>: training/* 읽기</li><li><code>s3:PutObject</code>: outputs/* 쓰기</li><li>제한 경로 읽기, 원본 덮어쓰기·삭제, 다른 버킷 접근은 허용하지 않습니다.</li></ul><p class="tiny muted">버킷 작업과 객체 작업의 ARN을 구분하세요. 전체 학습 실행 권한 중 데이터 접근 부분만 설계합니다.</p>',button:'미션 1 검증 · 10개'},
+  developer:{label:'미션 2 · 15분',title:'개발자 권한과 역할 전달',html:'<ul><li><code>sagemaker:CreateTrainingJob</code>·<code>sagemaker:DescribeTrainingJob</code>·<code>sagemaker:StopTrainingJob</code>: 실습 이름의 작업만</li><li><code>iam:PassRole</code>: 지정한 실행 역할 하나만</li><li><code>StringEquals</code> 조건으로 <code>iam:PassedToService</code>를 <code>sagemaker.amazonaws.com</code>으로 제한합니다.</li></ul><p class="tiny muted">Bedrock 문장을 아직 작성하지 않았다면 D09·D10은 실패할 수 있습니다. D01-D08·D13-D14부터 확인하세요. 신뢰 정책은 아래 참고에서 별도로 읽습니다.</p>',button:'개발자 정책 검증 · 14개'},
+  bedrock:{label:'미션 3 · 15분',title:'Bedrock 호출을 승인 모델로 제한',html:'<ul><li>개발자 정책에 <code>bedrock:InvokeModel</code>과 <code>bedrock:InvokeModelWithResponseStream</code>을 추가합니다.</li><li>지정 리전의 승인 foundation-model ARN 하나만 허용합니다.</li><li>다른 모델·다른 리전 요청은 거부되어야 합니다.</li><li>기존 SageMaker·PassRole 권한은 유지합니다.</li></ul><p class="tiny muted">Converse는 InvokeModel, ConverseStream은 InvokeModelWithResponseStream 권한으로 평가합니다. 모델 ARN의 계정 ID 자리는 비어 있습니다.</p>',button:'개발자 정책 검증 · 14개'}
+ };
+ function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3500);}
+ function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
+ function persist(){
+  try{localStorage.setItem(STORE,JSON.stringify({developerText:editors.developer.value,executionText:editors.execution.value,step,active}));$('save-status').textContent='이 브라우저에 임시 저장됨';}
+  catch{$('save-status').textContent='임시 저장 불가 · 답안 저장을 이용하세요';}
+ }
+ function clearResults(message='정책이 변경되었습니다. 다시 검증해 주세요.'){
+  results=null;lastPolicies=null;selectedId=null;lastScope=null;
+  $('download-report').disabled=true;$('count-total').textContent='—';$('count-pass').textContent='—';$('count-fail').textContent='—';
+  $('results-body').replaceChildren();$('results-table').hidden=true;$('empty').hidden=false;$('request-detail').hidden=true;
+  $('empty').replaceChildren();const emptyTitle=document.createElement('strong');emptyTitle.textContent='정책을 작성하고 검증해 주세요.';$('empty').append(emptyTitle,document.createTextNode('정상 요청의 허용과 범위 밖 요청의 거부를 함께 확인합니다.'));
+  $('result-caption').textContent='허용과 거부를 함께 확인합니다';$('run-scope').textContent='현재 정책으로 평가해 보세요';status(message);
+ }
+ function switchEditor(which,keepStep=false){
+  active=which;
+  for(const key of ['execution','developer']){
+   editors[key].hidden=key!==which;
+   const tab=$('tab-'+key);tab.classList.toggle('active',key===which);tab.setAttribute('aria-selected',String(key===which));tab.tabIndex=key===which?0:-1;
+  }
+  $('file-label').textContent=policyName[which];
+  const taskKey=which==='execution'?'execution':step==='bedrock'?'bedrock':'developer',task=tasks[taskKey];
+  $('task-title').textContent=task.title;$('task-body').innerHTML=task.html;$('lesson-label').textContent=task.label;$('run-stage').textContent=task.button;
+  $('next-step').textContent=which==='execution'?'다음 · 개발자 역할 →':taskKey==='developer'?'다음 · Bedrock →':'전체 검증으로 →';
+  renderEnvironment();if(!keepStep)persist();
+ }
+ function showStep(next){
+  step=next;document.querySelectorAll('nav button').forEach(b=>{if(b.dataset.step===next)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
+  $('guide').hidden=next!=='intro';$('workspace').hidden=next==='intro';
+  if(next!=='intro')switchEditor(next==='execution'?'execution':'developer',true);
+  if(next==='results'){$('lesson-label').textContent='전체 검증 · 제출';$('next-step').textContent='정책 설계 다시 보기';}
+  persist();
+ }
+ function renderEnvironment(){
+  const holder=$('environment');holder.replaceChildren();
+  for(const [name,value] of [['계정 · 리전 · 팀',config.account_id+' · '+config.region+' · '+config.team_id],['버킷',bucket],['학습 입력',bucket+'/training/*'],['학습 결과',bucket+'/outputs/*'],['학습 작업',job],['전달할 실행 역할',role],['승인 모델',model]]){
+   const p=document.createElement('p');p.textContent=name;const code=document.createElement('code');code.className='arn';code.textContent=value;p.append(code);holder.append(p);
+  }
+  if(active==='developer'){
+   const title=document.createElement('p');title.textContent='참고 · SageMaker 실행 역할 신뢰 정책 (이 평가기에서는 평가하지 않음)';
+   const pre=document.createElement('pre');pre.className='arn';pre.textContent=pretty(DATA.trust);holder.append(title,pre);
+  }
+ }
+ function parsePolicy(which){
+  let policy;
+  try{policy=JSON.parse(editors[which].value);}catch(e){throw new Error(policyName[which]+': JSON 문법을 확인하세요. '+e.message);}
+  try{E.validate(policy);}catch(e){throw new Error(policyName[which]+': '+e.message);}
+  return policy;
+ }
+ function run(scope){
+  if(step==='intro')showStep('results');
+  try{
+   const cases=DATA.cases.filter(c=>scope==='all'||c.stage===scope),policies={};
+   for(const which of ['execution','developer']){
+    if(scope==='all'||scope===which){try{policies[policyName[which]]=parsePolicy(which);}catch(e){switchEditor(which);throw e;}}
+   }
+   results=E.evaluate(policies,cases);lastPolicies=clone(policies);lastScope=scope;selectedId=null;$('filter').value='all';
+   $('count-total').textContent=results.length;$('count-pass').textContent=results.filter(r=>r.passed).length;$('count-fail').textContent=results.filter(r=>!r.passed).length;
+   $('run-scope').textContent=(scope==='all'?'두 정책 전체':scope==='execution'?'실행 역할 데이터 정책':'개발자 정책')+' · 로컬 평가';$('download-report').disabled=false;
+   const failed=results.filter(r=>!r.passed).length;
+   status(failed?failed+'개 요청이 기대와 다릅니다. 결과 행을 눌러 Action·Resource·조건을 확인하세요.':'선택한 '+results.length+'개 요청이 기대와 일치합니다. 매칭 근거도 설명해 보세요.');
+   renderResults();const first=results.find(r=>!r.passed)||results[0];if(first)showDetail(first.id,false);
+  }catch(e){clearResults('검증을 진행하지 못했습니다. '+e.message);status('검증을 진행하지 못했습니다. '+e.message,true);}
+ }
+ function badge(text,kind){const span=document.createElement('span');span.className='badge '+kind;span.textContent=text;return span;}
+ const decisionLabel={allowed:'허용',implicitDeny:'암시적 거부',explicitDeny:'명시적 거부'};
+ function renderResults(){
+  const tbody=$('results-body');tbody.replaceChildren();if(!results)return;
+  const filter=$('filter').value,rows=results.filter(r=>filter==='all'||filter==='pass'&&r.passed||filter==='fail'&&!r.passed);
+  $('results-table').hidden=!rows.length;$('empty').hidden=!!rows.length;
+  if(!rows.length){$('empty').replaceChildren();const strong=document.createElement('strong');strong.textContent='해당 조건의 결과가 없습니다.';$('empty').append(strong);}
+  $('result-caption').textContent='전체 '+results.length+'개 중 '+rows.length+'개 표시 · 행을 눌러 근거 확인';
+  for(const r of rows){
+   const tr=document.createElement('tr');tr.className='clickable'+(r.id===selectedId?' selected':'');tr.tabIndex=0;tr.setAttribute('aria-label',r.id+' '+r.description+' 상세보기');
+   const id=document.createElement('td');id.textContent=r.id;id.className='result-id';const desc=document.createElement('td');desc.textContent=r.description;
+   const expected=document.createElement('td');expected.textContent=r.expected==='allowed'?'허용':'거부';
+   const actual=document.createElement('td');actual.append(badge(decisionLabel[r.decision],r.decision==='allowed'?'allow':'denied'));
+   const pass=document.createElement('td');pass.append(badge(r.passed?'일치':'수정',r.passed?'pass':'fail'));
+   tr.append(id,desc,expected,actual,pass);tr.addEventListener('click',()=>showDetail(r.id));tr.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();showDetail(r.id);}});tbody.append(tr);
+  }
+ }
+ function showDetail(id,rerender=true){
+  const r=results?.find(x=>x.id===id);if(!r)return;selectedId=id;if(rerender)renderResults();
+  const holder=$('request-detail');holder.replaceChildren();holder.hidden=false;
+  const title=document.createElement('h3');title.textContent=r.id+' · '+r.description;holder.append(title);
+  const reason=document.createElement('p');reason.textContent=r.decision==='explicitDeny'?'매칭된 명시적 Deny가 허용보다 우선합니다.':r.decision==='allowed'?'Action·Resource·조건이 일치하는 Allow 문장이 있고 매칭된 명시적 Deny가 없습니다.':'Action·Resource·조건을 모두 만족하는 Allow 문장이 없습니다.';holder.append(reason);
+  const pre=document.createElement('pre');pre.textContent='Action: '+r.action+'\nResource: '+r.resource+'\nContext: '+(r.context?.map(c=>c.ContextKeyName+' = '+JSON.stringify(c.ContextKeyValues[0])).join('\n         ')||'없음');holder.append(pre);
+  const expected=document.createElement('p');expected.className='expected';expected.textContent='기대: '+(r.expected==='allowed'?'허용':'거부')+' / 로컬 판정: '+decisionLabel[r.decision]+' / 매칭된 Sid: '+(r.matching_statements.map(s=>s.sid+' ('+s.effect+')').join(', ')||'없음');holder.append(expected);
+  if(r.missing_context.length){const note=document.createElement('p');note.textContent='누락 문맥: '+r.missing_context.join(', ')+(r.id==='D08'?' · 의도적으로 문맥을 생략한 음성 테스트입니다.':'');holder.append(note);}
+  const list=document.createElement('ul');list.className='trace-list';
+  for(const t of r.trace){const li=document.createElement('li');li.textContent=t.sid+': Action '+(t.actionMatch?'일치':'불일치')+' / Resource '+(t.resourceMatch?'일치':'불일치')+(t.conditionMatch===null?' / 조건 평가 생략':t.checks.length?' / '+t.checks.join(', '):' / 추가 조건 없음');list.append(li);}holder.append(list);
+ }
+ function download(filename,value){
+  const blob=new Blob([typeof value==='string'?value:pretty(value)],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);toast(filename+' 파일로 저장합니다.');
+ }
+ function ask(text,button='불러오기'){
+  if($('confirm-dialog').open)return Promise.resolve(false);
+  $('confirm-text').textContent=text;$('confirm-ok').textContent=button;$('confirm-dialog').showModal();return new Promise(resolve=>confirmResolve=resolve);
+ }
+ function resolveConfirm(value){$('confirm-dialog').close();if(confirmResolve){const resolve=confirmResolve;confirmResolve=null;resolve(value);}}
+ $('confirm-ok').addEventListener('click',()=>resolveConfirm(true));$('confirm-cancel').addEventListener('click',()=>resolveConfirm(false));$('confirm-dialog').addEventListener('cancel',e=>{e.preventDefault();resolveConfirm(false);});
+ $('confirm-dialog').addEventListener('close',()=>{if(confirmResolve){const resolve=confirmResolve;confirmResolve=null;resolve(false);}});
+ async function loadPreset(){
+  const choice=$('preset').value;if(!await ask('선택한 예제로 해당 정책의 현재 편집 내용을 덮어씁니다. 필요하면 먼저 「답안 저장」을 이용하세요.'))return;
+  if(choice==='solution-all'){editors.execution.value=pretty(DATA.solutions['execution-data.json']);editors.developer.value=pretty(DATA.solutions['developer.json']);showStep('results');}
+  else if(choice==='solution-current')editors[active].value=pretty(DATA.solutions[policyName[active]]);
+  else if(choice==='starter-current')editors[active].value=starter;
+  else{
+   const which=choice==='bucket-object-arn'?'execution':'developer';showStep(which);editors[which].value=pretty(DATA.faults[choice][policyName[which]]);
+  }
+  persist();clearResults('예제를 불러왔습니다. 검증 버튼으로 결과를 확인하세요.');toast('예제를 불러왔습니다.');
+ }
+ async function importFile(file){
+  if(!file)return;if(file.size>300000){toast('300KB 이하의 JSON 파일을 사용하세요.');return;}
+  try{
+   const text=await file.text();
+   if(importMode==='session'){
+    const data=JSON.parse(text);if(data.version!==1||typeof data.developerText!=='string'||typeof data.executionText!=='string')throw new Error('「답안 저장」으로 만든 iam-workshop-answer.json 파일을 선택하세요. 정책 한 개는 「정책 파일 열기」로 불러옵니다.');
+    if(!await ask('불러온 답안으로 두 정책을 덮어씁니다.'))return;editors.developer.value=data.developerText;editors.execution.value=data.executionText;showStep('results');
+   }else{if(!await ask('선택한 JSON 파일로 현재 정책을 덮어씁니다.'))return;editors[active].value=text;}
+   persist();clearResults('답안을 불러왔습니다. 다시 검증해 주세요.');toast('파일을 불러왔습니다.');
+  }catch(e){toast('불러오기 실패: '+e.message);}
+ }
+ function report(){return {mode:'offline-educational-subset',aws_verified:false,generated_at:new Date().toISOString(),config:DATA.config,scope:lastScope,policies:lastPolicies,results};}
+ function print(){
+  const holder=$('print-area');holder.replaceChildren();const title=document.createElement('h1');title.textContent='SageMaker · Bedrock IAM 정책 실습';holder.append(title);
+  const p=document.createElement('p');p.textContent='교육용 오프라인 평가 · AWS 검증 결과 아님';holder.append(p);
+  for(const key of ['execution','developer']){const h=document.createElement('h2');h.textContent=policyName[key];const pre=document.createElement('pre');pre.textContent=editors[key].value;holder.append(h,pre);}
+  if(results){const h=document.createElement('h2');h.textContent='검증 결과 '+results.filter(r=>r.passed).length+'/'+results.length;holder.append(h);const table=document.createElement('table');const head=document.createElement('tr');for(const text of ['ID','요청','기대','로컬 판정','일치']){const th=document.createElement('th');th.textContent=text;head.append(th);}table.append(head);for(const r of results){const tr=document.createElement('tr');for(const text of [r.id,r.description,r.expected,decisionLabel[r.decision],r.passed?'일치':'수정']){const td=document.createElement('td');td.textContent=text;tr.append(td);}table.append(tr);}holder.append(table);}
+  window.print();
+ }
+ document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>showStep(b.dataset.step)));
+ $('start').addEventListener('click',()=>showStep('execution'));
+ for(const key of ['execution','developer']){
+  $('tab-'+key).addEventListener('click',()=>{showStep(key==='execution'?'execution':step==='bedrock'?'bedrock':'developer');});
+  $('tab-'+key).addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();const next=key==='execution'?'developer':'execution';showStep(next);$('tab-'+next).focus();}});
+  editors[key].addEventListener('input',()=>{persist();clearResults();});
+  editors[key].addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();const a=e.target.selectionStart,b=e.target.selectionEnd;e.target.setRangeText('  ',a,b,'end');e.target.dispatchEvent(new Event('input'));}});
+ }
+ $('next-step').addEventListener('click',()=>{if(step==='results')showStep('execution');else if(active==='execution')showStep('developer');else if(step==='developer')showStep('bedrock');else{showStep('results');run('all');}});
+ $('run-stage').addEventListener('click',()=>run(active));$('run-all').addEventListener('click',()=>run('all'));
+ $('filter').addEventListener('change',renderResults);$('load-preset').addEventListener('click',loadPreset);
+ $('format').addEventListener('click',()=>{try{editors[active].value=pretty(JSON.parse(editors[active].value));persist();clearResults('JSON을 정렬했습니다. 다시 검증해 주세요.');toast('JSON을 정렬했습니다.');}catch(e){status('JSON 정렬 실패: '+e.message,true);}});
+ $('download-policy').addEventListener('click',()=>{try{download(policyName[active],JSON.parse(editors[active].value));}catch(e){status('정책 저장 실패: JSON 문법을 확인하세요. 답안 저장은 미완성 내용도 보관합니다.',true);}});
+ $('export-session').addEventListener('click',()=>download('iam-workshop-answer.json',{version:1,config:DATA.config,developerText:editors.developer.value,executionText:editors.execution.value}));
+ $('download-report').addEventListener('click',()=>{if(results)download('iam-workshop-report.json',report());});
+ for(const [id,mode] of [['import-session','session'],['import-policy','policy']])$(id).addEventListener('click',()=>{importMode=mode;$('file-input').value='';$('file-input').click();});
+ $('file-input').addEventListener('change',e=>importFile(e.target.files[0]));
+ $('reset').addEventListener('click',async()=>{if(!await ask('두 정책과 현재 검증 결과를 초기 상태로 되돌립니다. 먼저 답안을 파일로 저장해 두세요.','초기화'))return;for(const key of ['execution','developer'])editors[key].value=starter;clearResults('초기 상태입니다. 미션 1부터 정책을 작성해 주세요.');$('filter').value='all';showStep('intro');toast('초기화했습니다.');});
+ $('print').addEventListener('click',print);
+ try{const saved=JSON.parse(localStorage.getItem(STORE));if(saved&&typeof saved.developerText==='string'&&typeof saved.executionText==='string'&&saved.developerText.length<300000&&saved.executionText.length<300000){editors.developer.value=saved.developerText;editors.execution.value=saved.executionText;step=['intro','execution','developer','bedrock','results'].includes(saved.step)?saved.step:'intro';}}
+ catch{$('save-status').textContent='임시 저장 불가 · 답안 저장을 이용하세요';}
+ showStep(step);renderEnvironment();
+})();
+</script>
+</body></html>
