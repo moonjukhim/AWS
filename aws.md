@@ -2,4 +2,7 @@
 
 https://us-east-1.student.classrooms.aws.training/class/rpe9FS2yMazTf9djSNQaRb
 
-https://us-east-1.student.classrooms.aws.training/class/ilt%237nWtY1nBW7gzxtcHkY3uFM
+[Security Engineering](https://us-east-1.student.classrooms.aws.training/class/rpe9FS2yMazTf9djSNQaRb)
+[TESS](https://us-east-1.student.classrooms.aws.training/class/7qy3CGZespE4uZGXKpop9a)
+
+[AgentCore](https://us-east-1.student.classrooms.aws.training/class/vQquLRqVTVueG7szUxxL3X)
