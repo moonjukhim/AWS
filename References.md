@@ -36,3 +36,13 @@
 - [Build an AWS Multi-Tier Architecture](https://lab.builder-labs.skillbuilder.aws/sa/lab/arn%3Aaws%3Alearningcontent%3Aus-east-1%3A470679935125%3Ablueprintversion%2FILT-TF-200-ARCHIT-7%2Flab-7-capstone%3A7.10.1-a5cc34c1/en-US)
 
 - []()
+
+
+---
+
+https://catalog.workshops.aws/fis-v2/en-US
+[Resilience Testing with AWS Fault Injection Service](https://catalog.workshops.aws/fis-v2/en-US)
+
+[AWS Solutions Architect Advanced - Implementing Observability and Management Controls](https://skillbuilder.aws/learn/RADS4Z18E9/aws-solutions-architect-advanced--implementing-observability-and-management-controls/TK9M5DTNWX)
+
+[AWS CloudOps Engineer - Configuring Fault-Tolerant Systems](https://skillbuilder.aws/learn/ETT3B7UE1G/aws-cloudops-engineer--configuring-faulttolerant-systems/G6ZFVWN9DY)
