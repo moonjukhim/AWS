@@ -46,3 +46,8 @@ https://catalog.workshops.aws/fis-v2/en-US
 [AWS Solutions Architect Advanced - Implementing Observability and Management Controls](https://skillbuilder.aws/learn/RADS4Z18E9/aws-solutions-architect-advanced--implementing-observability-and-management-controls/TK9M5DTNWX)
 
 [AWS CloudOps Engineer - Configuring Fault-Tolerant Systems](https://skillbuilder.aws/learn/ETT3B7UE1G/aws-cloudops-engineer--configuring-faulttolerant-systems/G6ZFVWN9DY)
+
+
+---
+
+ML  ml.t3.medium
