@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>헬스케어 과제별 AWS 참조 아키텍처 자료</title>
+<style>
+  :root { --text:#1f1f1d; --muted:#5f5e5a; --line:#e3e1da; --accent:#0f6e56; --bg:#fbfaf7; --card:#fff; --warn-bg:#faeeda; --warn:#633806; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; line-height:1.7; }
+  main { max-width:880px; margin:0 auto; padding:48px 24px 64px; }
+  h1 { font-size:26px; font-weight:600; margin:0 0 6px; }
+  .sub { color:var(--muted); margin:0 0 32px; font-size:15px; }
+  nav { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:32px; }
+  nav ol { margin:0; padding-left:20px; }
+  nav a { color:var(--text); text-decoration:none; }
+  nav a:hover { color:var(--accent); }
+  section { margin-bottom:36px; }
+  h2 { font-size:19px; font-weight:600; border-bottom:2px solid var(--accent); padding-bottom:6px; margin:0 0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:12px; }
+  .card h3 { font-size:16px; font-weight:600; margin:0 0 2px; }
+  .card h3 a { color:var(--accent); text-decoration:none; }
+  .card h3 a:hover { text-decoration:underline; }
+  .src { font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .card p { margin:0 0 6px; font-size:15px; }
+  .use { font-size:14px; color:var(--muted); }
+  .use b { color:var(--text); font-weight:600; }
+  .warn { background:var(--warn-bg); color:var(--warn); border-radius:12px; padding:16px 20px; font-size:15px; }
+  footer { margin-top:40px; font-size:13px; color:var(--muted); }
+  @media print { body { background:#fff; } .card, nav { break-inside:avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>헬스케어 과제별 AWS 참조 아키텍처 자료</h1>
+  <p class="sub">과제마다 AWS 공식 블로그, 가이던스, Well-Architected 문서에서 고른 참조 자료 3개 · 2026년 11월 5일 기준</p>
+
+  <nav>
+    <ol>
+      <li><a href="#t1">반려동물 AI 돌봄 플랫폼</a></li>
+      <li><a href="#t2">구급차 안의 기록 담당 AI</a></li>
+      <li><a href="#t3">웨어러블 시계열 데이터 분석 및 생성형 AI 기반 개인 맞춤형 건강 행동 가이드 서비스</a></li>
+      <li><a href="#t4">환자 중심 진료 연속성 · 기록 공유 · 지역 의료 이용 서비스</a></li>
+      <li><a href="#t5">진료한장: 말로 설명하면 병원 안내와 진료 요약지까지</a></li>
+    </ol>
+  </nav>
+
+  <section id="t1">
+    <h2>1. 반려동물 AI 돌봄 플랫폼</h2>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/publicsector/using-generative-ai-to-help-dog-owners-make-smarter-health-decisions" target="_blank">코넬대 반려견 건강 상담 생성형 AI</a></h3>
+      <div class="src">AWS Public Sector Blog</div>
+      <p>Amazon Bedrock(Claude), Bedrock Knowledge Bases, EKS로 만든 RAG 상담 구조입니다. 코넬대 수의대 자료를 지식 기반으로 쓰고, 진단이 아닌 정보 제공용이라는 고지를 넣었으며, 교수진이 답변을 검토합니다.</p>
+      <div class="use"><b>참고할 부분:</b> AI 상담 계층, 그리고 "진단은 수의사가" 맡는 경계 설정</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/generate-personalized-and-re-ranked-recommendations-using-amazon-personalize.html" target="_blank">Amazon Personalize 반려동물 추천 패턴</a></h3>
+      <div class="src">AWS Prescriptive Guidance</div>
+      <p>Kinesis로 이벤트를 받고, Lambda, Personalize, Step Functions로 실시간 추천, 재정렬, 주기적 재학습을 처리합니다. 반려동물 입양 사이트를 예로 들며, CDK 코드가 공개되어 있습니다.</p>
+      <div class="use"><b>참고할 부분:</b> 개인화 추천 엔진. 재정렬 단계 뒤에 알러지·질환 금기 안전 필터를 추가하면 됩니다.</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/industries/nestles-purina-brand-smart-bowl-uses-iot-to-help-pet-owners-care-for-furry-friends" target="_blank">퓨리나 스마트 보울 IoT</a></h3>
+      <div class="src">AWS for Industries</div>
+      <p>AWS IoT Core로 스마트 보울 센서 데이터를 클라우드에 연결하고, 이 데이터를 분석해 맞춤 급식 추천과 알림을 제공합니다.</p>
+      <div class="use"><b>참고할 부분:</b> IoT 기기 데이터 수집 계층. 이 글에서 쓴 IoT Analytics는 지원 종료 대상으로 알려져 있어, 지금은 Kinesis, S3, Timestream 등으로 대체해야 합니다.</div>
+    </div>
+  </section>
+
+  <section id="t2">
+    <h2>2. 구급차 안의 기록 담당 AI</h2>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/machine-learning/using-amazon-q-business-with-aws-healthscribe-to-gain-insights-from-patient-consultations" target="_blank">AWS HealthScribe + Amazon Q Business로 진료 대화 분석</a></h3>
+      <div class="src">AWS Machine Learning Blog</div>
+      <p>HealthScribe는 음성 인식과 의료 특화 생성형 AI로 예비 진료 기록을 자동 생성하는 HIPAA 적격 서비스입니다. 화자 역할 구분과 단어 단위 타임스탬프를 제공합니다.</p>
+      <div class="use"><b>참고할 부분:</b> 음성을 기록으로 바꾸는 핵심 엔진. 구급대원과 환자의 발화를 구분하는 데 씁니다.</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/industries/creating-an-interoperable-clinical-voice-application-with-aws" target="_blank">상호운용 가능한 임상 음성 애플리케이션 만들기</a></h3>
+      <div class="src">AWS for Industries</div>
+      <p>음성 기반 임상 앱이 만든 기록을 AWS HealthLake에 FHIR R4 형식으로 저장하는 방법을 보여줍니다.</p>
+      <div class="use"><b>참고할 부분:</b> 구급차에서 만든 기록을 병원 응급실에 표준 형식으로 넘겨주는 구간</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/publicsector/advancing-health-equity-et3-programs-aws" target="_blank">eVisit의 구급차 원격진료(ET3 프로그램)</a></h3>
+      <div class="src">AWS Public Sector Blog</div>
+      <p>구급대원이 AWS 기반 태블릿 앱으로 현장의 119 신고 환자와 응급의학과 의사를 원격진료로 연결하는 사례입니다.</p>
+      <div class="use"><b>참고할 부분:</b> 구급차 현장 환경에서 AWS를 쓴 사례. 아키텍처 세부 내용은 적습니다.</div>
+    </div>
+  </section>
+
+  <section id="t3">
+    <h2>3. 웨어러블 시계열 데이터 분석 및 생성형 AI 기반 개인 맞춤형 건강 행동 가이드 서비스</h2>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/architecture/how-boat-delivers-personalized-fitness-coaching-with-amazon-bedrock/" target="_blank">boAt 스마트워치 AI 코치</a></h3>
+      <div class="src">AWS Architecture Blog</div>
+      <p>스마트워치 앱 데이터를 Lambda가 받아 Bedrock(Llama 3.3)으로 개인 코칭 플랜을 생성합니다. 이력은 RDS와 DocumentDB에 저장하며, 수백만 사용자를 대상으로 6개월 넘게 운영 중입니다.</p>
+      <div class="use"><b>참고할 부분:</b> 이 과제와 가장 가까운 서버리스 구조</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/industries/peloton-iq-how-peloton-generates-millions-of-personalized-fitness-insights-weekly-using-amazon-bedrock" target="_blank">Peloton IQ 개인화 인사이트</a></h3>
+      <div class="src">AWS for Industries</div>
+      <p>사용자 컨텍스트 데이터와 Bedrock의 LLM으로 주당 수백만 건의 개인화 인사이트를 생성합니다. 배치와 실시간 처리를 모두 지원합니다.</p>
+      <div class="use"><b>참고할 부분:</b> 일일 가이드(배치)와 즉시 알림(실시간)을 나누는 설계, 프롬프트 엔지니어링</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/industries/improving-the-utilization-of-wearable-device-data-using-an-aws-data-lake" target="_blank">웨어러블 데이터 레이크</a></h3>
+      <div class="src">AWS for Industries</div>
+      <p>여러 제조사의 웨어러블 데이터를 데이터 레이크로 모으고, 조회하기 쉬운 형식으로 변환해 ML 모델 학습에 활용하는 방법을 다룹니다.</p>
+      <div class="use"><b>참고할 부분:</b> 시계열 분석 앞단의 데이터 기반</div>
+    </div>
+  </section>
+
+  <section id="t4">
+    <h2>4. 환자 중심 진료 연속성 · 기록 공유 · 지역 의료 이용 서비스</h2>
+    <div class="card">
+      <h3><a href="https://docs.aws.amazon.com/wellarchitected/latest/healthcare-industry-lens/interoperability-architectures.html" target="_blank">Well-Architected 헬스케어 렌즈: 상호운용성 참조 아키텍처</a></h3>
+      <div class="src">AWS 공식 문서</div>
+      <p>HL7 v2, v3, FHIR별 참조 아키텍처를 제공합니다. HealthLake가 비정형 데이터를 ICD-10-CM, SNOMED CT 같은 표준 용어와 연결하는 방법도 다룹니다.</p>
+      <div class="use"><b>참고할 부분:</b> 기관 간 기록 공유의 표준 설계 기준</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/industries/addressing-health-equity-through-remote-patient-monitoring-and-continuity-of-care" target="_blank">원격 환자 모니터링과 진료 연속성으로 건강 형평성 높이기</a></h3>
+      <div class="src">AWS for Industries</div>
+      <p>원격 환자 모니터링(RPM)과 진료 연속성을 함께 다루는 참조 구현 아키텍처입니다. 의료 취약 지역에 초점을 맞췄습니다.</p>
+      <div class="use"><b>참고할 부분:</b> 진료 연속성과 지역 의료 이용 관점</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/publicsector/building-trust-in-healthcare-data-real-world-interoperability-with-aws-healthlake-and-dataart" target="_blank">DataArt의 HealthLake 기반 전국 단위 의료정보 교환</a></h3>
+      <div class="src">AWS Public Sector Blog</div>
+      <p>HealthLake 중심의 모듈형 구조로 정형·비정형 데이터를 FHIR R4로 변환합니다. 야간 배치 ETL을 거의 실시간 교환으로 바꿨습니다.</p>
+      <div class="use"><b>참고할 부분:</b> 여러 기관이 기록을 공유하는 데이터 아키텍처</div>
+    </div>
+  </section>
+
+  <section id="t5">
+    <h2>5. 진료한장: 말로 설명하면 병원 안내와 진료 요약지까지</h2>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/machine-learning/kyruus-builds-a-generative-ai-provider-matching-solution-on-aws" target="_blank">Kyruus의 생성형 AI 의료진 매칭</a></h3>
+      <div class="src">AWS Machine Learning Blog</div>
+      <p>사용자가 증상과 위치를 자연어로 입력하면 Bedrock(Claude)이 이를 해석하고, OpenSearch로 적합한 전문의를 찾습니다.</p>
+      <div class="use"><b>참고할 부분:</b> "말로 설명하면 병원 안내" 기능에 거의 그대로 해당</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://aws.amazon.com/blogs/machine-learning/how-clarus-care-uses-amazon-bedrock-to-deliver-conversational-contact-center-interactions" target="_blank">Clarus Care의 생성형 AI 음성 콜센터</a></h3>
+      <div class="src">AWS Machine Learning Blog</div>
+      <p>Amazon Connect, Lex, Bedrock으로 음성과 채팅을 처리합니다. Lambda가 긴급도와 의도를 분류하고, 필요한 정보를 추출하고, 응답을 생성합니다.</p>
+      <div class="use"><b>참고할 부분:</b> 음성 입력 채널, 그리고 응급 상황을 따로 보내는 분기 설계</div>
+    </div>
+    <div class="card">
+      <h3><a href="https://docs.aws.amazon.com/solutions/identifying-diagnosis-codes-from-clinical-notes-on-aws/" target="_blank">임상 기록에서 진단 코드 식별 가이던스</a></h3>
+      <div class="src">AWS Solutions Library</div>
+      <p>HealthScribe로 진료 대화를 요약하고, Comprehend Medical로 ICD-10-CM 코드를 붙이고, Bedrock으로 상태를 파악합니다. GitHub에 배포 코드가 있습니다.</p>
+      <div class="use"><b>참고할 부분:</b> 진료 요약지 생성 구간</div>
+    </div>
+  </section>
+
+  <div class="warn">
+    <b>국내 적용 시 주의:</b> AWS HealthScribe는 현재 미국 동부(버지니아 북부) 리전에서만 제공되어 데이터 보관 위치 요건이 걸릴 수 있습니다. 2번과 5번 과제를 국내에서 운영하려면 Amazon Transcribe와 Amazon Bedrock(서울 리전)을 조합하는 대안을 검토하세요. 출시 전에 최신 리전 지원 현황을 꼭 확인하세요.
+  </div>
+
+  <footer>링크는 2026년 11월 5일 기준으로 확인한 AWS 공개 자료입니다.</footer>
+</main>
+</body>
+</html>
