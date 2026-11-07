@@ -1,0 +1,2913 @@
+{
+  "schema": 1,
+  "applicationInfo": {
+    "name": "SRE Multi-Agent System",
+    "description": "### Summary\nAI-powered multi-agent system for Site Reliability Engineering operations. Coordinates specialized agents for Kubernetes monitoring, log analysis, performance metrics, and operational runbooks to assist with infrastructure troubleshooting and incident response.\n\n### Key objectives\n- Automate infrastructure troubleshooting through coordinated multi-agent analysis\n- Provide real-time insights from Kubernetes clusters, application logs, and performance metrics\n- Enable intelligent incident response using operational runbooks and historical knowledge\n- Maintain long-term memory of infrastructure patterns and investigation outcomes\n- Support interactive SRE workflows through conversational AI interface\n\n### Use-cases\n- Investigate Kubernetes pod failures and cluster health issues\n- Analyze application error patterns and log anomalies\n- Monitor performance metrics and identify resource bottlenecks\n- Execute incident response procedures from runbooks\n- Track investigation history and infrastructure knowledge across sessions\n\n### Features\n- Multi-agent architecture with supervisor coordination using LangGraph\n- Four specialized agents: Kubernetes, Logs, Metrics, and Runbooks\n- AWS Bedrock integration for LLM capabilities with Claude models\n- Long-term memory system using AWS Bedrock AgentCore Memory\n- Gateway service for MCP tool integration and API access\n- Demo backend servers simulating observability data sources\n- OpenTelemetry instrumentation with Jaeger tracing\n- Docker containerization with ARM64 and x86_64 support\n- CLI and REST API interfaces for agent interaction"
+  },
+  "architecture": {
+    "description": "### High Level Architecture\n\n#### Application type\nMulti-agent AI system with REST API and CLI interfaces for SRE operations\n\n#### Layers\n- Presentation: CLI interface, REST API with FastAPI/Uvicorn\n- Orchestration: LangGraph multi-agent supervisor coordinating specialized agents\n- Agent: Four specialized agents for K8s, logs, metrics, runbooks\n- Integration: Gateway service with MCP adapters for external API access\n- Memory: AWS Bedrock AgentCore Memory for long-term knowledge storage\n- Backend: Demo servers simulating observability data sources\n\n#### Boundaries\n- Internal: Agent runtime, supervisor, memory client, backend demo servers\n- External: AWS Bedrock LLM services, AWS Bedrock AgentCore Memory, observability APIs via gateway\n- Network zones: Docker containers, AWS cloud services, local development environment\n\n#### Technology components\n- Python 3.12+ with LangChain, LangGraph, FastAPI, Uvicorn\n- AWS Bedrock with Claude models for LLM inference\n- AWS Bedrock AgentCore Memory for persistence\n- OpenTelemetry with Jaeger for distributed tracing\n- Docker with ARM64 and x86_64 support\n- AWS Cognito for authentication\n\n#### Deployment architecture\n- Containerized with Docker, multi-architecture support\n- AWS infrastructure with EC2, S3, Cognito\n- OpenTelemetry collector and Jaeger for observability\n- Demo backend servers on ports 8011-8014\n- Agent runtime on port 8080\n\n#### APIs\n| Endpoint | Method | Purpose |\n|----------|--------|----------|\n| /pods/status | GET | Kubernetes pod information |\n| /deployments/status | GET | Deployment health checks |\n| /events | GET | Cluster events retrieval |\n| /resource_usage | GET | Resource consumption monitoring |\n| /nodes/status | GET | Node health status |\n| Agent runtime API | POST | Agent interaction endpoint |\n\n#### Security relevant components\n- AWS Cognito user pools for authentication\n- API key authentication for backend services\n- IAM roles for AWS service access\n- TLS/HTTPS for API communications\n- Token vault for credential management\n\n### Low Level Architecture\n- Supervisor node: Routes queries to specialized agents based on investigation plan\n- Kubernetes agent: Queries K8s API via gateway for cluster data\n- Logs agent: Analyzes application logs via gateway\n- Metrics agent: Retrieves performance metrics via gateway\n- Runbooks agent: Accesses operational procedures via gateway\n- Memory client: Manages three memory strategies - user preferences, infrastructure knowledge, investigation summaries\n- Gateway service: MCP adapter for external API integration with credential provider\n- Agent state: Shared state with messages, agent results, metadata, memory context\n- LLM client: AWS Bedrock integration with Claude models and error handling\n- Backend servers: Four FastAPI servers simulating K8s, logs, metrics, runbooks APIs\n- OpenTelemetry instrumentation: Automatic tracing of agent execution and API calls",
+    "image": ""
+  },
+  "dataflow": {
+    "description": "### Human actors\n- SRE Engineers: Interact via CLI or REST API to investigate infrastructure issues\n- System Administrators: Configure agents, gateways, and memory systems\n- DevOps Teams: Monitor observability data and respond to incidents\n\n### External entities\n- AWS Bedrock: LLM inference using Claude models\n- AWS Bedrock AgentCore Memory: Long-term memory persistence\n- AWS Bedrock AgentCore Gateway: MCP tool integration for external APIs\n- AWS Cognito: User authentication and authorization\n- Jaeger: Distributed tracing backend\n- OpenTelemetry Collector: Trace aggregation and forwarding\n\n### Processes\n- Agent Runtime: FastAPI server exposing REST API on port 8080\n- Supervisor: Routes queries to specialized agents based on investigation plan\n- Kubernetes Agent: Queries K8s cluster data via gateway\n- Logs Agent: Analyzes application logs via gateway\n- Metrics Agent: Retrieves performance metrics via gateway\n- Runbooks Agent: Accesses operational procedures via gateway\n- Memory Client: Manages user preferences, infrastructure knowledge, investigation summaries\n- Gateway Service: MCP adapter with credential provider for backend API access\n- K8s Backend Server: Demo server on port 8011\n- Logs Backend Server: Demo server on port 8012\n- Metrics Backend Server: Demo server on port 8013\n- Runbooks Backend Server: Demo server on port 8014\n\n### Data stores\n| Store | Type | High-Value |\n|-------|------|------------|\n| AWS Bedrock AgentCore Memory | Cloud DB | Y |\n| Agent State | In-Memory | Y |\n| Backend JSON Data Files | File System | N |\n| S3 Bucket (OpenAPI Schemas) | Object Storage | N |\n| Conversation History | In-Memory | Y |\n\n### Trust boundaries\n| Zone | Elements | Trust Level |\n|------|----------|-------------|\n| User Zone | CLI, REST API clients | Untrusted |\n| Application Zone | Agent Runtime, Supervisor, Agents, Memory Client | Trusted |\n| Backend Zone | Demo backend servers | Trusted |\n| AWS Cloud Zone | Bedrock LLM, AgentCore Memory, Gateway, Cognito | Trusted |\n| Observability Zone | OTEL Collector, Jaeger | Trusted |\n\n### Data flows\n| Flow ID | Description | Source | Target | Trust Boundaries Crossed | Assets |\n|---------|-------------|--------|--------|--------------------------|--------|\n| DF-01 | User query submission | SRE Engineer | Agent Runtime | User to Application | User queries, session tokens |\n| DF-02 | Query routing to supervisor | Agent Runtime | Supervisor | None | Query text, agent state |\n| DF-03 | Agent task assignment | Supervisor | Specialized Agents | None | Investigation plan, routing info |\n| DF-04 | Tool execution via gateway | Specialized Agents | Gateway Service | Application to AWS Cloud | Tool calls, API credentials |\n| DF-05 | Backend API calls | Gateway Service | Backend Servers | AWS Cloud to Backend | API requests, X-API-Key headers |\n| DF-06 | Backend data response | Backend Servers | Gateway Service | Backend to AWS Cloud | K8s/logs/metrics/runbooks data |\n| DF-07 | Tool results to agents | Gateway Service | Specialized Agents | AWS Cloud to Application | Observability data |\n| DF-08 | LLM inference requests | Specialized Agents | AWS Bedrock | Application to AWS Cloud | Prompts, conversation context |\n| DF-09 | LLM responses | AWS Bedrock | Specialized Agents | AWS Cloud to Application | Generated analysis, recommendations |\n| DF-10 | Agent results to supervisor | Specialized Agents | Supervisor | None | Intermediate findings |\n| DF-11 | Memory save operations | Memory Client | AgentCore Memory | Application to AWS Cloud | User prefs, infra knowledge, summaries |\n| DF-12 | Memory retrieval queries | Memory Client | AgentCore Memory | Application to AWS Cloud | Actor ID, session ID, query text |\n| DF-13 | Retrieved memories | AgentCore Memory | Memory Client | AWS Cloud to Application | Historical context, preferences |\n| DF-14 | Final response delivery | Supervisor | Agent Runtime | None | Aggregated investigation results |\n| DF-15 | Response to user | Agent Runtime | SRE Engineer | Application to User | Investigation findings, recommendations |\n| DF-16 | Authentication requests | Agent Runtime | AWS Cognito | Application to AWS Cloud | User credentials, tokens |\n| DF-17 | Auth tokens | AWS Cognito | Agent Runtime | AWS Cloud to Application | JWT tokens, session info |\n| DF-18 | Trace data export | Agent Runtime | OTEL Collector | Application to Observability | Distributed traces, spans |\n| DF-19 | Trace forwarding | OTEL Collector | Jaeger | None | Aggregated trace data |\n| DF-20 | OpenAPI schema retrieval | Gateway Service | S3 Bucket | None | API specifications |",
+    "image": ""
+  },
+  "assumptions": [
+    {
+      "id": "609d30a7-cb11-4653-8b54-26e76d5d26bd",
+      "numericId": 1,
+      "content": "Analysis based on Python source code in sre_agent, backend, gateway, and deployment directories",
+      "tags": [
+        "Code Analysis",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Complete codebase analysis performed including agent nodes, supervisor, memory system, and backend servers"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "7ce92fca-d3a1-4f74-8534-2e49d4da3ccb",
+      "numericId": 2,
+      "content": "Application uses AWS Bedrock for LLM services with Claude models as primary inference engine",
+      "tags": [
+        "AWS",
+        "LLM",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Identified from llm_utils.py, agent_nodes.py, and pyproject.toml dependencies including langchain-aws and langchain-anthropic"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "8557dadd-6c0a-43a4-b72c-b6325fbbd75d",
+      "numericId": 3,
+      "content": "Multi-agent system uses LangGraph framework for workflow orchestration and agent coordination",
+      "tags": [
+        "Architecture",
+        "Framework",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Confirmed from multi_agent_langgraph.py, graph_builder.py, and agent_state.py implementation"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "931e73a3-21a1-481e-8080-065949874ab1",
+      "numericId": 4,
+      "content": "Memory system uses AWS Bedrock AgentCore Memory with three strategies: user preferences, infrastructure knowledge, and investigation summaries",
+      "tags": [
+        "Memory",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Identified from memory/client.py and memory/config.py with retention periods of 90, 30, and 60 days respectively"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "2a35bb1b-bc84-4020-a957-f04e8d739fb4",
+      "numericId": 5,
+      "content": "Backend demo servers simulate observability data sources for development and testing purposes",
+      "tags": [
+        "Testing",
+        "Development",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Backend servers for K8s, logs, metrics, and runbooks found in backend/servers/ with static JSON data in backend/data/"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "36bdf7d9-e6ab-4447-a221-c08822154a36",
+      "numericId": 6,
+      "content": "Gateway service provides MCP tool integration and manages API access to external observability systems",
+      "tags": [
+        "Gateway",
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway implementation in gateway/ directory with config.yaml.example and MCP adapter integration"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "43e62f06-4b6e-4f65-ad79-5291f2202506",
+      "numericId": 7,
+      "content": "Application supports both CLI and REST API interfaces with FastAPI and Uvicorn for agent runtime",
+      "tags": [
+        "API",
+        "Interface",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CLI entry point in sre_agent/cli.py and REST API in agent_runtime.py with FastAPI dependencies in pyproject.toml"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "0937f5a6-9b88-4806-a0e8-5531a6afbe9d",
+      "numericId": 8,
+      "content": "Observability implemented with OpenTelemetry instrumentation and Jaeger tracing backend",
+      "tags": [
+        "Observability",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Docker-compose.yaml includes Jaeger and OTEL collector services, Dockerfile uses opentelemetry-instrument"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "07ca84ed-93be-43bd-bfd7-48ebaad785fb",
+      "numericId": 9,
+      "content": "Application designed for deployment on AWS infrastructure with support for ARM64 and x86_64 architectures",
+      "tags": [
+        "Deployment",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Separate Dockerfiles for ARM64 and x86_64, deployment scripts in deployment/ directory, AWS SDK dependencies"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "2e058eb9-05e8-4091-a5b8-9469afdb040c",
+      "numericId": 10,
+      "content": "Agent configuration managed through YAML files with tool-to-agent mappings and prompt templates",
+      "tags": [
+        "Configuration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "agent_config.yaml defines agent-tool relationships, prompt templates in config/prompts/ directory"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "3ed3af8b-b26b-46f8-a498-273091b389bc",
+      "numericId": 11,
+      "content": "Python 3.12+ required with dependencies managed through UV package manager and setuptools",
+      "tags": [
+        "Dependencies",
+        "Python",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "pyproject.toml specifies Python 3.12+ requirement, UV used in Dockerfile for dependency management"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "5aac525e-dff3-4a81-b2f4-8d96ef1f110a",
+      "numericId": 12,
+      "content": "Some source files contain Unicode characters that may cause encoding issues on certain systems",
+      "tags": [
+        "Code Quality",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Multiple files failed to read with cp949 codec errors, suggesting UTF-8 content with special characters"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Info Agent"
+        }
+      ]
+    },
+    {
+      "id": "127d8221-38d9-45da-a40e-0b72e3ee283a",
+      "numericId": 13,
+      "content": "Architecture analysis based on Python source code, configuration files, and Docker deployment manifests",
+      "tags": [
+        "Code Analysis",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Complete codebase analysis including agent nodes, supervisor, graph builder, memory system, gateway, and backend servers"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "ddb8de91-d18c-472b-819c-cd7df522f460",
+      "numericId": 14,
+      "content": "Multi-agent orchestration uses LangGraph framework with supervisor pattern coordinating four specialized agents",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Confirmed from graph_builder.py, supervisor.py, and agent_state.py showing supervisor routing to kubernetes, logs, metrics, runbooks agents"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "2e222fc7-db0b-4a9f-bd2e-53d6a9573bf9",
+      "numericId": 15,
+      "content": "Agent communication flows through shared AgentState with messages, agent_results, and metadata fields",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "AgentState TypedDict defines conversation messages, routing, intermediate results, memory context, and investigation tracking"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "3c57df00-f84b-48d8-8f9e-9fea0886fb7c",
+      "numericId": 16,
+      "content": "Memory system uses AWS Bedrock AgentCore with three strategies: user preferences, infrastructure knowledge, investigation summaries",
+      "tags": [
+        "Memory",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Memory client creates three strategies with namespaces: /sre/users, /sre/infrastructure, /sre/investigations with retention 90, 30, 60 days"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "5dcfa059-3756-4386-b217-3a884829b8a3",
+      "numericId": 17,
+      "content": "Gateway service provides MCP tool integration using AWS Bedrock AgentCore Gateway with API key credential provider",
+      "tags": [
+        "Gateway",
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway config shows S3-based OpenAPI schema storage, Cognito authentication, and credential provider for backend API access"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "a38309a2-04c1-4dda-96c6-504925b998e7",
+      "numericId": 18,
+      "content": "Backend demo servers run on ports 8011-8014 providing simulated observability data for development and testing",
+      "tags": [
+        "Backend",
+        "Testing",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Four FastAPI servers for K8s, logs, metrics, runbooks with static JSON data and OpenAPI specifications for gateway integration"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "d804ec7e-65d6-41d6-aaa1-02915c54396d",
+      "numericId": 19,
+      "content": "Agent runtime exposes REST API on port 8080 using FastAPI with OpenTelemetry instrumentation",
+      "tags": [
+        "API",
+        "Observability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Dockerfile shows uvicorn serving agent_runtime.py with opentelemetry-instrument wrapper for automatic tracing"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "695d1fe5-a43c-4622-a214-f5964100a6f2",
+      "numericId": 20,
+      "content": "Tool filtering mechanism restricts each agent to specific tools based on agent_config.yaml mappings",
+      "tags": [
+        "Security",
+        "Configuration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Agent nodes filter tools using _filter_tools_for_agent function matching tool names to agent-specific allowed lists plus global tools"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "be0fe8a0-8de9-400b-b149-319df188ea76",
+      "numericId": 21,
+      "content": "LLM integration uses AWS Bedrock with Claude models and includes error handling and retry logic",
+      "tags": [
+        "LLM",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "LLM utils create Bedrock client with langchain-aws integration, supporting prompt caching and error recovery"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "9341697f-0fb1-42a4-9b48-3f3f926ceee0",
+      "numericId": 22,
+      "content": "Observability stack uses OpenTelemetry collector forwarding traces to Jaeger backend on port 16686",
+      "tags": [
+        "Observability",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Docker-compose defines Jaeger and OTEL collector services with gRPC on 4317 and HTTP on 4318 for trace collection"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "eb4af0ad-6d20-44f1-9699-0b014dabff68",
+      "numericId": 23,
+      "content": "Conversation memory manager automatically stores user queries, agent responses, and tool execution results",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Agent nodes create conversation manager to store USER, ASSISTANT, and TOOL messages in memory after each agent execution"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "fb503dc6-2876-4985-b0f1-30d7c3b1842a",
+      "numericId": 24,
+      "content": "Agent execution includes 120-second timeout protection to prevent infinite hanging on tool calls or LLM responses",
+      "tags": [
+        "Reliability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "BaseAgentNode implements asyncio timeout wrapper around agent streaming execution with error handling"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "9a171a32-da6d-4291-987e-9c8e2529ea66",
+      "numericId": 25,
+      "content": "Deployment uses separate Dockerfiles for ARM64 and x86_64 architectures with UV package manager",
+      "tags": [
+        "Deployment",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Dockerfile and Dockerfile.x86_64 use platform-specific base images with UV for dependency management"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "383fbeb2-bc77-43aa-b050-a4e47a26859d",
+      "numericId": 26,
+      "content": "Authentication uses AWS Cognito user pools with client ID for user management",
+      "tags": [
+        "Security",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway config requires user_pool_id and client_id, setup_cognito.sh script creates Cognito resources"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "7228e0c5-cb10-4f91-8dd1-1cf54f5cd075",
+      "numericId": 27,
+      "content": "Backend API authentication uses X-API-Key header with token vault credential provider",
+      "tags": [
+        "Security",
+        "API",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "OpenAPI specs define apiKey security scheme in header, gateway creates API key credential provider for backend access"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Agent"
+        }
+      ]
+    },
+    {
+      "id": "928f083c-e613-4444-b6db-8adecb31e43f",
+      "numericId": 28,
+      "content": "Data flow analysis based on architecture docs, agent state, memory client, gateway config, and OpenAPI specs",
+      "tags": [
+        "Code Analysis",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Complete dataflow analysis including agent orchestration, memory operations, gateway integration, and backend interactions"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "43479856-dbed-4bda-8c50-280c50f66e36",
+      "numericId": 29,
+      "content": "Agent communication flows through shared AgentState with messages, agent_results, and routing metadata",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "AgentState TypedDict defines conversation flow between supervisor and specialized agents"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "3d4be7fc-c74f-4d69-b0fd-55650e7e6f57",
+      "numericId": 30,
+      "content": "Backend servers use X-API-Key header authentication with credential provider managed by gateway",
+      "tags": [
+        "Security",
+        "API",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "OpenAPI specs define apiKey security scheme, gateway config shows credential provider for backend access"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "3522e66c-6ee9-489f-80e3-d9fa3d1949e7",
+      "numericId": 31,
+      "content": "Memory operations use actor_id for all memory types, session_id required for infrastructure and investigations",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Memory client save_event and retrieve_memories methods show namespace patterns with actor and session IDs"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "5dd0dc37-64f3-4e20-8f35-bce176bc7243",
+      "numericId": 32,
+      "content": "Gateway service acts as trust boundary between application zone and backend/AWS cloud zones",
+      "tags": [
+        "Security",
+        "Trust Boundary",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway provides MCP tool integration with credential management for secure backend API access"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "2b2bd99b-47b2-4633-94b0-c069f527e812",
+      "numericId": 33,
+      "content": "OpenTelemetry instrumentation automatically captures traces from agent runtime with OTEL collector forwarding to Jaeger",
+      "tags": [
+        "Observability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Docker-compose shows OTEL collector on ports 4317 (gRPC) and 4318 (HTTP) forwarding to Jaeger on 16686"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "3160d296-de71-4915-b9f3-05c4bbacb5b2",
+      "numericId": 34,
+      "content": "Agent runtime exposes REST API on port 8080, backend servers on ports 8011-8014 for K8s, logs, metrics, runbooks",
+      "tags": [
+        "API",
+        "Networking",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Port assignments identified from docker-compose, backend server scripts, and OpenAPI specs"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "b507d01e-4312-4fb0-a431-dc8577f3677c",
+      "numericId": 35,
+      "content": "Supervisor implements multi-agent orchestration pattern with planning, routing, and aggregation phases",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Architecture diagram shows supervisor routing to specialized agents with aggregate phase for final response"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "6b4505b3-60e4-4cbd-ac30-04ca7f6523fe",
+      "numericId": 36,
+      "content": "Memory system uses three strategies with different namespaces and retention periods for user prefs, infra, investigations",
+      "tags": [
+        "Memory",
+        "Data Retention",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Memory client shows namespaces /sre/users, /sre/infrastructure, /sre/investigations with 90, 30, 60 day retention"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "e82a688a-60db-43f1-baee-074d2b764009",
+      "numericId": 37,
+      "content": "AWS Cognito provides authentication with user pool and client ID for agent runtime access control",
+      "tags": [
+        "Authentication",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway config requires user_pool_id and client_id for Cognito integration"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "532cb191-ac09-457e-aeba-acaef42f97ab",
+      "numericId": 38,
+      "content": "High-value data includes agent state, conversation history, and AgentCore Memory containing user preferences and infra knowledge",
+      "tags": [
+        "Data Classification",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "These stores contain sensitive investigation data, user preferences, and infrastructure patterns"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "9f18ee47-7821-48e9-8626-3d1da4820e03",
+      "numericId": 39,
+      "content": "Backend demo servers provide simulated observability data from static JSON files for development and testing",
+      "tags": [
+        "Testing",
+        "Development",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Backend data directory contains static JSON files for K8s, logs, metrics, and runbooks data"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "20324014-d509-43bf-aa7f-d29d623fb01f",
+      "numericId": 40,
+      "content": "S3 bucket stores OpenAPI schema files for gateway target configuration with auto-generated bucket names",
+      "tags": [
+        "Configuration",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway config shows S3 path prefix for OpenAPI schemas with optional auto-creation of bucket"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "ff079eff-4753-4509-bfe4-61fb7e5d45f6",
+      "numericId": 41,
+      "content": "Agent tool filtering restricts each agent to specific tools based on agent_config.yaml mappings plus global tools",
+      "tags": [
+        "Security",
+        "Configuration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Agent config shows tool-to-agent mappings with global x_amz_bedrock_agentcore_search tool available to all"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "ffec05b1-4404-444c-8846-df5630ef4129",
+      "numericId": 42,
+      "content": "LLM requests include prompts and conversation context flowing to AWS Bedrock with responses containing analysis and recommendations",
+      "tags": [
+        "LLM",
+        "Data Flow",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Agents send prompts with tool results to Bedrock Claude models for inference and receive generated responses"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Agent"
+        }
+      ]
+    },
+    {
+      "id": "da372dab-1f46-4d3d-af75-9fc92c4f77a8",
+      "numericId": 43,
+      "content": "TLS/HTTPS is used for all external communications but certificate validation may not be enforced",
+      "tags": [
+        "Security",
+        "Networking",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Architecture mentions TLS/HTTPS for API communications but implementation details of certificate pinning, validation, and mutual TLS are not evident in the codebase. This assumption affects MITM threat severity."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "fe7704f6-b464-49ba-8498-447db7a3338b",
+      "numericId": 44,
+      "content": "Backend demo servers may be deployed in production environments without proper hardening",
+      "tags": [
+        "Deployment",
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Backend servers are described as demo servers with static JSON data, but the architecture suggests they represent real observability endpoints. Assuming these could be production-deployed affects threat prioritization."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "bb55681c-01be-44b1-86bc-e36d224f5767",
+      "numericId": 45,
+      "content": "No rate limiting or request throttling is implemented at the agent runtime API level",
+      "tags": [
+        "Security",
+        "API",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "FastAPI implementation in agent_runtime.py does not show evidence of rate limiting middleware or request throttling, making DoS attacks more feasible."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "9758cbc5-800a-43f9-aaa8-0713b91b4ca7",
+      "numericId": 46,
+      "content": "Sensitive credentials may be passed via environment variables without secrets management integration",
+      "tags": [
+        "Security",
+        "Credentials",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Docker deployment and configuration files suggest environment variable usage for credentials, but integration with AWS Secrets Manager or similar services is not evident in the codebase."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "6c1ed9f2-ab7d-43da-a3ab-f10c61f36019",
+      "numericId": 47,
+      "content": "Memory access controls rely on actor_id and session_id without additional authorization validation",
+      "tags": [
+        "Security",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Memory client implementation shows actor_id and session_id based namespacing, but additional authorization checks to prevent cross-user access are not evident in the code."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "88acca25-e443-46c4-bebe-0311bd04d24f",
+      "numericId": 48,
+      "content": "Jaeger UI and OTEL collector may be exposed without authentication",
+      "tags": [
+        "Observability",
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Docker-compose configuration shows Jaeger on port 16686 and OTEL collector on ports 4317/4318, but authentication configuration is not evident, potentially exposing sensitive trace data."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "7d83beb9-2380-40ef-96e6-a594e0672718",
+      "numericId": 49,
+      "content": "Input validation on LLM prompts is limited to basic sanitization without advanced prompt injection detection",
+      "tags": [
+        "Security",
+        "LLM",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "No evidence of specialized prompt injection detection or validation beyond standard input sanitization in the agent nodes and LLM utils code."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "8be0cc2b-0b8b-457d-928f-4248bad171af",
+      "numericId": 50,
+      "content": "OpenAPI schema integrity validation is not implemented in the gateway service",
+      "tags": [
+        "Security",
+        "Gateway",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway retrieves OpenAPI schemas from S3 but code does not show checksum validation, signature verification, or version pinning to prevent schema tampering."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "ea8a27f5-cf75-4e3b-b2f9-0db751756d69",
+      "numericId": 51,
+      "content": "Agent tool filtering is enforced at the application layer but may be bypassable through LLM manipulation",
+      "tags": [
+        "Security",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Tool filtering in agent_config.yaml provides security controls, but LLM-based decision making could potentially be manipulated to bypass these restrictions through carefully crafted prompts."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "466e6e64-39ce-4f70-ab81-fccd1fb7e334",
+      "numericId": 52,
+      "content": "AWS IAM roles follow least privilege principle but specific permissions are not documented",
+      "tags": [
+        "Security",
+        "AWS",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Architecture mentions IAM roles for AWS service access but specific permission boundaries and least privilege implementation details are not evident in the deployment scripts."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "60102926-6eaf-4ea2-8e7e-65cf23520db4",
+      "numericId": 1,
+      "content": "Implement prompt injection detection using AWS Bedrock Guardrails with custom policies to filter malicious prompts before they reach the LLM. Configure content filters for prompt attacks, jailbreak attempts, and context manipulation patterns.",
+      "tags": [
+        "Preventative",
+        "LLM Security",
+        "AWS Bedrock",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "AWS Bedrock Guardrails provides native prompt injection detection capabilities that can be integrated directly into the LLM inference pipeline. Configure guardrails with denied topics (credential extraction, system prompt exposure), content filters (high threshold for prompt attacks), and contextual grounding checks. This is implemented at the Bedrock API level before prompts reach Claude models, providing defense-in-depth against prompt manipulation."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "0d6d9805-5ae0-4206-af56-98dd29580a8f",
+      "numericId": 2,
+      "content": "Implement output validation on LLM responses to detect and block attempts to leak sensitive information. Use regex patterns and semantic analysis to identify infrastructure credentials, API keys, session tokens, and PII in agent responses before returning to users.",
+      "tags": [
+        "Detective",
+        "Data Loss Prevention",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Create a validation layer in agent_nodes.py that scans LLM outputs before they are added to AgentState. Implement pattern matching for AWS credentials (AKIA*, session tokens), API keys, IP addresses, and sensitive infrastructure details. Use AWS Comprehend for PII detection or implement custom regex patterns. Block responses containing sensitive data and log incidents for security review. This provides detective control for prompt injection attempts that successfully manipulate the LLM."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "f3aa9507-f467-4ea2-8866-f5a14e69b626",
+      "numericId": 3,
+      "content": "Implement strict input validation and sanitization on user queries before processing. Limit query length (max 2000 characters), block special characters that could be used for injection (&lt;, &gt;, script tags), and implement rate limiting per user session (10 queries per minute).",
+      "tags": [
+        "Preventative",
+        "Input Validation",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add validation middleware in agent_runtime.py FastAPI endpoint to sanitize user inputs. Implement character allowlists, length restrictions, and pattern blocking for common injection vectors. Use FastAPI dependency injection to enforce rate limits using slowapi or similar library with Redis backend for distributed rate limiting. This reduces the attack surface for prompt injection by limiting the complexity and frequency of malicious inputs."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "037f43bc-835d-49a3-92f8-df12f9d18eb8",
+      "numericId": 4,
+      "content": "Implement fine-grained authorization checks in memory client to validate that actor_id matches the authenticated Cognito user identity before allowing memory retrieval operations. Add session ownership validation to prevent cross-user memory access.",
+      "tags": [
+        "Preventative",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Modify memory/client.py retrieve_memories method to accept Cognito JWT token and validate that the actor_id in the request matches the sub claim from the authenticated user. Implement session ownership checks by storing session-to-user mappings in DynamoDB and validating ownership before memory operations. Add audit logging for all memory access attempts with user identity, timestamp, and accessed namespaces. This prevents compromised credentials from accessing other users' memory data."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "983ae58f-32ab-4cbc-9feb-bfc6d069370e",
+      "numericId": 5,
+      "content": "Implement AWS Cognito advanced security features including adaptive authentication, compromised credentials detection, and multi-factor authentication (MFA) for all users accessing the agent runtime API.",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Enable Cognito Advanced Security in the user pool to detect compromised credentials, suspicious sign-in attempts, and unusual device patterns. Configure adaptive authentication to require step-up MFA for high-risk actions like accessing investigation summaries or infrastructure knowledge. Implement TOTP or SMS-based MFA for all users. Configure account takeover protection and enable breach detection to automatically block known compromised credentials. Update setup_cognito.sh script to enable these features during deployment."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "165d092d-c7ab-4fb3-bfd2-3e33ed123abd",
+      "numericId": 6,
+      "content": "Implement AWS Secrets Manager integration for X-API-Key credentials with automatic rotation every 30 days. Update gateway credential provider to retrieve secrets from Secrets Manager instead of environment variables or configuration files.",
+      "tags": [
+        "Preventative",
+        "Credential Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Migrate X-API-Key storage from environment variables to AWS Secrets Manager. Update gateway credential provider to use boto3 secrets manager client with IAM role authentication. Implement automatic rotation using Lambda functions that generate new API keys, update backend servers, and rotate secrets. Configure secret access policies to restrict retrieval to only the gateway service IAM role. Add CloudWatch alarms for unauthorized secret access attempts. This eliminates credential exposure through container inspection or configuration file leaks."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "87f16665-b92d-4c33-865b-b075f668e3fb",
+      "numericId": 7,
+      "content": "Implement network segmentation using AWS Security Groups to restrict backend server access to only the gateway service IP addresses. Block direct internet access to ports 8011-8014 and require all traffic to flow through the gateway.",
+      "tags": [
+        "Preventative",
+        "Network Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Configure AWS Security Groups to create network boundaries: (1) Backend SG allowing inbound only from Gateway SG on ports 8011-8014, (2) Gateway SG allowing inbound from Agent Runtime SG, (3) Agent Runtime SG allowing inbound from ALB/API Gateway. Remove any 0.0.0.0/0 rules from backend servers. Implement VPC flow logs to monitor for unauthorized access attempts. This prevents direct backend access even if X-API-Keys are compromised, as network-level controls block unauthorized sources."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "32bb3727-70bc-46b0-9164-720e9da4b209",
+      "numericId": 8,
+      "content": "Implement mutual TLS (mTLS) authentication between gateway and backend servers using AWS Certificate Manager (ACM) private CA. Require client certificates for all backend API connections and validate certificate chains.",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "Encryption",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Create ACM private CA to issue client certificates for gateway service and server certificates for backend APIs. Update backend FastAPI servers to require client certificate validation using SSL context configuration. Modify gateway MCP adapter to present client certificate during backend connections. Implement certificate rotation every 90 days using ACM automation. This provides strong authentication that cannot be bypassed even with compromised API keys, as both credentials and valid certificates are required."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "74fb9225-8500-40a1-9dd2-1788f9921868",
+      "numericId": 9,
+      "content": "Implement certificate pinning for AWS Bedrock API connections in llm_utils.py. Validate TLS certificates against known AWS Bedrock certificate fingerprints to prevent man-in-the-middle attacks.",
+      "tags": [
+        "Preventative",
+        "Encryption",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add certificate pinning to the Bedrock client initialization in llm_utils.py using custom SSL context with certificate verification callback. Pin AWS Bedrock service certificates using public key hashes or certificate fingerprints. Implement certificate update mechanism to handle AWS certificate rotations. Use requests or urllib3 SSL adapter to enforce pinning. Add monitoring for certificate validation failures which could indicate MITM attacks. This prevents interception of LLM requests containing sensitive prompts and infrastructure context."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "1687c1dc-0663-424a-b977-fb6c67e45cf3",
+      "numericId": 10,
+      "content": "Implement request/response payload encryption for LLM communications using AWS KMS. Encrypt prompts before sending to Bedrock and decrypt responses, storing encryption keys in KMS with strict IAM policies.",
+      "tags": [
+        "Preventative",
+        "Encryption",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add encryption layer in agent_nodes.py that encrypts LLM prompts using AWS KMS before sending to Bedrock. While Bedrock uses TLS in transit, this provides additional protection against potential MITM or Bedrock service compromise. Use KMS customer managed keys with key policies restricting decrypt operations to only the agent runtime IAM role. Implement envelope encryption for large payloads. This ensures sensitive infrastructure details in prompts are protected with additional encryption layer beyond TLS."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "f1d211ae-fecb-46bd-a9df-fb64989a98e0",
+      "numericId": 11,
+      "content": "Implement AWS IAM permission boundaries and service control policies (SCPs) to restrict AgentCore Memory access to only specific namespaces per IAM role. Use IAM conditions to enforce actor_id and session_id validation at the AWS API level.",
+      "tags": [
+        "Preventative",
+        "Authorization",
+        "AWS IAM",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Create IAM permission boundaries that restrict Bedrock AgentCore Memory API access using resource-based conditions. Use IAM policy conditions to enforce namespace restrictions (aws:RequestedRegion, bedrock:ResourceTag) ensuring each service role can only access its designated memory namespaces. Implement SCPs at the AWS Organizations level to prevent privilege escalation. Add CloudTrail monitoring for all AgentCore Memory API calls with alerts for unauthorized namespace access attempts. This provides AWS-level enforcement preventing direct memory access even with compromised IAM credentials."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "bf29532d-fca9-4086-aee8-c34245651051",
+      "numericId": 12,
+      "content": "Implement comprehensive rate limiting and request throttling using AWS API Gateway or AWS WAF. Configure per-user rate limits (10 requests/minute), burst limits (20 requests), and IP-based throttling (100 requests/minute per IP).",
+      "tags": [
+        "Preventative",
+        "Availability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Deploy AWS API Gateway in front of the agent runtime with usage plans and API keys for authenticated rate limiting. Configure throttle settings: 10 requests per minute per authenticated user, 20 burst capacity, 100 requests per minute per source IP. Implement AWS WAF rate-based rules to block IPs exceeding thresholds. Add CloudWatch alarms for rate limit violations. Use API Gateway caching for identical queries to reduce backend load. This prevents DoS attacks while allowing legitimate burst traffic during incident response."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "3f80e830-fb98-4b2e-befc-6d9f01e4ad28",
+      "numericId": 13,
+      "content": "Implement request queue management with priority-based processing and circuit breaker patterns. Use AWS SQS for request queuing with dead-letter queues for failed requests and implement exponential backoff for LLM calls.",
+      "tags": [
+        "Preventative",
+        "Availability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Modify agent_runtime.py to use AWS SQS for asynchronous request processing. Implement priority queues (P0 for critical incidents, P1 for normal investigations) with separate processing pools. Add circuit breaker pattern using pybreaker library to prevent cascading failures when Bedrock is overloaded. Configure dead-letter queues for requests that fail after 3 retries. Implement graceful degradation by returning cached results or simplified analysis when system is under load. This prevents resource exhaustion while maintaining availability for critical operations."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "3c10b597-13e1-4f50-9b99-23260920750d",
+      "numericId": 14,
+      "content": "Implement tool invocation authorization checks in agent nodes to validate that requested tool calls are appropriate for the current investigation context. Use LLM-based reasoning validation to detect suspicious tool call patterns.",
+      "tags": [
+        "Detective",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add authorization validation layer in agent_nodes.py that analyzes tool call requests against the original user query and investigation context. Implement heuristics to detect suspicious patterns: (1) tool calls unrelated to query topic, (2) excessive tool invocations (more than 10 per query), (3) privileged operations without justification. Use a secondary LLM call to validate tool call appropriateness before execution. Log all tool authorization decisions for security review. This detects prompt injection attempts that manipulate agents into unauthorized tool usage."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "e5f651f9-ad12-4b2b-8e3a-c371988f1868",
+      "numericId": 15,
+      "content": "Implement enhanced tool filtering with dynamic policy enforcement based on user roles and investigation context. Create tool access policies in DynamoDB that map user groups to allowed tool sets and validate before each invocation.",
+      "tags": [
+        "Preventative",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Extend agent_config.yaml tool filtering with dynamic policy engine stored in DynamoDB. Define user roles (SRE-ReadOnly, SRE-Operator, SRE-Admin) with corresponding tool permissions. Modify _filter_tools_for_agent function to query DynamoDB policies based on authenticated user role from Cognito token. Implement context-aware filtering that restricts destructive operations (pod restarts, config changes) to admin roles. Add audit logging for all tool access decisions. This provides fine-grained authorization preventing privilege escalation through tool manipulation."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "c069f1dd-2c58-45b2-9541-c9c73d0c4ccc",
+      "numericId": 16,
+      "content": "Implement container security scanning in CI/CD pipeline using Amazon ECR image scanning. Enable automatic scanning on push and block deployment of images with HIGH or CRITICAL vulnerabilities.",
+      "tags": [
+        "Preventative",
+        "Container Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Enable Amazon ECR enhanced scanning with Inspector integration for continuous vulnerability assessment. Configure scan-on-push for all images pushed to ECR. Implement deployment gates in CI/CD pipeline that block images with CVE severity HIGH or CRITICAL from reaching production. Use ECR lifecycle policies to automatically delete vulnerable images. Add Slack/SNS notifications for new vulnerabilities detected in running images. This prevents deployment of containers with known vulnerabilities that could be exploited for credential extraction."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "b614a371-f602-48b2-a437-636891e77366",
+      "numericId": 17,
+      "content": "Implement runtime container security monitoring using AWS GuardDuty for ECS/EKS. Enable runtime threat detection for suspicious process execution, credential access attempts, and network connections from containers.",
+      "tags": [
+        "Detective",
+        "Container Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Enable GuardDuty ECS/EKS runtime monitoring for all agent runtime containers. Configure GuardDuty to detect suspicious activities: unexpected process execution, credential file access (/root/.aws), outbound connections to unusual IPs, privilege escalation attempts. Integrate GuardDuty findings with Security Hub and configure EventBridge rules to trigger automated response (container isolation, credential rotation). Add CloudWatch dashboards for runtime security events. This provides detective control for container compromise attempts targeting credential extraction."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "e82a1294-a284-478e-accd-988189d3ec8f",
+      "numericId": 18,
+      "content": "Implement secrets encryption at rest in containers using AWS KMS and remove all plaintext credentials from environment variables. Use ECS/EKS secrets integration to inject encrypted secrets at runtime.",
+      "tags": [
+        "Preventative",
+        "Encryption",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Migrate all credentials from environment variables to AWS Secrets Manager. Configure ECS task definitions or Kubernetes secrets to inject secrets as environment variables at runtime using IAM role authentication. Enable encryption at rest for ECS task storage using KMS customer managed keys. Update Dockerfiles to remove hardcoded credentials and use IAM roles for AWS service authentication. Implement secret rotation hooks that automatically restart containers when secrets are rotated. This eliminates credential exposure through container inspection or memory dumps."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "056b7005-16e4-4ea5-ae11-1be8a600f9c0",
+      "numericId": 19,
+      "content": "Implement memory input validation and sanitization in memory client save_event method. Validate data types, length limits, and content patterns before persisting to AgentCore Memory to prevent injection of malicious data.",
+      "tags": [
+        "Preventative",
+        "Input Validation",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add comprehensive validation in memory/client.py save_event method: (1) validate event content length (max 10KB), (2) sanitize HTML/script tags, (3) validate JSON structure for structured events, (4) implement content filtering for suspicious patterns (SQL injection, command injection syntax), (5) rate limit memory writes (max 100 events per session per hour). Add schema validation for each memory type ensuring only expected fields are stored. This prevents memory poisoning attacks that could corrupt the knowledge base."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "e535e065-3818-4708-aeb7-a58dbe265eb6",
+      "numericId": 20,
+      "content": "Implement memory integrity verification using cryptographic hashes. Store SHA-256 hashes of memory events and validate integrity during retrieval to detect tampering.",
+      "tags": [
+        "Detective",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Modify memory client to compute SHA-256 hash of event content before saving to AgentCore Memory. Store hashes in DynamoDB with event metadata (timestamp, actor_id, session_id). During memory retrieval, recompute hashes and compare with stored values to detect tampering. Implement alerting for hash mismatches indicating memory corruption or unauthorized modification. Add periodic integrity scans of memory namespaces. This provides detective control for memory poisoning attempts by detecting unauthorized modifications to stored knowledge."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "12d3ec90-6127-47c0-a8de-ae8d7bb5f943",
+      "numericId": 21,
+      "content": "Implement Web Application Firewall (AWS WAF) rules for backend servers to protect against common web vulnerabilities. Configure OWASP Core Rule Set (CRS) and custom rules for API-specific attacks.",
+      "tags": [
+        "Preventative",
+        "Web Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Deploy AWS WAF in front of backend servers with managed rule groups: (1) AWS Managed Rules for Core Rule Set (SQL injection, XSS, LFI), (2) Known Bad Inputs rule group, (3) Custom rate-based rules for API endpoints. Configure IP reputation lists to block known malicious IPs. Implement geo-blocking if backend servers should only be accessed from specific regions. Add WAF logging to S3 with Athena queries for security analysis. This provides defense-in-depth for backend servers against web application attacks."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "cf0df4d2-ea12-4746-8f69-7dae154df18b",
+      "numericId": 22,
+      "content": "Implement automated dependency vulnerability scanning using Dependabot or Snyk. Configure automated pull requests for security updates and block deployment of applications with known vulnerable dependencies.",
+      "tags": [
+        "Preventative",
+        "Dependency Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Enable GitHub Dependabot or integrate Snyk into CI/CD pipeline to scan pyproject.toml dependencies. Configure automated PR creation for security updates with severity HIGH or above. Implement pre-deployment checks that fail builds if vulnerable dependencies are detected. Use pip-audit or safety to scan for known vulnerabilities in Python packages. Add weekly dependency update reviews and security patch cycles. This ensures backend FastAPI servers are protected against known vulnerabilities in frameworks and libraries."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "4cefff93-acbc-4f05-8f3e-3aba9ae19630",
+      "numericId": 23,
+      "content": "Implement authentication and authorization for Jaeger UI using OAuth2 proxy or AWS Application Load Balancer (ALB) authentication. Restrict access to distributed traces to authorized SRE team members only.",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Deploy OAuth2 proxy (e.g., oauth2-proxy) in front of Jaeger UI on port 16686 with AWS Cognito as identity provider. Configure ALB with Cognito authentication to require login before accessing Jaeger. Implement IP allowlisting to restrict access to corporate VPN or office networks. Add audit logging for all Jaeger UI access attempts. Configure session timeouts (15 minutes) for idle sessions. This prevents unauthorized access to sensitive trace data containing infrastructure details and API patterns."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "ce835f55-3316-4ac0-8ccf-ad4bcddb5155",
+      "numericId": 24,
+      "content": "Implement trace data sanitization in OpenTelemetry instrumentation to redact sensitive information before export. Configure OTEL processors to remove credentials, API keys, and PII from span attributes and logs.",
+      "tags": [
+        "Preventative",
+        "Data Loss Prevention",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Configure OpenTelemetry collector with attribute processor to redact sensitive data patterns: (1) AWS credentials (AKIA*, AWS session tokens), (2) API keys (X-API-Key headers), (3) Authorization headers, (4) PII (email, phone numbers). Use regex-based redaction rules in otel-collector-config.yaml. Implement span processor in agent runtime to sanitize data before export. Add sampling rules to reduce trace volume while maintaining security visibility. This prevents credential leakage through observability data."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "aead84a2-6657-46bf-8707-d00697539c6f",
+      "numericId": 25,
+      "content": "Implement query complexity analysis and timeout enforcement with dynamic adjustment. Analyze query patterns to predict execution time and reject queries likely to exceed timeout before processing.",
+      "tags": [
+        "Preventative",
+        "Availability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add query complexity analyzer in agent_runtime.py that estimates execution time based on query characteristics: word count, number of questions, tool requirements. Implement dynamic timeout adjustment (60-120 seconds) based on query complexity. Use historical execution data stored in DynamoDB to train complexity prediction model. Reject queries predicted to exceed timeout with user feedback suggesting query simplification. Add monitoring for timeout patterns to detect abuse. This prevents resource exhaustion from complex queries while maintaining service availability."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "9fa442c2-3a73-463c-8a46-fc868a0553d2",
+      "numericId": 26,
+      "content": "Implement S3 bucket versioning and object lock for OpenAPI schemas with integrity validation. Enable MFA delete and configure EventBridge rules to alert on schema modifications.",
+      "tags": [
+        "Preventative",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Enable S3 versioning and object lock (compliance mode) on the bucket storing OpenAPI schemas. Configure object lock retention period of 90 days to prevent deletion or modification. Enable MFA delete requiring multi-factor authentication for schema deletions. Implement S3 event notifications via EventBridge to trigger alerts when schemas are modified. Store SHA-256 checksums of schemas in DynamoDB and validate during gateway startup. Add automated schema validation against OpenAPI 3.0 specification before accepting updates. This prevents unauthorized schema tampering."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "b735bf2b-4f60-4de3-a458-ebefa789dbe5",
+      "numericId": 27,
+      "content": "Implement schema integrity verification in gateway service using digital signatures. Sign OpenAPI schemas with AWS KMS and verify signatures before loading schemas into MCP adapter.",
+      "tags": [
+        "Preventative",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Implement schema signing process: (1) compute SHA-256 hash of OpenAPI schema, (2) sign hash using AWS KMS asymmetric key, (3) store signature alongside schema in S3. Modify gateway service to verify signatures during schema loading using KMS public key verification. Reject schemas with invalid or missing signatures. Implement key rotation for signing keys every 180 days. Add CloudWatch alarms for signature verification failures. This ensures only authorized schemas signed by trusted process can be loaded into gateway."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "fa535857-57a8-4597-bc7a-0c7349e51331",
+      "numericId": 28,
+      "content": "Implement memory encryption at rest for in-memory AgentState using application-level encryption. Encrypt sensitive fields (messages, agent_results) using AWS KMS before storing in memory and decrypt only when needed.",
+      "tags": [
+        "Preventative",
+        "Encryption",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add encryption layer in agent_state.py that encrypts sensitive AgentState fields using AWS KMS envelope encryption. Implement field-level encryption for messages, agent_results, and metadata containing infrastructure details. Use KMS data keys with automatic key rotation. Decrypt fields only when needed for LLM processing or API responses. Implement secure memory wiping (overwrite with zeros) when AgentState is destroyed. This protects sensitive investigation data from memory dump attacks or container compromise."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "78ea4362-e612-47e2-8740-3c22f8cfe0d3",
+      "numericId": 29,
+      "content": "Implement supervisor node integrity monitoring using code signing and runtime verification. Sign supervisor.py and graph_builder.py code with digital signatures and verify integrity at startup.",
+      "tags": [
+        "Detective",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Implement code signing for critical supervisor components: (1) compute SHA-256 hashes of supervisor.py, graph_builder.py, agent_nodes.py, (2) store hashes in AWS Systems Manager Parameter Store, (3) verify hashes during application startup before loading modules. Use Python import hooks to enforce verification. Implement file integrity monitoring (FIM) using AIDE or Tripwire to detect runtime modifications. Add CloudWatch alarms for integrity check failures. This detects unauthorized modifications to supervisor logic that could enable privilege escalation."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "2b420a83-ee03-4243-9fdf-1ecccc77992d",
+      "numericId": 30,
+      "content": "Implement supervisor execution monitoring and anomaly detection. Log all routing decisions, agent selections, and execution paths with ML-based anomaly detection to identify suspicious supervisor behavior.",
+      "tags": [
+        "Detective",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add comprehensive logging in supervisor.py for all routing decisions including investigation plan, selected agents, and execution order. Stream logs to CloudWatch Logs with structured JSON format. Implement CloudWatch Logs Insights queries to establish baseline routing patterns. Use CloudWatch Anomaly Detection or Amazon Lookout for Metrics to identify unusual supervisor behavior: unexpected agent combinations, excessive routing loops, disabled security agents. Configure SNS alerts for detected anomalies. This provides detective control for compromised supervisor logic."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "358933d1-c7b9-466b-b0d2-0b1e44b8d4e5",
+      "numericId": 31,
+      "content": "Implement conversation history access controls with session-based isolation. Store conversation history in DynamoDB with partition key as user_id+session_id and implement row-level security to prevent cross-session access.",
+      "tags": [
+        "Preventative",
+        "Authorization",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Migrate conversation history storage from in-memory to DynamoDB with partition key design: user_id#session_id. Implement IAM policies with dynamic policy variables to restrict DynamoDB access to only user's own sessions. Add attribute-based access control (ABAC) using session tags from Cognito token. Implement automatic session expiration (24 hours) with data deletion. Add audit logging for all conversation history access. This prevents unauthorized access to historical investigation data across sessions."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "297c57c5-6498-478f-991d-5d3eb5dbf4bf",
+      "numericId": 32,
+      "content": "Implement replay attack prevention using request signatures and nonce validation. Require signed requests with timestamp and nonce to prevent replay of previous investigation queries.",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Implement request signing in agent_runtime.py API endpoint: (1) require timestamp header (valid within 5 minutes), (2) require unique nonce per request, (3) compute HMAC-SHA256 signature of request body + timestamp + nonce using user's API key. Store used nonces in Redis with 10-minute TTL to prevent reuse. Reject requests with expired timestamps or duplicate nonces. Add rate limiting on signature validation failures (5 per minute). This prevents replay attacks that could extract historical conversation data."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "ed8cfae5-3fbf-4031-be6d-c03cd59c0350",
+      "numericId": 33,
+      "content": "Implement AWS Secrets Manager integration with automatic rotation for gateway credential provider. Configure Lambda rotation functions to update backend API keys every 30 days with zero-downtime rotation.",
+      "tags": [
+        "Preventative",
+        "Credential Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Create AWS Secrets Manager secret for each backend API key with automatic rotation enabled. Implement Lambda rotation function that: (1) generates new API key, (2) updates backend server configuration, (3) updates secret with new key, (4) validates new key works, (5) removes old key after 24-hour grace period. Configure gateway credential provider to cache secrets with automatic refresh on rotation. Add CloudWatch alarms for rotation failures. This ensures compromised credentials have limited lifetime and are automatically rotated."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "a081564b-1b28-447e-9b58-4e944f47239a",
+      "numericId": 34,
+      "content": "Implement credential provider access monitoring and anomaly detection. Log all credential retrieval operations with CloudWatch Logs and implement ML-based detection for unusual access patterns.",
+      "tags": [
+        "Detective",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Add comprehensive logging in gateway credential provider for all credential operations: retrieval, caching, refresh. Include metadata: timestamp, requesting service, IAM role, credential type. Stream logs to CloudWatch Logs with structured JSON. Implement CloudWatch Insights queries to establish baseline access patterns. Use CloudWatch Anomaly Detection to identify suspicious activities: unusual access frequency, access from unexpected IAM roles, bulk credential retrieval. Configure SNS alerts for detected anomalies with automated response (credential rotation, IAM role suspension). This provides detective control for credential provider compromise."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "48cebd84-f102-4772-b95f-94df647b56ef",
+      "numericId": 35,
+      "content": "Implement LangGraph workflow integrity verification using configuration validation and runtime checks. Validate graph structure against approved schema before execution and detect unauthorized node modifications.",
+      "tags": [
+        "Preventative",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Create approved LangGraph schema defining valid nodes, edges, and execution flows. Store schema in AWS Systems Manager Parameter Store with version control. Implement validation in graph_builder.py that verifies graph structure matches approved schema before compilation. Check for: (1) unauthorized nodes, (2) modified edges bypassing security checks, (3) unexpected entry/exit points. Add runtime monitoring to detect graph modifications during execution. Implement immutable graph compilation with signature verification. This prevents injection of malicious nodes or workflow tampering."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "86b03230-94b3-4b6b-baa6-63b51e808945",
+      "numericId": 36,
+      "content": "Implement actor_id and session_id generation using cryptographically secure random values (UUID v4). Add validation to reject predictable or sequential identifiers and implement rate limiting on memory access per identifier.",
+      "tags": [
+        "Preventative",
+        "Cryptography",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Modify memory client to generate actor_id and session_id using secrets.token_urlsafe() or UUID v4 for cryptographic randomness. Implement validation that rejects sequential or predictable IDs. Add rate limiting in memory retrieval: max 100 queries per actor_id per hour, max 50 queries per session_id per hour. Implement account lockout after 10 failed memory access attempts. Store access attempts in DynamoDB with TTL for rate limit enforcement. This prevents enumeration attacks targeting memory data across users."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "31d751ce-9df3-4ad9-a5c1-b23d251419e3",
+      "numericId": 37,
+      "content": "Implement AWS Bedrock token usage monitoring and quota management. Configure CloudWatch alarms for unusual token consumption patterns and implement per-user token budgets with automatic throttling.",
+      "tags": [
+        "Detective",
+        "Cost Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Implement token usage tracking in llm_utils.py by capturing input/output tokens from Bedrock responses. Store usage metrics in CloudWatch custom metrics with dimensions: user_id, agent_type, model_id. Configure CloudWatch alarms for: (1) sudden spikes in token usage (more than 2x baseline), (2) approaching service quotas (80 percent threshold), (3) per-user budget exceeded (10K tokens per day). Implement token budget enforcement that throttles users exceeding limits. Add cost attribution tags to all Bedrock API calls. This detects and prevents resource consumption attacks."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    },
+    {
+      "id": "85dba461-5dee-468f-8687-c2e62ae5d34b",
+      "numericId": 38,
+      "content": "Implement AWS Bedrock service quota monitoring and automatic scaling. Configure Service Quotas alarms and implement request queuing with priority-based processing when approaching quota limits.",
+      "tags": [
+        "Preventative",
+        "Availability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Use AWS Service Quotas API to monitor Bedrock usage against quotas (requests per minute, tokens per minute). Implement CloudWatch dashboard showing real-time quota utilization. Configure alarms at 70 percent and 90 percent thresholds. When approaching limits, automatically route requests to SQS queue with priority-based processing (critical incidents first). Implement automatic quota increase requests via Service Quotas API. Add fallback to alternative models or regions when primary quota exhausted. This prevents DoS through quota exhaustion while maintaining availability."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Agent"
+        }
+      ]
+    }
+  ],
+  "assumptionLinks": [
+    {
+      "type": "Threat",
+      "assumptionId": "da372dab-1f46-4d3d-af75-9fc92c4f77a8",
+      "linkedId": "b4e84791-5c0d-4de5-b835-487bbbcbe264"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "fe7704f6-b464-49ba-8498-447db7a3338b",
+      "linkedId": "a6752db3-309a-4c3a-827c-841b123a0843"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "bb55681c-01be-44b1-86bc-e36d224f5767",
+      "linkedId": "0f060fde-f615-4463-8cd4-6f7fb51d84d1"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "9758cbc5-800a-43f9-aaa8-0713b91b4ca7",
+      "linkedId": "de85ff92-7173-4ce8-a936-4260dd2ba0d2"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "6c1ed9f2-ab7d-43da-a3ab-f10c61f36019",
+      "linkedId": "0e7c544a-6249-40de-ad69-faae9ee4476b"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "6c1ed9f2-ab7d-43da-a3ab-f10c61f36019",
+      "linkedId": "9b1c316f-2a43-47b4-be9c-54b310921c55"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "88acca25-e443-46c4-bebe-0311bd04d24f",
+      "linkedId": "f77a3e9c-5705-4273-a2d4-80eb58063805"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "7d83beb9-2380-40ef-96e6-a594e0672718",
+      "linkedId": "e1cf50d8-0598-41fa-b3e1-803c45a0fc36"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "8be0cc2b-0b8b-457d-928f-4248bad171af",
+      "linkedId": "b6249cf1-c15a-4e34-a3d1-a8656a0f55e8"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "ea8a27f5-cf75-4e3b-b2f9-0db751756d69",
+      "linkedId": "2dbb92a6-d216-4935-9617-cf946d449cea"
+    }
+  ],
+  "mitigationLinks": [
+    {
+      "mitigationId": "60102926-6eaf-4ea2-8e7e-65cf23520db4",
+      "linkedId": "e1cf50d8-0598-41fa-b3e1-803c45a0fc36"
+    },
+    {
+      "mitigationId": "0d6d9805-5ae0-4206-af56-98dd29580a8f",
+      "linkedId": "e1cf50d8-0598-41fa-b3e1-803c45a0fc36"
+    },
+    {
+      "mitigationId": "f3aa9507-f467-4ea2-8866-f5a14e69b626",
+      "linkedId": "e1cf50d8-0598-41fa-b3e1-803c45a0fc36"
+    },
+    {
+      "mitigationId": "037f43bc-835d-49a3-92f8-df12f9d18eb8",
+      "linkedId": "0e7c544a-6249-40de-ad69-faae9ee4476b"
+    },
+    {
+      "mitigationId": "983ae58f-32ab-4cbc-9feb-bfc6d069370e",
+      "linkedId": "0e7c544a-6249-40de-ad69-faae9ee4476b"
+    },
+    {
+      "mitigationId": "165d092d-c7ab-4fb3-bfd2-3e33ed123abd",
+      "linkedId": "c024932a-4176-4d6c-abcb-e17ab7776ba9"
+    },
+    {
+      "mitigationId": "87f16665-b92d-4c33-865b-b075f668e3fb",
+      "linkedId": "c024932a-4176-4d6c-abcb-e17ab7776ba9"
+    },
+    {
+      "mitigationId": "32bb3727-70bc-46b0-9164-720e9da4b209",
+      "linkedId": "c024932a-4176-4d6c-abcb-e17ab7776ba9"
+    },
+    {
+      "mitigationId": "74fb9225-8500-40a1-9dd2-1788f9921868",
+      "linkedId": "b4e84791-5c0d-4de5-b835-487bbbcbe264"
+    },
+    {
+      "mitigationId": "1687c1dc-0663-424a-b977-fb6c67e45cf3",
+      "linkedId": "b4e84791-5c0d-4de5-b835-487bbbcbe264"
+    },
+    {
+      "mitigationId": "f1d211ae-fecb-46bd-a9df-fb64989a98e0",
+      "linkedId": "f8d5af6f-ec40-48d5-92e0-4399196aa878"
+    },
+    {
+      "mitigationId": "bf29532d-fca9-4086-aee8-c34245651051",
+      "linkedId": "0f060fde-f615-4463-8cd4-6f7fb51d84d1"
+    },
+    {
+      "mitigationId": "3f80e830-fb98-4b2e-befc-6d9f01e4ad28",
+      "linkedId": "0f060fde-f615-4463-8cd4-6f7fb51d84d1"
+    },
+    {
+      "mitigationId": "3c10b597-13e1-4f50-9b99-23260920750d",
+      "linkedId": "2dbb92a6-d216-4935-9617-cf946d449cea"
+    },
+    {
+      "mitigationId": "e5f651f9-ad12-4b2b-8e3a-c371988f1868",
+      "linkedId": "2dbb92a6-d216-4935-9617-cf946d449cea"
+    },
+    {
+      "mitigationId": "c069f1dd-2c58-45b2-9541-c9c73d0c4ccc",
+      "linkedId": "de85ff92-7173-4ce8-a936-4260dd2ba0d2"
+    },
+    {
+      "mitigationId": "b614a371-f602-48b2-a437-636891e77366",
+      "linkedId": "de85ff92-7173-4ce8-a936-4260dd2ba0d2"
+    },
+    {
+      "mitigationId": "e82a1294-a284-478e-accd-988189d3ec8f",
+      "linkedId": "de85ff92-7173-4ce8-a936-4260dd2ba0d2"
+    },
+    {
+      "mitigationId": "056b7005-16e4-4ea5-ae11-1be8a600f9c0",
+      "linkedId": "b4c81722-6599-4359-9520-e070852cb2c6"
+    },
+    {
+      "mitigationId": "e535e065-3818-4708-aeb7-a58dbe265eb6",
+      "linkedId": "b4c81722-6599-4359-9520-e070852cb2c6"
+    },
+    {
+      "mitigationId": "12d3ec90-6127-47c0-a8de-ae8d7bb5f943",
+      "linkedId": "a6752db3-309a-4c3a-827c-841b123a0843"
+    },
+    {
+      "mitigationId": "cf0df4d2-ea12-4746-8f69-7dae154df18b",
+      "linkedId": "a6752db3-309a-4c3a-827c-841b123a0843"
+    },
+    {
+      "mitigationId": "4cefff93-acbc-4f05-8f3e-3aba9ae19630",
+      "linkedId": "f77a3e9c-5705-4273-a2d4-80eb58063805"
+    },
+    {
+      "mitigationId": "ce835f55-3316-4ac0-8ccf-ad4bcddb5155",
+      "linkedId": "f77a3e9c-5705-4273-a2d4-80eb58063805"
+    },
+    {
+      "mitigationId": "aead84a2-6657-46bf-8707-d00697539c6f",
+      "linkedId": "264127e5-fe61-4a1e-8d92-b046b2b0aebb"
+    },
+    {
+      "mitigationId": "9fa442c2-3a73-463c-8a46-fc868a0553d2",
+      "linkedId": "b6249cf1-c15a-4e34-a3d1-a8656a0f55e8"
+    },
+    {
+      "mitigationId": "b735bf2b-4f60-4de3-a458-ebefa789dbe5",
+      "linkedId": "b6249cf1-c15a-4e34-a3d1-a8656a0f55e8"
+    },
+    {
+      "mitigationId": "fa535857-57a8-4597-bc7a-0c7349e51331",
+      "linkedId": "1b73fdd7-f3e4-4bba-a6a5-3f30ff9e9f6a"
+    },
+    {
+      "mitigationId": "78ea4362-e612-47e2-8740-3c22f8cfe0d3",
+      "linkedId": "7079d1c1-fc80-4030-8e9a-4091abb00bc0"
+    },
+    {
+      "mitigationId": "2b420a83-ee03-4243-9fdf-1ecccc77992d",
+      "linkedId": "7079d1c1-fc80-4030-8e9a-4091abb00bc0"
+    },
+    {
+      "mitigationId": "358933d1-c7b9-466b-b0d2-0b1e44b8d4e5",
+      "linkedId": "53bd9a53-8640-4c9e-b7f9-f8c0633287a8"
+    },
+    {
+      "mitigationId": "297c57c5-6498-478f-991d-5d3eb5dbf4bf",
+      "linkedId": "53bd9a53-8640-4c9e-b7f9-f8c0633287a8"
+    },
+    {
+      "mitigationId": "ed8cfae5-3fbf-4031-be6d-c03cd59c0350",
+      "linkedId": "1f637b0d-38c4-441e-a810-699d1574680f"
+    },
+    {
+      "mitigationId": "a081564b-1b28-447e-9b58-4e944f47239a",
+      "linkedId": "1f637b0d-38c4-441e-a810-699d1574680f"
+    },
+    {
+      "mitigationId": "48cebd84-f102-4772-b95f-94df647b56ef",
+      "linkedId": "011e704c-f0e5-45b7-88d9-68d021807d37"
+    },
+    {
+      "mitigationId": "86b03230-94b3-4b6b-baa6-63b51e808945",
+      "linkedId": "9b1c316f-2a43-47b4-be9c-54b310921c55"
+    },
+    {
+      "mitigationId": "31d751ce-9df3-4ad9-a5c1-b23d251419e3",
+      "linkedId": "d9f4c469-bd52-4ebd-bc7c-61e3eb51d366"
+    },
+    {
+      "mitigationId": "85dba461-5dee-468f-8687-c2e62ae5d34b",
+      "linkedId": "d9f4c469-bd52-4ebd-bc7c-61e3eb51d366"
+    }
+  ],
+  "threats": [
+    {
+      "id": "e1cf50d8-0598-41fa-b3e1-803c45a0fc36",
+      "numericId": 1,
+      "threatSource": "internet-based actor",
+      "prerequisites": "with network access to the agent runtime API",
+      "threatAction": "submit malicious prompts designed to manipulate agent behavior or extract sensitive information through prompt injection",
+      "threatImpact": "unauthorized access to infrastructure data, execution of unintended operations, or disclosure of sensitive investigation history",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "agent state",
+        "conversation history",
+        "infrastructure knowledge"
+      ],
+      "statement": "An internet-based actor with network access to the agent runtime API can submit malicious prompts designed to manipulate agent behavior or extract sensitive information through prompt injection, which leads to unauthorized access to infrastructure data, execution of unintended operations, or disclosure of sensitive investigation history, resulting in reduced confidentiality of agent state, conversation history, infrastructure knowledge.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-01",
+        "Agent Runtime",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "I",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "LLM-based systems are vulnerable to prompt injection attacks where malicious input can manipulate the agent's reasoning, bypass security controls, or extract sensitive data from memory context. The multi-agent architecture with memory persistence increases the attack surface as injected prompts could persist across sessions."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "0e7c544a-6249-40de-ad69-faae9ee4476b",
+      "numericId": 2,
+      "threatSource": "actor",
+      "prerequisites": "who has compromised AWS Cognito credentials",
+      "threatAction": "authenticate to the agent runtime and access investigation data from other users",
+      "threatImpact": "unauthorized disclosure of sensitive infrastructure knowledge, investigation summaries, and user preferences stored in AgentCore Memory",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "agentcore memory",
+        "user preferences",
+        "investigation summaries"
+      ],
+      "statement": "An actor who has compromised AWS Cognito credentials can authenticate to the agent runtime and access investigation data from other users, which leads to unauthorized disclosure of sensitive infrastructure knowledge, investigation summaries, and user preferences stored in AgentCore Memory, resulting in reduced confidentiality of agentcore memory, user preferences, investigation summaries.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-16",
+        "DF-17",
+        "AWS Cognito",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Cognito provides authentication but memory retrieval uses actor_id which could be enumerated or guessed. Without proper authorization checks, compromised credentials could allow access to other users' sensitive investigation data stored in the three memory strategies (90-day user prefs, 30-day infra knowledge, 60-day investigations)."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "c024932a-4176-4d6c-abcb-e17ab7776ba9",
+      "numericId": 3,
+      "threatSource": "actor",
+      "prerequisites": "with access to X-API-Key credentials",
+      "threatAction": "directly query backend servers bypassing the gateway and agent authorization controls",
+      "threatImpact": "unauthorized access to kubernetes cluster data, application logs, performance metrics, and operational runbooks",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "kubernetes data",
+        "application logs",
+        "performance metrics",
+        "runbooks"
+      ],
+      "statement": "An actor with access to X-API-Key credentials can directly query backend servers bypassing the gateway and agent authorization controls, which leads to unauthorized access to kubernetes cluster data, application logs, performance metrics, and operational runbooks, resulting in reduced confidentiality of kubernetes data, application logs, performance metrics, runbooks.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-05",
+        "Backend Servers",
+        "Gateway Service",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Backend servers authenticate using X-API-Key headers managed by the gateway credential provider. If these keys are compromised through credential leakage, insider threat, or insecure storage, attackers can bypass the multi-agent orchestration and directly access sensitive observability data on ports 8011-8014."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b4e84791-5c0d-4de5-b835-487bbbcbe264",
+      "numericId": 4,
+      "threatSource": "actor",
+      "prerequisites": "in a man-in-the-middle position",
+      "threatAction": "intercept and modify LLM inference requests or responses between agents and AWS Bedrock",
+      "threatImpact": "injection of false analysis results, manipulation of agent recommendations, or disclosure of sensitive prompts containing infrastructure details",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "llm prompts",
+        "agent analysis",
+        "investigation recommendations"
+      ],
+      "statement": "An actor in a man-in-the-middle position can intercept and modify LLM inference requests or responses between agents and AWS Bedrock, which leads to injection of false analysis results, manipulation of agent recommendations, or disclosure of sensitive prompts containing infrastructure details, resulting in reduced confidentiality of llm prompts, agent analysis, investigation recommendations.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-08",
+        "DF-09",
+        "AWS Bedrock",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "D",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "LLM requests contain sensitive prompts with infrastructure context and conversation history. Without proper TLS validation and certificate pinning, MITM attacks could intercept these requests to steal sensitive data or modify responses to inject malicious recommendations that could lead to incorrect incident response actions."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f8d5af6f-ec40-48d5-92e0-4399196aa878",
+      "numericId": 5,
+      "threatSource": "actor",
+      "prerequisites": "with access to AWS IAM credentials",
+      "threatAction": "directly access or modify AgentCore Memory data bypassing application-level access controls",
+      "threatImpact": "unauthorized disclosure, modification, or deletion of user preferences, infrastructure knowledge, and investigation summaries",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity",
+        "availability"
+      ],
+      "impactedAssets": [
+        "agentcore memory",
+        "user preferences",
+        "infrastructure knowledge",
+        "investigation summaries"
+      ],
+      "statement": "An actor with access to AWS IAM credentials can directly access or modify AgentCore Memory data bypassing application-level access controls, which leads to unauthorized disclosure, modification, or deletion of user preferences, infrastructure knowledge, and investigation summaries, resulting in reduced confidentiality of agentcore memory, user preferences, infrastructure knowledge, investigation summaries.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-11",
+        "DF-12",
+        "DF-13",
+        "AgentCore Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "T",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "AgentCore Memory stores sensitive long-term data with retention periods up to 90 days. Compromised IAM credentials with Bedrock permissions could allow direct API access to memory stores, bypassing the application's actor_id and session_id based access controls. This could enable data exfiltration or poisoning of the knowledge base."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "0f060fde-f615-4463-8cd4-6f7fb51d84d1",
+      "numericId": 6,
+      "threatSource": "actor",
+      "prerequisites": "",
+      "threatAction": "flood the agent runtime API with concurrent requests exceeding system capacity",
+      "threatImpact": "denial of service preventing legitimate SRE engineers from investigating critical infrastructure incidents",
+      "impactedGoal": [
+        "availability"
+      ],
+      "impactedAssets": [
+        "agent runtime",
+        "supervisor",
+        "specialized agents"
+      ],
+      "statement": "An actor can flood the agent runtime API with concurrent requests exceeding system capacity, which leads to denial of service preventing legitimate SRE engineers from investigating critical infrastructure incidents, resulting in reduced availability of agent runtime, supervisor, specialized agents.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-01",
+        "Agent Runtime",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "The agent runtime exposes a REST API on port 8080 without evident rate limiting. Each request triggers expensive LLM inference calls to AWS Bedrock and potentially multiple backend API calls through the gateway. Without rate limiting or request throttling, the system is vulnerable to resource exhaustion attacks that could prevent incident response during critical outages."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "2dbb92a6-d216-4935-9617-cf946d449cea",
+      "numericId": 7,
+      "threatSource": "actor",
+      "prerequisites": "with access to the agent runtime",
+      "threatAction": "craft queries that cause agents to execute unintended tool calls or access unauthorized backend APIs",
+      "threatImpact": "unauthorized data access, execution of privileged operations, or lateral movement to backend systems",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "backend servers",
+        "kubernetes cluster",
+        "application logs"
+      ],
+      "statement": "An actor with access to the agent runtime can craft queries that cause agents to execute unintended tool calls or access unauthorized backend APIs, which leads to unauthorized data access, execution of privileged operations, or lateral movement to backend systems, resulting in reduced confidentiality of backend servers, kubernetes cluster, application logs.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-04",
+        "Gateway Service",
+        "Specialized Agents",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "E",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "While agent_config.yaml provides tool filtering per agent, the LLM-based decision making could be manipulated through carefully crafted prompts to invoke tools in unintended ways or sequences. The gateway provides access to multiple backend APIs (K8s, logs, metrics, runbooks) and without proper authorization validation at the tool level, privilege escalation is possible."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "de85ff92-7173-4ce8-a936-4260dd2ba0d2",
+      "numericId": 8,
+      "threatSource": "actor",
+      "prerequisites": "with access to the docker host or container runtime",
+      "threatAction": "extract sensitive credentials from environment variables or configuration files in running containers",
+      "threatImpact": "compromise of AWS credentials, API keys, and authentication tokens enabling full system compromise",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "aws credentials",
+        "api keys",
+        "cognito tokens",
+        "iam roles"
+      ],
+      "statement": "An actor with access to the docker host or container runtime can extract sensitive credentials from environment variables or configuration files in running containers, which leads to compromise of AWS credentials, API keys, and authentication tokens enabling full system compromise, resulting in reduced confidentiality of aws credentials, api keys, cognito tokens, iam roles.",
+      "status": "threatIdentified",
+      "tags": [
+        "Deployment",
+        "Docker",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "The system uses Docker containers with multiple sensitive credentials: AWS IAM for Bedrock access, X-API-Keys for backend servers, Cognito client secrets. If these are passed via environment variables or mounted config files without proper secrets management (e.g., AWS Secrets Manager, HashiCorp Vault), container compromise leads to credential exposure."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b4c81722-6599-4359-9520-e070852cb2c6",
+      "numericId": 9,
+      "threatSource": "actor",
+      "prerequisites": "with access to memory client operations",
+      "threatAction": "inject malicious data into AgentCore Memory that persists across sessions",
+      "threatImpact": "poisoning of infrastructure knowledge base leading to incorrect agent recommendations in future investigations",
+      "impactedGoal": [
+        "integrity"
+      ],
+      "impactedAssets": [
+        "infrastructure knowledge",
+        "investigation summaries",
+        "agent recommendations"
+      ],
+      "statement": "An actor with access to memory client operations can inject malicious data into AgentCore Memory that persists across sessions, which leads to poisoning of infrastructure knowledge base leading to incorrect agent recommendations in future investigations, resulting in reduced integrity of infrastructure knowledge, investigation summaries, agent recommendations.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-11",
+        "Memory Client",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "The memory system stores infrastructure knowledge for 30 days and investigation summaries for 60 days. Without input validation and integrity checks on memory save operations, attackers could inject false information that influences future agent behavior. This is particularly dangerous as the LLM uses this historical context to make recommendations during incident response."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "a6752db3-309a-4c3a-827c-841b123a0843",
+      "numericId": 10,
+      "threatSource": "actor",
+      "prerequisites": "with network access to backend servers",
+      "threatAction": "exploit vulnerabilities in the demo backend servers running on ports 8011-8014",
+      "threatImpact": "unauthorized access to observability data or use of compromised servers as pivot points for lateral movement",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "backend servers",
+        "kubernetes data",
+        "application logs",
+        "metrics data"
+      ],
+      "statement": "An actor with network access to backend servers can exploit vulnerabilities in the demo backend servers running on ports 8011-8014, which leads to unauthorized access to observability data or use of compromised servers as pivot points for lateral movement, resulting in reduced confidentiality of backend servers, kubernetes data, application logs, metrics data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-05",
+        "DF-06",
+        "Backend Servers",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "E",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Backend servers are FastAPI applications serving static JSON data. While marked as demo servers, they represent real observability endpoints in production. Without proper input validation, dependency updates, and security hardening, these servers could be exploited through common web vulnerabilities (injection, deserialization, etc.) to access sensitive infrastructure data."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f77a3e9c-5705-4273-a2d4-80eb58063805",
+      "numericId": 11,
+      "threatSource": "actor",
+      "prerequisites": "with access to OpenTelemetry traces",
+      "threatAction": "extract sensitive information from distributed traces sent to Jaeger",
+      "threatImpact": "disclosure of infrastructure details, API endpoints, query patterns, and potentially credentials in trace data",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "distributed traces",
+        "api endpoints",
+        "query patterns"
+      ],
+      "statement": "An actor with access to OpenTelemetry traces can extract sensitive information from distributed traces sent to Jaeger, which leads to disclosure of infrastructure details, API endpoints, query patterns, and potentially credentials in trace data, resulting in reduced confidentiality of distributed traces, api endpoints, query patterns.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-18",
+        "DF-19",
+        "OTEL Collector",
+        "Jaeger",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "OpenTelemetry automatic instrumentation captures detailed execution traces including function parameters, API calls, and potentially sensitive data. Jaeger UI on port 16686 may expose this data without authentication. Traces could reveal infrastructure topology, API keys in headers, query patterns, and system internals useful for reconnaissance."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "264127e5-fe61-4a1e-8d92-b046b2b0aebb",
+      "numericId": 12,
+      "threatSource": "actor",
+      "prerequisites": "",
+      "threatAction": "cause agent execution timeouts by submitting complex queries that exceed the 120-second timeout",
+      "threatImpact": "degraded service availability and resource exhaustion through repeated timeout scenarios",
+      "impactedGoal": [
+        "availability"
+      ],
+      "impactedAssets": [
+        "specialized agents",
+        "llm inference",
+        "backend apis"
+      ],
+      "statement": "An actor can cause agent execution timeouts by submitting complex queries that exceed the 120-second timeout, which leads to degraded service availability and resource exhaustion through repeated timeout scenarios, resulting in reduced availability of specialized agents, llm inference, backend apis.",
+      "status": "threatIdentified",
+      "tags": [
+        "Specialized Agents",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "BaseAgentNode implements 120-second timeout protection, but complex queries requiring multiple tool calls and LLM iterations could consistently hit this limit. Repeated timeout scenarios consume resources (LLM tokens, API calls) without completing work, leading to resource exhaustion and degraded service for legitimate users."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b6249cf1-c15a-4e34-a3d1-a8656a0f55e8",
+      "numericId": 13,
+      "threatSource": "actor",
+      "prerequisites": "with access to S3 bucket containing OpenAPI schemas",
+      "threatAction": "modify OpenAPI specifications to inject malicious endpoints or alter tool definitions",
+      "threatImpact": "agents invoking malicious endpoints or executing unintended operations through modified tool schemas",
+      "impactedGoal": [
+        "integrity"
+      ],
+      "impactedAssets": [
+        "openapi schemas",
+        "gateway configuration",
+        "tool definitions"
+      ],
+      "statement": "An actor with access to S3 bucket containing OpenAPI schemas can modify OpenAPI specifications to inject malicious endpoints or alter tool definitions, which leads to agents invoking malicious endpoints or executing unintended operations through modified tool schemas, resulting in reduced integrity of openapi schemas, gateway configuration, tool definitions.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-20",
+        "S3 Bucket",
+        "Gateway Service",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Gateway service retrieves OpenAPI schemas from S3 to configure MCP tool integration. Without integrity validation (checksums, signatures), compromised S3 access could allow schema tampering. Modified schemas could redirect tool calls to attacker-controlled endpoints or change parameter validation to enable injection attacks."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "1b73fdd7-f3e4-4bba-a6a5-3f30ff9e9f6a",
+      "numericId": 14,
+      "threatSource": "actor",
+      "prerequisites": "with access to agent state in memory",
+      "threatAction": "extract sensitive investigation data from in-memory agent state during active sessions",
+      "threatImpact": "disclosure of real-time investigation details, intermediate findings, and conversation context",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "agent state",
+        "conversation history",
+        "intermediate findings"
+      ],
+      "statement": "An actor with access to agent state in memory can extract sensitive investigation data from in-memory agent state during active sessions, which leads to disclosure of real-time investigation details, intermediate findings, and conversation context, resulting in reduced confidentiality of agent state, conversation history, intermediate findings.",
+      "status": "threatIdentified",
+      "tags": [
+        "Agent State",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "AgentState TypedDict contains sensitive data including messages, agent_results, and metadata during active investigations. Memory dumps, debugging interfaces, or container compromise could expose this data. Unlike AgentCore Memory which has access controls, in-memory state may lack encryption at rest and could be accessed through process memory inspection."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "7079d1c1-fc80-4030-8e9a-4091abb00bc0",
+      "numericId": 15,
+      "threatSource": "actor",
+      "prerequisites": "who has compromised the supervisor node",
+      "threatAction": "manipulate routing decisions to prevent specific agents from executing or to force execution of malicious agent logic",
+      "threatImpact": "incorrect investigation results, bypassed security controls, or execution of unauthorized operations",
+      "impactedGoal": [
+        "integrity",
+        "availability"
+      ],
+      "impactedAssets": [
+        "supervisor",
+        "routing logic",
+        "investigation results"
+      ],
+      "statement": "An actor who has compromised the supervisor node can manipulate routing decisions to prevent specific agents from executing or to force execution of malicious agent logic, which leads to incorrect investigation results, bypassed security controls, or execution of unauthorized operations, resulting in reduced integrity of supervisor, routing logic, investigation results.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-03",
+        "Supervisor",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "The supervisor is the central orchestration point routing queries to specialized agents. Compromise of this component through code injection, dependency vulnerabilities, or logic flaws could allow attackers to control the entire investigation flow, selectively disable security checks, or inject malicious agent responses into the aggregation phase."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "53bd9a53-8640-4c9e-b7f9-f8c0633287a8",
+      "numericId": 16,
+      "threatSource": "actor",
+      "prerequisites": "with access to conversation history",
+      "threatAction": "replay previous investigation queries to extract historical infrastructure data or patterns",
+      "threatImpact": "unauthorized access to historical investigation context and infrastructure knowledge from past sessions",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "conversation history",
+        "investigation summaries",
+        "infrastructure patterns"
+      ],
+      "statement": "An actor with access to conversation history can replay previous investigation queries to extract historical infrastructure data or patterns, which leads to unauthorized access to historical investigation context and infrastructure knowledge from past sessions, resulting in reduced confidentiality of conversation history, investigation summaries, infrastructure patterns.",
+      "status": "threatIdentified",
+      "tags": [
+        "Conversation History",
+        "Memory Client",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Conversation manager automatically stores USER, ASSISTANT, and TOOL messages in memory. Without proper access controls and session isolation, attackers could access conversation history from other users or sessions to gather intelligence about infrastructure, security incidents, and operational patterns over time."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "1f637b0d-38c4-441e-a810-699d1574680f",
+      "numericId": 17,
+      "threatSource": "actor",
+      "prerequisites": "with access to the gateway credential provider",
+      "threatAction": "extract or modify API credentials used for backend authentication",
+      "threatImpact": "unauthorized access to all backend observability systems or denial of service through credential revocation",
+      "impactedGoal": [
+        "confidentiality",
+        "availability"
+      ],
+      "impactedAssets": [
+        "api credentials",
+        "backend servers",
+        "credential provider"
+      ],
+      "statement": "An actor with access to the gateway credential provider can extract or modify API credentials used for backend authentication, which leads to unauthorized access to all backend observability systems or denial of service through credential revocation, resulting in reduced confidentiality of api credentials, backend servers, credential provider.",
+      "status": "threatIdentified",
+      "tags": [
+        "Gateway Service",
+        "Credential Provider",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D",
+            "T"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "The gateway uses a credential provider to manage X-API-Key authentication for backend servers. This is a single point of failure - compromise of the credential provider exposes all backend API keys simultaneously. Without proper secrets rotation, encryption at rest, and access logging, this becomes a high-value target."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "011e704c-f0e5-45b7-88d9-68d021807d37",
+      "numericId": 18,
+      "threatSource": "actor",
+      "prerequisites": "with access to LangGraph workflow definitions",
+      "threatAction": "modify the agent graph structure to bypass security controls or inject malicious nodes",
+      "threatImpact": "execution of unauthorized agent logic, bypassed authorization checks, or data exfiltration through rogue nodes",
+      "impactedGoal": [
+        "integrity"
+      ],
+      "impactedAssets": [
+        "langgraph workflow",
+        "agent nodes",
+        "supervisor logic"
+      ],
+      "statement": "An actor with access to LangGraph workflow definitions can modify the agent graph structure to bypass security controls or inject malicious nodes, which leads to execution of unauthorized agent logic, bypassed authorization checks, or data exfiltration through rogue nodes, resulting in reduced integrity of langgraph workflow, agent nodes, supervisor logic.",
+      "status": "threatIdentified",
+      "tags": [
+        "LangGraph",
+        "Graph Builder",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "LangGraph workflow is defined in graph_builder.py and controls the entire agent execution flow. If an attacker can modify this code or inject malicious graph nodes through configuration tampering, they could add backdoor agents, intercept data flows, or bypass tool filtering controls implemented in agent_config.yaml."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "9b1c316f-2a43-47b4-be9c-54b310921c55",
+      "numericId": 19,
+      "threatSource": "actor",
+      "prerequisites": "",
+      "threatAction": "enumerate actor_id and session_id values to access memory data from other users",
+      "threatImpact": "unauthorized access to user preferences, infrastructure knowledge, and investigation summaries across different sessions",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "user preferences",
+        "infrastructure knowledge",
+        "investigation summaries"
+      ],
+      "statement": "An actor can enumerate actor_id and session_id values to access memory data from other users, which leads to unauthorized access to user preferences, infrastructure knowledge, and investigation summaries across different sessions, resulting in reduced confidentiality of user preferences, infrastructure knowledge, investigation summaries.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-12",
+        "Memory Client",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Memory retrieval uses actor_id for all memory types and session_id for infrastructure and investigations. If these identifiers are predictable (sequential, UUID v1) or not properly validated, attackers could enumerate values to access other users' memory data. The long retention periods (30-90 days) increase the value of this attack."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "d9f4c469-bd52-4ebd-bc7c-61e3eb51d366",
+      "numericId": 20,
+      "threatSource": "actor",
+      "prerequisites": "with access to AWS Bedrock service",
+      "threatAction": "exhaust LLM token quotas or incur excessive costs through resource consumption attacks",
+      "threatImpact": "denial of service through quota exhaustion or financial impact from uncontrolled LLM usage costs",
+      "impactedGoal": [
+        "availability"
+      ],
+      "impactedAssets": [
+        "aws bedrock",
+        "llm tokens",
+        "service quotas"
+      ],
+      "statement": "An actor with access to AWS Bedrock service can exhaust LLM token quotas or incur excessive costs through resource consumption attacks, which leads to denial of service through quota exhaustion or financial impact from uncontrolled LLM usage costs, resulting in reduced availability of aws bedrock, llm tokens, service quotas.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-08",
+        "AWS Bedrock",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "Each agent query triggers LLM inference calls to AWS Bedrock with Claude models. Without rate limiting, cost controls, or quota management, attackers could submit queries designed to maximize token consumption (long prompts, complex reasoning chains) leading to service quota exhaustion or significant financial costs."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    }
+  ]
+}
