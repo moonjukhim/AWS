@@ -1,0 +1,2852 @@
+{
+  "schema": 1,
+  "applicationInfo": {
+    "name": "A2A Multi-Agent Orchestration Platform",
+    "description": "### Summary\nAgent-to-Agent orchestration platform enabling multi-agent collaboration for AWS infrastructure monitoring and web search. Built on Amazon Bedrock AgentCore Runtime with Google ADK, OpenAI Agents SDK, and AWS Strands frameworks.\n\n### Key objectives\n- Enable autonomous agent-to-agent communication using A2A protocol\n- Orchestrate specialized agents for monitoring and web search tasks\n- Provide secure, authenticated multi-agent workflows\n- Support real-time streaming responses with tool invocation visibility\n- Maintain conversational memory across agent interactions\n\n### Use-cases\n- AWS CloudWatch monitoring and log analysis via specialized monitoring agent\n- Web search for AWS documentation and best practices\n- Incident response orchestration across multiple specialized agents\n- Real-time infrastructure health monitoring with contextual memory\n- Multi-framework agent integration (ADK, OpenAI Agents, Strands)\n\n### Features\n- Host agent orchestrating multiple sub-agents (Google ADK)\n- Monitoring agent with CloudWatch integration (AWS Strands)\n- Web search agent with memory capabilities (OpenAI Agents SDK)\n- AWS Cognito authentication with JWT authorization\n- Real-time streaming chat interface with React frontend\n- Agent memory using BedrockAgentCore Memory service\n- MCP Gateway for CloudWatch operations\n- Docker-based agent deployment on ECR\n- X-Ray tracing and CloudWatch logging\n- OAuth2 M2M authentication between agents"
+  },
+  "architecture": {
+    "description": "### High Level Architecture\n\n#### Application type\nMulti-agent AI orchestration platform with web interface\n\n#### Layers\n- Presentation: React SPA frontend\n- Orchestration: Host agent (Google ADK)\n- Agent: Specialized agents (Monitoring, Web Search)\n- Integration: MCP Gateway for CloudWatch\n- Data: Memory service, CloudWatch\n\n#### Boundaries\n- Internet to frontend (users)\n- Frontend to Bedrock AgentCore Runtime (authenticated)\n- Host agent to sub-agents (A2A protocol, M2M OAuth2)\n- Monitoring agent to MCP Gateway (authenticated)\n- MCP Gateway to CloudWatch (IAM)\n\n#### Technology components\n- Frontend: React, Vite, AWS Amplify, TypeScript\n- Agents: Python (Google ADK, AWS Strands, OpenAI Agents SDK)\n- Runtime: Amazon Bedrock AgentCore, Docker containers on ECR\n- Auth: AWS Cognito (JWT, OAuth2 M2M)\n- AI: Claude Sonnet 4.5 via Bedrock\n- Observability: X-Ray, CloudWatch Logs\n- IaC: CloudFormation, CodeBuild\n\n#### Deployment architecture\n- ECR repositories for agent containers (ARM64)\n- CodeBuild for Docker image builds\n- EventBridge for automated runtime updates\n- Lambda functions for custom resources\n- S3 for source code and Smithy models\n\n#### APIs\n| Endpoint | Method | Purpose |\n|----------|--------|----------|\n| /runtimes/{arn}/invocations | POST | Invoke agent with streaming |\n| /.well-known/agent-card.json | GET | Agent capability discovery |\n| /oauth2/token | POST | Cognito M2M token |\n| CloudWatch Logs API | Various | Log operations via MCP |\n| CloudWatch API | Various | Metrics/alarms via MCP |\n\n#### Security relevant components\n- Cognito User Pool with JWT authorizer\n- OAuth2 M2M client credentials flow\n- Custom header X-Amzn-Bedrock-AgentCore-Runtime-Custom-Actorid\n- Secrets Manager for client credentials\n- IAM roles with scoped permissions\n\n### Low Level Architecture\n- Host Agent Runtime: Google ADK-based orchestrator, HTTP protocol, public network\n- Monitoring Agent Runtime: AWS Strands-based, A2A protocol, custom memory strategies\n- Web Search Agent Runtime: OpenAI Agents SDK, Tavily integration, semantic memory\n- MCP Gateway: Smithy model-based CloudWatch operations proxy\n- Cognito: 4 clients (Web, Host, Monitoring, Gateway) with scoped OAuth2\n- Memory Service: Custom extraction/consolidation for monitoring and search\n- Frontend: JWT extraction, session management, SSE streaming\n- Lambda Functions: ECR notification, X-Ray setup, OAuth2 provider creation\n- CodeBuild: Parallel Docker build and ECR auth, ARM64 architecture",
+    "image": ""
+  },
+  "dataflow": {
+    "description": "### Human actors\n- End users accessing web interface for agent interactions\n- AWS administrators managing infrastructure and deployments\n- DevOps engineers deploying code and managing CI/CD\n\n### External entities\n- Amazon Bedrock (Claude Sonnet 4.5 model)\n- Tavily web search API (via web search agent)\n- AWS CloudWatch Logs and Metrics\n- Amazon Cognito OAuth2 token endpoint\n\n### Processes\n- React Frontend SPA: User interface for chat interactions\n- Host Agent Runtime: Orchestrates sub-agents using Google ADK\n- Monitoring Agent Runtime: CloudWatch operations via AWS Strands\n- Web Search Agent Runtime: Web search using OpenAI Agents SDK\n- MCP Gateway: Proxy for CloudWatch API operations\n- CodeBuild: Docker image build and push to ECR\n- Lambda Functions: Custom resource handlers and runtime updates\n\n### Data stores\n| Store | Type | High-Value (Y/N) |\n|-------|------|------------------|\n| ECR Repositories | Container Registry | Y |\n| CloudWatch Logs | Log Storage | Y |\n| Secrets Manager | Credential Store | Y |\n| SSM Parameter Store | Configuration Store | N |\n| Cognito User Pool | Identity Store | Y |\n| BedrockAgentCore Memory | Conversation State | Y |\n| In-Memory Session Service | Session State | N |\n\n### Trust boundaries\n| Zone | Elements | Trust Level |\n|------|----------|-------------|\n| Public Internet | End users, Frontend | Untrusted |\n| AWS Cloud - Frontend | React SPA, Amplify | Low Trust |\n| AWS Cloud - Agent Runtime | Host, Monitoring, Web Search Agents | Medium Trust |\n| AWS Cloud - Backend Services | Bedrock, CloudWatch, Cognito | High Trust |\n| AWS Cloud - Data Layer | ECR, Secrets Manager, Memory Service | High Trust |\n\n### Data flows\n| Flow ID | Description | Source | Target | Trust Boundaries Crossed | Assets |\n|---------|-------------|--------|--------|--------------------------|--------|\n| DF-01 | User authentication | Frontend | Cognito | Public to AWS Cloud | JWT tokens, credentials |\n| DF-02 | Agent invocation request | Frontend | Host Agent Runtime | Frontend to Agent Runtime | User prompts, session IDs, JWT |\n| DF-03 | Streaming response | Host Agent Runtime | Frontend | Agent Runtime to Frontend | Agent responses, tool outputs |\n| DF-04 | Sub-agent invocation | Host Agent | Monitoring/Web Search Agent | Agent Runtime (internal) | Prompts, A2A protocol messages |\n| DF-05 | M2M token request | Agent Runtime | Cognito | Agent Runtime to Backend | Client credentials, OAuth2 tokens |\n| DF-06 | CloudWatch operations | Monitoring Agent | MCP Gateway | Agent Runtime (internal) | Log queries, metric requests |\n| DF-07 | CloudWatch API calls | MCP Gateway | CloudWatch | Agent Runtime to Backend | AWS API requests, log data |\n| DF-08 | LLM inference | Agent Runtimes | Bedrock | Agent Runtime to Backend | Prompts, model responses |\n| DF-09 | Memory operations | Agent Runtimes | Memory Service | Agent Runtime to Data Layer | Conversation context, technical issues |\n| DF-10 | Docker image push | CodeBuild | ECR | Backend (internal) | Container images |\n| DF-11 | Runtime update trigger | EventBridge | Lambda | Backend (internal) | ECR push events |\n| DF-12 | Runtime configuration update | Lambda | Agent Runtime | Backend (internal) | Container URIs, config |\n| DF-13 | Web search query | Web Search Agent | Tavily API | AWS Cloud to Public Internet | Search queries, results |\n| DF-14 | X-Ray traces | Agent Runtimes | X-Ray | Agent Runtime to Backend | Distributed traces |\n| DF-15 | Application logs | Agent Runtimes | CloudWatch Logs | Agent Runtime to Backend | Log events, errors |",
+    "image": ""
+  },
+  "assumptions": [
+    {
+      "id": "744cd870-cd12-4b02-b7b0-02d36dca7073",
+      "numericId": 1,
+      "content": "Application uses Amazon Bedrock AgentCore Runtime as primary orchestration platform",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Based on CloudFormation templates and agent runtime configurations"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "415c839c-6700-476b-9a19-22e09595021e",
+      "numericId": 2,
+      "content": "Three distinct agent types: Host Agent (ADK), Monitoring Agent (Strands), Web Search Agent (OpenAI)",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Each agent uses different framework and has specialized capabilities"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "862202ca-9d98-4535-a1eb-938c8bc72ed4",
+      "numericId": 3,
+      "content": "AWS Cognito provides authentication for both user access and agent-to-agent communication",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Multiple user pools and clients configured for different authentication flows"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "d177e543-ce91-4db9-b8f1-965d68d83cc9",
+      "numericId": 4,
+      "content": "Application deployed on AWS using CloudFormation with automated Docker image builds via CodeBuild",
+      "tags": [
+        "Deployment",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Infrastructure as code approach with automated CI/CD pipeline"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f4828e59-4738-452e-a52b-6d915d7acfac",
+      "numericId": 5,
+      "content": "Frontend is React-based SPA using Vite, AWS Amplify, and Tailwind CSS",
+      "tags": [
+        "Frontend",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Modern web stack with real-time streaming capabilities"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "dc7a4c8b-ba7a-4304-af12-9313366a36f0",
+      "numericId": 6,
+      "content": "Monitoring agent uses MCP Gateway to access CloudWatch logs, metrics, and alarms",
+      "tags": [
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Smithy model defines CloudWatch operations available to monitoring agent"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "11aab338-c24c-4e87-b3dc-fb4fddb6fd06",
+      "numericId": 7,
+      "content": "Agent memory service maintains conversation context and technical issues across sessions",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Custom memory strategies for monitoring issues and semantic knowledge"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "088a7a8c-0141-4534-b1ca-a040dc76e5ff",
+      "numericId": 8,
+      "content": "All agents use Claude Sonnet 4.5 model via Amazon Bedrock",
+      "tags": [
+        "AI Model",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Model ID: global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "ff57334d-06ba-4254-b12d-47af10c9904c",
+      "numericId": 9,
+      "content": "OAuth2 M2M authentication enables secure agent-to-agent communication",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Custom OAuth2 credential providers configured for each agent"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "5a0b7709-4f2d-4f3e-957f-5376f6025ea0",
+      "numericId": 10,
+      "content": "Application uses ARM64 architecture for agent runtime containers",
+      "tags": [
+        "Infrastructure",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CodeBuild uses ARM_CONTAINER with amazonlinux2-aarch64-standard:3.0"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "168e543f-86a1-4237-adda-aaa57ba19bb5",
+      "numericId": 11,
+      "content": "X-Ray tracing enabled for all agent runtimes and gateway for distributed tracing",
+      "tags": [
+        "Observability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Custom Lambda functions configure X-Ray delivery sources and destinations"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "dca6cd56-7de0-46dc-a6c7-cc3fa7e36476",
+      "numericId": 12,
+      "content": "Session management uses in-memory session service with user-specific session IDs",
+      "tags": [
+        "Session Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Google ADK InMemorySessionService maintains conversation state"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "04a5efbc-d0f9-43ac-8107-b6305fa47b1a",
+      "numericId": 13,
+      "content": "EventBridge triggers automatic agent runtime updates when new Docker images are pushed to ECR",
+      "tags": [
+        "CI/CD",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Lambda function updates runtime configuration with new container URI"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "98bada53-415d-4b60-9bfc-0c45e4f4cc61",
+      "numericId": 14,
+      "content": "Frontend extracts JWT sub claim to use as actor ID for agent invocations",
+      "tags": [
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Custom header X-Amzn-Bedrock-AgentCore-Runtime-Custom-Actorid carries actor identity"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "80415705-e4bc-48da-aaad-91ff3265076c",
+      "numericId": 15,
+      "content": "Application source code completeness assumed based on presence of deployment scripts and infrastructure code",
+      "tags": [
+        "Code Analysis",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Some files had encoding issues but core structure is evident"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Application Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "97cf15f1-8035-475e-9f48-5981e4ac4020",
+      "numericId": 16,
+      "content": "Host agent uses HTTP protocol while sub-agents use A2A protocol for agent-to-agent communication",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Based on CloudFormation ProtocolConfiguration: HTTP for host, A2A for monitoring and web search"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "41913890-b8d0-4dc7-8a80-daba134de30d",
+      "numericId": 17,
+      "content": "All agent runtimes deployed as ARM64 Docker containers on ECR with automated updates via EventBridge",
+      "tags": [
+        "Deployment",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CodeBuild uses ARM_CONTAINER, EventBridge triggers Lambda to update runtime on new ECR push"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "42f554e8-0e0a-46ee-a40b-9253713a7177",
+      "numericId": 18,
+      "content": "Frontend extracts JWT sub claim to use as actor ID in custom header for agent invocations",
+      "tags": [
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "chatService.ts extracts sub claim and sends in X-Amzn-Bedrock-AgentCore-Runtime-Custom-Actorid header"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "2a6ce2e9-9b7e-4714-9b40-ecdd238169ee",
+      "numericId": 19,
+      "content": "MCP Gateway uses Smithy model to define CloudWatch operations available to monitoring agent",
+      "tags": [
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Smithy model stored in S3, defines 7 operations: DescribeLogGroups, DescribeLogStreams, FilterLogEvents, GetLogEvents, ListMetrics, GetMetricStatistics, DescribeAlarms"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "bfbc0a20-e578-45a9-8765-3153cf6bba4f",
+      "numericId": 20,
+      "content": "Host agent creates lazy client factories to handle httpx client lifecycle across async event loops",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "LazyClientFactory in host_adk_agent/agent.py creates fresh authenticated httpx clients on demand"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "e3738c7f-6124-4c4d-8944-6da2d8939c49",
+      "numericId": 21,
+      "content": "Monitoring agent uses custom memory hooks for technical issue tracking with specialized extraction prompts",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "MonitoringMemoryHooks with custom semantic override for AWS monitoring context extraction"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "dfa874f3-1f61-4ccd-af63-1e9c18e5efcc",
+      "numericId": 22,
+      "content": "Web search agent uses multiple memory strategies: custom search query tracker, semantic, summary, and user preference",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Four memory strategies configured in web_search_agent.yaml with custom extraction for search patterns"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "2e23cb40-a83e-4e0a-94cf-ea542a20b7ee",
+      "numericId": 23,
+      "content": "OAuth2 credential providers created via Lambda custom resources during stack creation",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CodeBuildTriggerFunction creates OAuth2 providers for agents, GatewayOAuth2SetupFunction for gateway"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "6a23f27e-3432-48b3-b0b8-f8c5a3c128b8",
+      "numericId": 24,
+      "content": "X-Ray tracing configured via Lambda custom resources creating delivery sources, destinations, and deliveries",
+      "tags": [
+        "Observability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "XRayTracesSetupFunction creates CloudWatch Logs delivery pipeline to X-Ray for each runtime and gateway"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "105fce59-c617-49a9-ad8a-051c962ca97a",
+      "numericId": 25,
+      "content": "Cognito supports both M2M client credentials flow and PKCE authorization code flow",
+      "tags": [
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "WebUserPoolClient uses PKCE (public client, no secret), other clients use client credentials with secrets"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f73f945e-f10e-4998-abcb-f4d03efa5b50",
+      "numericId": 26,
+      "content": "Frontend uses SSE streaming to receive agent responses with JSON event parsing",
+      "tags": [
+        "Frontend",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "chatService.ts parses both SSE format (data: prefix) and plain JSON events from streaming response"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b893ad20-066f-4fbf-8995-7a0493718cf3",
+      "numericId": 27,
+      "content": "Agent runtimes use workload identity for authentication to AWS services and other agents",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "requires_access_token decorator in agent.py uses workload identity for M2M authentication"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "8e60bc28-df0d-4473-82d6-15e641d4fc93",
+      "numericId": 28,
+      "content": "CodeBuild performs parallel Docker build and ECR authentication to optimize build time",
+      "tags": [
+        "CI/CD",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "BuildSpec runs docker build and ECR login in parallel using background processes and wait"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "1bd51e9d-98cc-473f-b422-80c4da9e0067",
+      "numericId": 29,
+      "content": "Lambda functions upgrade boto3 at runtime to ensure latest bedrock-agentcore-control API support",
+      "tags": [
+        "Deployment",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "ECRImageNotificationFunction uses subprocess to pip install --upgrade boto3 to /tmp"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "9e0cec45-31b6-425b-9112-533456b73d71",
+      "numericId": 30,
+      "content": "Agent runtime updates preserve existing configuration while only updating container URI",
+      "tags": [
+        "Deployment",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Lambda gets current runtime config and passes all settings back except containerUri in update call"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Architecture Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "c25706fb-9f7c-4935-b4ca-04eefd76cb8a",
+      "numericId": 31,
+      "content": "Frontend extracts JWT sub claim as actor ID for all agent invocations",
+      "tags": [
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Based on chatService.ts extractSubFromToken function and custom header usage"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "c0db17f6-929f-47d6-a73c-d7f563733b4a",
+      "numericId": 32,
+      "content": "All agent-to-agent communication uses A2A protocol over HTTPS with M2M OAuth2 tokens",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Host agent creates lazy client factories with OAuth2 authentication for each sub-agent invocation"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "36848c48-df2c-4ecf-9506-89cb5fd41620",
+      "numericId": 33,
+      "content": "MCP Gateway acts as authenticated proxy between monitoring agent and CloudWatch APIs",
+      "tags": [
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Gateway uses OAuth2 token from workload identity, exposes 7 CloudWatch operations via Smithy model"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "453357d4-e7cb-44b6-9172-a49fb7a40758",
+      "numericId": 34,
+      "content": "Memory service stores conversation context per actor and session with custom extraction strategies",
+      "tags": [
+        "Memory",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Monitoring agent uses technical issue tracking, web search uses query patterns and semantic memory"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "8295a6b0-26e9-4535-9ca4-b73d73a721f8",
+      "numericId": 35,
+      "content": "EventBridge triggers Lambda to update agent runtime configuration when new ECR images are pushed",
+      "tags": [
+        "CI/CD",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Lambda upgrades boto3 at runtime and preserves existing config while updating container URI"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f0c9d1d0-caba-492b-ae25-baa712009912",
+      "numericId": 36,
+      "content": "All agent runtimes stream responses back to frontend using SSE format with JSON events",
+      "tags": [
+        "Frontend",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Frontend parses both SSE format with data: prefix and plain JSON events from streaming response"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "4f6edceb-5ebe-4189-8350-00801d292089",
+      "numericId": 37,
+      "content": "Cognito supports both user authentication (PKCE) and M2M authentication (client credentials)",
+      "tags": [
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "WebUserPoolClient uses PKCE without secret, other clients use client credentials with secrets in Secrets Manager"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "7f357ab7-d7f0-4fd7-9217-a46553bc682c",
+      "numericId": 38,
+      "content": "X-Ray tracing configured via Lambda custom resources creating delivery pipelines to CloudWatch Logs",
+      "tags": [
+        "Observability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Separate delivery sources, destinations, and deliveries for each runtime and gateway"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "6f972d92-8592-4542-ba7a-9a8a23a55374",
+      "numericId": 39,
+      "content": "Host agent uses HTTP protocol while monitoring and web search agents use A2A protocol",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Host agent accepts HTTP requests from frontend, sub-agents only accept A2A protocol from host"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "8259cecf-fb72-47f5-b3d6-000cad8abeaf",
+      "numericId": 40,
+      "content": "Agent runtimes use workload identity tokens to obtain OAuth2 access tokens for service-to-service calls",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "requires_access_token decorator and GetResourceOauth2Token API used for M2M authentication"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "7f3e2fb1-ee9d-49a6-be6a-f53c52cf1f14",
+      "numericId": 41,
+      "content": "CodeBuild performs parallel Docker build and ECR authentication to optimize build time",
+      "tags": [
+        "CI/CD",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "BuildSpec runs docker build and ECR login in parallel using background processes"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "be14f2be-aaba-41a3-a7e7-cc4ae89b0a66",
+      "numericId": 42,
+      "content": "Session management uses in-memory session service scoped by app name, user ID, and session ID",
+      "tags": [
+        "Session Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Google ADK InMemorySessionService creates sessions on first use for each actor"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "5fd250cd-9ce5-4db5-8d93-d211132353e4",
+      "numericId": 43,
+      "content": "Smithy model defines CloudWatch operations exposed by MCP Gateway to monitoring agent",
+      "tags": [
+        "Integration",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "7 operations: DescribeLogGroups, DescribeLogStreams, FilterLogEvents, GetLogEvents, ListMetrics, GetMetricStatistics, DescribeAlarms"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "6ab41146-3afd-4494-b308-56e2a4ea5b25",
+      "numericId": 44,
+      "content": "All agents use Claude Sonnet 4.5 model via Amazon Bedrock for LLM inference",
+      "tags": [
+        "AI Model",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Model ID: global.anthropic.claude-sonnet-4-5-20250929-v1:0 configured as environment variable"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "57bd7adc-e0fe-48ec-9756-d17e694a7853",
+      "numericId": 45,
+      "content": "Frontend uses AWS Amplify for Cognito integration and authentication flow management",
+      "tags": [
+        "Frontend",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Amplify configuration includes Cognito user pool and client IDs for PKCE flow"
+        },
+        {
+          "key": "custom:agent",
+          "value": "Dataflow Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "c3ce9aa4-1fed-4891-bbf6-445890ce8cde",
+      "numericId": 46,
+      "content": "TLS/HTTPS encryption is properly configured for all network communications",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Assumed that all HTTP communications use TLS 1.2+ with proper certificate validation. Not explicitly verified in code."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "f0479d18-28a5-4e1e-b63f-e99080722dac",
+      "numericId": 47,
+      "content": "IAM roles and policies follow principle of least privilege",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Assumed that IAM roles for agents, Lambda functions, and other services are properly scoped. CloudFormation templates show role definitions but detailed policy analysis not performed."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "9cd83104-127a-4ec0-9468-e1310556f03f",
+      "numericId": 48,
+      "content": "No rate limiting or throttling implemented at application layer",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "No evidence of rate limiting in frontend or agent runtime code. Relying on AWS service-level throttling only."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "fb77e1ab-1979-4f3f-be10-cef0286a26aa",
+      "numericId": 49,
+      "content": "Docker images are not signed or verified before deployment",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "No evidence of image signing with Docker Content Trust or AWS Signer in CodeBuild or deployment process."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b4b5440e-f3f0-416b-872d-4be67c747f73",
+      "numericId": 50,
+      "content": "Memory service data is not encrypted at rest",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "No explicit mention of encryption at rest for BedrockAgentCore Memory service. Assumed to use AWS default encryption but not verified."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "06a437b1-52fa-40e7-9768-20ccbdfe7380",
+      "numericId": 51,
+      "content": "JWT tokens are stored in browser localStorage or sessionStorage",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Frontend uses AWS Amplify which typically stores tokens in browser storage. Not explicitly verified in code but standard Amplify behavior."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "3f643357-fa29-4657-a782-5a2e56a3e8b5",
+      "numericId": 52,
+      "content": "No MFA configured for Cognito user authentication",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CloudFormation templates do not show MFA configuration for Cognito User Pool. Assumed MFA is not enforced."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "20b48469-c828-43a1-83ef-167983d115c4",
+      "numericId": 53,
+      "content": "Secrets Manager credentials do not have automatic rotation enabled",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "No evidence of automatic secret rotation for M2M client credentials in Secrets Manager configuration."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "2a5b5d43-d956-4650-8c95-0e8ec55eb604",
+      "numericId": 54,
+      "content": "CloudWatch Logs retention is configured but specific retention period unknown",
+      "tags": [
+        "Compliance",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "CloudWatch Logs used for X-Ray traces and application logs. Retention policy not explicitly defined in reviewed code."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b46eb58d-9521-4a1e-ae21-d23d38ae1823",
+      "numericId": 55,
+      "content": "A2A protocol communication occurs within AWS network boundaries",
+      "tags": [
+        "Architecture",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Assumed that agent-to-agent communication using A2A protocol stays within AWS VPC or private network. Not explicitly verified."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "59b87893-f079-47d8-b2c8-69273dc64382",
+      "numericId": 56,
+      "content": "Frontend implements standard XSS protection mechanisms",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "React framework provides some XSS protection by default. Assumed standard security headers and CSP are configured but not verified."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "b15d922a-0101-425d-abf0-b16b1435706b",
+      "numericId": 57,
+      "content": "Lambda functions have CloudWatch Logs encryption enabled",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Assumed Lambda function logs are encrypted using AWS managed keys. Not explicitly configured in CloudFormation templates."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "06e4ff4e-c1f3-4117-a150-1b8ae8456e3a",
+      "numericId": 58,
+      "content": "ECR repositories use image scanning but results are not enforced",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "ECR may have image scanning enabled but no evidence of blocking deployments based on scan results."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "6ce481d2-d2dd-4dae-bd2b-52b8815066c8",
+      "numericId": 59,
+      "content": "Tavily API credentials are stored securely but access is not restricted by IP or other controls",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Web search agent uses Tavily API. Assumed credentials are stored securely but no evidence of additional access controls."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "32172ca7-ead9-4b67-b8f9-d593ac371cfb",
+      "numericId": 60,
+      "content": "Agent memory isolation relies on actor ID from JWT sub claim",
+      "tags": [
+        "Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "Memory service uses actor ID for isolation. Assumed proper validation of JWT and actor ID but implementation details not fully verified."
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "a417ae65-816f-4ec1-b584-a4c84f850cd7",
+      "numericId": 1,
+      "content": "Implement prompt injection detection using Amazon Bedrock Guardrails with content filtering and denied topics to block malicious prompts attempting to extract memory data or manipulate agent behavior",
+      "tags": [
+        "Preventative",
+        "AI/LLM Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure Bedrock Guardrails with custom denied topics for memory extraction patterns, system prompt override attempts, and data exfiltration keywords. Apply guardrails to all agent invocations before processing.\n\n**Rationale**: Addresses prompt injection at the entry point before prompts reach the LLM. Bedrock Guardrails provides native integration with Claude models and can detect adversarial patterns.\n\n**Considerations**: Requires tuning to avoid false positives. Monitor guardrail rejection rates and adjust policies based on legitimate use cases."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "8a590c45-3023-4a29-8386-909c2cb5e6df",
+      "numericId": 2,
+      "content": "Enforce actor-based memory isolation by validating JWT sub claim against memory service queries and implementing server-side access controls to prevent cross-actor memory access",
+      "tags": [
+        "Preventative",
+        "Access Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Add middleware to agent runtime that extracts and validates JWT sub claim, then enforces that all memory service queries include actor ID filter. Implement memory service access controls that reject queries without proper actor scoping.\n\n**Rationale**: Prevents attackers with valid tokens from accessing other users' conversation history or technical issues stored in memory.\n\n**Considerations**: Requires modification to memory service client code and potential updates to BedrockAgentCore Memory API calls to enforce scoping."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "057b7ca0-bf4c-46e9-8e05-53914293ffda",
+      "numericId": 3,
+      "content": "Implement rate limiting using AWS WAF for frontend endpoints and API Gateway throttling for agent runtime invocations with per-user quotas based on JWT sub claim",
+      "tags": [
+        "Preventative",
+        "Availability",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Deploy AWS WAF in front of frontend with rate-based rules (e.g., 100 requests per 5 minutes per IP). Configure agent runtime with throttling limits (e.g., 10 concurrent invocations per user). Use JWT sub claim for user-level rate limiting.\n\n**Rationale**: Prevents DoS attacks and resource exhaustion from high-volume concurrent requests. Protects both Bedrock API quotas and agent runtime resources.\n\n**Considerations**: Set appropriate limits based on expected usage patterns. Monitor for legitimate users hitting limits and adjust accordingly."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "7370b308-fb78-4c2b-8dca-8ac897960510",
+      "numericId": 4,
+      "content": "Enable Cognito Advanced Security Features including adaptive authentication, compromised credentials detection, and require MFA for all user accounts accessing agent invocation capabilities",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable Cognito Advanced Security in User Pool configuration. Configure MFA using TOTP or SMS. Enable compromised credentials check against known breach databases. Implement adaptive authentication to require step-up authentication for sensitive operations.\n\n**Rationale**: Significantly reduces risk of credential stuffing, brute force, and account takeover attacks. Adaptive authentication adds context-aware security.\n\n**Considerations**: User experience impact from MFA enrollment. Consider phased rollout starting with high-privilege users."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "42a95e28-7b3e-40d4-85b2-59ae3e66f22d",
+      "numericId": 5,
+      "content": "Implement automatic secret rotation for M2M client credentials in Secrets Manager with 90-day rotation period and update OAuth2 credential providers to use rotated secrets",
+      "tags": [
+        "Preventative",
+        "Credential Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure Secrets Manager automatic rotation using Lambda rotation function. Update Cognito app client secrets on rotation. Modify OAuth2 credential providers to fetch secrets from Secrets Manager on each token request rather than caching.\n\n**Rationale**: Limits exposure window if M2M credentials are compromised. Reduces risk of long-term credential theft from Secrets Manager.\n\n**Considerations**: Requires coordination between secret rotation and agent runtime credential refresh. Test rotation process thoroughly to avoid service disruption."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "549aaf13-d0c8-437f-8e35-2f0c43345d7f",
+      "numericId": 6,
+      "content": "Implement least-privilege IAM policies for Secrets Manager access with resource-level permissions restricting each agent to only its own client credentials",
+      "tags": [
+        "Preventative",
+        "Access Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Create separate IAM policies for each agent runtime that grant GetSecretValue only for their specific secret ARN. Remove wildcard permissions. Implement IAM condition keys to restrict access by resource tags.\n\n**Rationale**: Prevents lateral movement where compromised agent credentials allow access to other agents' secrets. Limits blast radius of credential compromise.\n\n**Considerations**: Review and update CloudFormation templates to implement granular IAM policies. Test each agent runtime can only access its designated secrets."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "933826f9-9527-4511-a6b0-a33575854580",
+      "numericId": 7,
+      "content": "Enable ECR image scanning with automatic scanning on push and implement admission control to block deployment of images with HIGH or CRITICAL vulnerabilities",
+      "tags": [
+        "Preventative",
+        "Container Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable ECR enhanced scanning (Inspector integration) for all repositories. Modify ECRImageNotificationFunction Lambda to check scan results before updating runtime. Reject runtime updates if scan finds HIGH/CRITICAL vulnerabilities.\n\n**Rationale**: Prevents deployment of vulnerable container images that could be exploited. Provides continuous vulnerability assessment of agent runtime containers.\n\n**Considerations**: May require vulnerability remediation workflow. Consider grace period for existing vulnerabilities with compensating controls."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "b24f5872-c036-461b-ade8-da4fdf7d2523",
+      "numericId": 8,
+      "content": "Implement Docker image signing using AWS Signer and verify image signatures in Lambda function before updating agent runtime configuration",
+      "tags": [
+        "Preventative",
+        "Container Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure AWS Signer signing profile for container images. Update CodeBuild to sign images after build using docker trust sign. Modify ECRImageNotificationFunction to verify image signature using AWS Signer API before updating runtime.\n\n**Rationale**: Ensures only images built by authorized CodeBuild project are deployed. Prevents deployment of malicious images pushed directly to ECR.\n\n**Considerations**: Requires integration with AWS Signer and modification to build pipeline. Test signature verification thoroughly to avoid blocking legitimate deployments."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "235cf09e-bc6e-4ef3-a4fc-88d5fae0b124",
+      "numericId": 9,
+      "content": "Implement EventBridge rule conditions to validate ECR push events originate from authorized CodeBuild project ARN before triggering Lambda runtime updates",
+      "tags": [
+        "Preventative",
+        "CI/CD Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Add event pattern filtering to EventBridge rule that checks detail.requestParameters.sourceArn matches authorized CodeBuild project ARN. Implement additional validation in Lambda to verify event source and reject unauthorized updates.\n\n**Rationale**: Prevents attackers from triggering runtime updates with crafted EventBridge events. Ensures only legitimate build pipeline can update agent containers.\n\n**Considerations**: Requires understanding of ECR push event structure. Test with actual CodeBuild pushes to ensure legitimate events are not blocked."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "b86fe9f4-9de9-463a-8bd2-b54fac268779",
+      "numericId": 10,
+      "content": "Implement resource-based policy on Lambda functions to restrict invocation to EventBridge rules and require event signature validation",
+      "tags": [
+        "Preventative",
+        "Access Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Add Lambda resource-based policy that allows invocation only from specific EventBridge rule ARNs. Remove any wildcard permissions. Implement event signature validation in Lambda code to verify events are authentic.\n\n**Rationale**: Prevents direct Lambda invocation by unauthorized actors. Ensures Lambda functions can only be triggered through legitimate EventBridge rules.\n\n**Considerations**: Review all Lambda functions that handle sensitive operations (ECR notifications, X-Ray setup, OAuth2 configuration). Update CloudFormation to implement restrictive policies."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "6e4c8228-abec-448f-9c0d-6a2f9b569031",
+      "numericId": 11,
+      "content": "Implement CloudWatch Logs resource-based policies to restrict MCP Gateway access to specific log groups using IAM conditions and resource tags",
+      "tags": [
+        "Preventative",
+        "Access Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Tag CloudWatch log groups by sensitivity level. Update MCP Gateway IAM role to include condition keys that restrict access based on resource tags. Implement deny policies for production log groups unless explicitly authorized.\n\n**Rationale**: Limits scope of CloudWatch data accessible through monitoring agent. Prevents exfiltration of sensitive production logs even if monitoring agent credentials are compromised.\n\n**Considerations**: Requires log group tagging strategy. May need separate monitoring agents for different environments with scoped permissions."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "be3e4997-bec2-4337-ba6d-dbdd490919d3",
+      "numericId": 12,
+      "content": "Enable CloudWatch Logs Insights query logging and implement anomaly detection for unusual query patterns indicating data exfiltration attempts",
+      "tags": [
+        "Detective",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable CloudWatch Logs query logging for all log groups accessed by MCP Gateway. Create CloudWatch Insights queries to detect anomalies like high-volume log retrieval, unusual time patterns, or queries for sensitive log groups. Set up CloudWatch Alarms for anomaly thresholds.\n\n**Rationale**: Provides visibility into CloudWatch data access patterns. Enables detection of credential compromise or insider threats attempting data exfiltration.\n\n**Considerations**: Requires baseline of normal query patterns. Tune detection thresholds to minimize false positives while catching genuine threats."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "3eb9c54a-cacc-4bf5-9684-a92ddf4bca25",
+      "numericId": 13,
+      "content": "Implement Content Security Policy (CSP) headers in frontend with strict-dynamic and nonce-based script execution to prevent XSS attacks and token theft",
+      "tags": [
+        "Preventative",
+        "Web Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure web server to send CSP headers with script-src 'strict-dynamic' and nonce-based script loading. Disable unsafe-inline and unsafe-eval. Implement nonce generation in Vite build process. Add additional headers: X-Frame-Options, X-Content-Type-Options, Referrer-Policy.\n\n**Rationale**: Prevents injection of malicious JavaScript that could steal JWT tokens from browser storage. Strict CSP significantly reduces XSS attack surface.\n\n**Considerations**: Requires refactoring inline scripts to use nonces. Test thoroughly with all frontend features. May break third-party integrations that use inline scripts."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "ebfeb18d-b30d-4bb9-8d98-3d416f6d1911",
+      "numericId": 14,
+      "content": "Implement Subresource Integrity (SRI) for all external JavaScript dependencies and enable npm audit in CI/CD pipeline to block builds with known vulnerabilities",
+      "tags": [
+        "Preventative",
+        "Supply Chain Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure Vite to generate SRI hashes for all script and style tags. Add npm audit check to CodeBuild buildspec that fails build if HIGH/CRITICAL vulnerabilities detected. Implement dependency scanning using npm audit or Snyk.\n\n**Rationale**: Prevents compromised CDN or npm packages from injecting malicious code. Ensures frontend dependencies are verified before execution.\n\n**Considerations**: Requires process for updating dependencies when vulnerabilities found. SRI may complicate dynamic script loading if used."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "d9a7ed35-27d6-4e29-9ce0-863268933294",
+      "numericId": 15,
+      "content": "Enable encryption at rest for BedrockAgentCore Memory service using AWS KMS customer-managed keys with key rotation and access logging",
+      "tags": [
+        "Preventative",
+        "Data Protection",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure BedrockAgentCore Memory service to use KMS CMK for encryption at rest. Enable automatic key rotation. Configure KMS key policy to restrict access to agent runtimes only. Enable CloudTrail logging for all KMS key usage.\n\n**Rationale**: Protects conversation context and technical issue data at rest. Provides audit trail of memory data access. Key rotation limits exposure from key compromise.\n\n**Considerations**: Verify BedrockAgentCore Memory supports CMK encryption. May have performance impact from KMS API calls. Monitor KMS costs and request limits."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "961cf9f2-8d1e-4df3-a696-033183751faf",
+      "numericId": 16,
+      "content": "Implement memory data access logging with CloudTrail and create CloudWatch alarms for unusual memory access patterns or cross-actor access attempts",
+      "tags": [
+        "Detective",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable CloudTrail data events for BedrockAgentCore Memory service API calls. Create CloudWatch Logs Insights queries to detect anomalies like high-volume memory reads, access outside normal hours, or attempts to query memories for different actors. Set up alarms for threshold breaches.\n\n**Rationale**: Provides visibility into memory data access. Enables detection of compromised credentials or attempts to exfiltrate conversation history.\n\n**Considerations**: CloudTrail data events can be expensive at scale. Consider sampling or filtering to critical operations only."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "5afe56d4-3fe3-414e-a971-700009c42937",
+      "numericId": 17,
+      "content": "Implement network segmentation using VPC with private subnets for agent runtimes and VPC endpoints for AWS service access to prevent internet exposure",
+      "tags": [
+        "Preventative",
+        "Network Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Deploy agent runtimes in VPC private subnets with no internet gateway. Create VPC endpoints for Bedrock, Secrets Manager, CloudWatch, and other AWS services. Implement security groups restricting agent-to-agent communication to required ports only. Use Network ACLs for additional layer of defense.\n\n**Rationale**: Eliminates internet-based attack vectors against agent runtimes. Prevents data exfiltration to external endpoints. Reduces risk of man-in-the-middle attacks on A2A protocol.\n\n**Considerations**: Requires VPC configuration in CloudFormation. May need NAT Gateway for outbound internet access (e.g., Tavily API). Test all agent communication paths work through VPC endpoints."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "0148dc5c-677c-46df-904d-dd04edc0daa2",
+      "numericId": 18,
+      "content": "Enable VPC Flow Logs and implement network traffic analysis to detect anomalous communication patterns between agents or data exfiltration attempts",
+      "tags": [
+        "Detective",
+        "Network Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable VPC Flow Logs for all subnets containing agent runtimes. Send logs to CloudWatch Logs. Create CloudWatch Insights queries to detect anomalies like unexpected destination IPs, high-volume data transfers, or communication outside normal patterns. Use Amazon GuardDuty VPC Flow Log analysis.\n\n**Rationale**: Provides visibility into network-level threats. Enables detection of compromised agents attempting lateral movement or data exfiltration.\n\n**Considerations**: VPC Flow Logs can generate significant data volume. Consider filtering to rejected traffic or specific security groups. Use sampling if cost is concern."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "52e2cc1d-faad-40b0-96ab-951ebf154311",
+      "numericId": 19,
+      "content": "Implement S3 bucket policies with encryption enforcement and versioning for Smithy model storage, with CloudTrail logging of all object modifications",
+      "tags": [
+        "Preventative",
+        "Data Protection",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure S3 bucket policy requiring encryption for all PutObject operations. Enable versioning to maintain history of Smithy model changes. Enable S3 Object Lock to prevent deletion. Configure CloudTrail to log all S3 data events. Implement IAM policies restricting write access to authorized deployment roles only.\n\n**Rationale**: Prevents unauthorized modification of Smithy model that defines MCP Gateway operations. Provides audit trail and ability to rollback malicious changes.\n\n**Considerations**: Versioning increases storage costs. Implement lifecycle policy to archive old versions. Test MCP Gateway handles model updates correctly."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "4dce2647-0331-425b-b759-09b1b2d5950a",
+      "numericId": 20,
+      "content": "Implement Smithy model validation in MCP Gateway startup that verifies model signature and checksums before loading operations",
+      "tags": [
+        "Preventative",
+        "Integrity",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Generate and store cryptographic hash of approved Smithy model in SSM Parameter Store. Modify MCP Gateway startup code to download model, compute hash, and compare against stored value. Reject startup if hash mismatch. Implement model signing using AWS Signer.\n\n**Rationale**: Detects tampering with Smithy model before malicious operations can be exposed. Ensures MCP Gateway only loads authorized CloudWatch operation definitions.\n\n**Considerations**: Requires process for updating hash when model legitimately changes. Consider using AWS Signer for more robust signature verification."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "cf8d39aa-4cef-4b70-91c6-ddb530ba37cf",
+      "numericId": 21,
+      "content": "Implement IAM policies with explicit deny for sensitive Bedrock operations and enforce resource-based policies requiring specific agent runtime ARNs",
+      "tags": [
+        "Preventative",
+        "Access Control",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Create IAM policies with explicit deny for Bedrock model management operations (CreateModel, DeleteModel, etc.). Implement condition keys requiring requests come from specific agent runtime ARNs. Use AWS Organizations SCPs to enforce policies across accounts.\n\n**Rationale**: Prevents compromised credentials from being used for unauthorized Bedrock operations. Limits blast radius of credential compromise to agent invocation only.\n\n**Considerations**: Review all Bedrock API operations and determine which should be explicitly denied. Test agent runtimes can still perform legitimate inference operations."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "2cd75e30-f01e-455c-a07b-8b0baf83dd7a",
+      "numericId": 22,
+      "content": "Enable AWS CloudTrail for Bedrock API calls and implement CloudWatch alarms for high-volume inference requests or unusual usage patterns",
+      "tags": [
+        "Detective",
+        "Monitoring",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable CloudTrail logging for all Bedrock API calls. Create CloudWatch metrics from logs tracking invocation count, token usage, and error rates per agent. Set up alarms for anomalies like sudden spike in invocations, high error rates, or usage outside normal hours.\n\n**Rationale**: Provides visibility into Bedrock usage and enables detection of compromised credentials or DoS attacks. Helps identify quota exhaustion risks.\n\n**Considerations**: CloudTrail logs can be expensive for high-volume APIs. Consider filtering to specific operations or using CloudWatch metrics instead of full logging."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "bd18bad9-bb5f-4847-8e70-5f4bffd95c2e",
+      "numericId": 23,
+      "content": "Implement CodeBuild source integrity validation using CodeCommit branch protection and require signed commits for all code changes",
+      "tags": [
+        "Preventative",
+        "Supply Chain Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: If using CodeCommit, enable branch protection requiring pull request reviews and signed commits. Configure CodeBuild to verify commit signatures before build. Implement approval workflow requiring security review for changes to buildspec.yml or Dockerfiles.\n\n**Rationale**: Prevents unauthorized modification of build process. Ensures only approved code changes are built and deployed to agent runtimes.\n\n**Considerations**: Requires Git signing setup for all developers. May slow down development workflow. Consider automated security scanning in PR process."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "e0cffc0e-5ad5-473d-8370-722b92d536bd",
+      "numericId": 24,
+      "content": "Implement input validation and sanitization for web search queries to prevent injection attacks and limit query scope to approved domains",
+      "tags": [
+        "Preventative",
+        "Input Validation",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Add query validation in web search agent that checks for SQL injection patterns, command injection attempts, and malicious URLs. Implement allowlist of approved search domains (e.g., AWS documentation sites only). Sanitize query strings before passing to Tavily API.\n\n**Rationale**: Prevents attackers from using web search agent to probe internal systems or exfiltrate data through search queries. Limits search scope to legitimate use cases.\n\n**Considerations**: May limit functionality if search needs to cover broad internet. Consider implementing query review workflow for sensitive searches."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "c12f9abd-3ff1-4a1b-93a9-69eb031ee18e",
+      "numericId": 25,
+      "content": "Implement session timeout and idle timeout policies in frontend with automatic token refresh and secure token storage using httpOnly cookies instead of localStorage",
+      "tags": [
+        "Preventative",
+        "Session Management",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure Cognito token expiration to 1 hour. Implement frontend idle timeout (e.g., 15 minutes) that clears session. Move JWT storage from localStorage to httpOnly, Secure, SameSite cookies. Implement automatic token refresh using refresh token before expiration.\n\n**Rationale**: Limits window of opportunity for stolen tokens. httpOnly cookies prevent JavaScript access, mitigating XSS token theft. Idle timeout reduces risk from unattended sessions.\n\n**Considerations**: Requires backend changes to handle cookie-based authentication. May impact user experience with frequent re-authentication. Test token refresh flow thoroughly."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "d6600406-d647-43b9-b422-696da82542c8",
+      "numericId": 26,
+      "content": "Enable AWS GuardDuty for threat detection across EC2, S3, and IAM with automated response using EventBridge and Lambda for high-severity findings",
+      "tags": [
+        "Detective",
+        "Threat Detection",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable GuardDuty in AWS account. Configure EventBridge rules to trigger Lambda functions for high-severity findings (e.g., compromised credentials, unusual API calls). Implement automated response actions like disabling compromised IAM users, revoking tokens, or isolating compromised resources.\n\n**Rationale**: Provides continuous threat detection using machine learning and threat intelligence. Enables rapid response to security incidents before significant damage occurs.\n\n**Considerations**: GuardDuty has monthly costs based on data volume. Test automated response actions carefully to avoid false positive disruptions. Implement notification workflow for security team."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "1b362d00-fa17-4147-b732-8c80f0d7513b",
+      "numericId": 27,
+      "content": "Implement centralized security logging with CloudWatch Logs aggregation and retention policies, with automated alerting for security events using CloudWatch Insights",
+      "tags": [
+        "Detective",
+        "Logging",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Aggregate all security-relevant logs (CloudTrail, VPC Flow Logs, application logs, X-Ray traces) into dedicated CloudWatch Log Groups. Implement 90-day retention for compliance. Create CloudWatch Insights queries for security events (failed auth, privilege escalation, unusual API calls). Set up SNS notifications for critical events.\n\n**Rationale**: Provides centralized visibility for security monitoring and incident response. Enables correlation of events across different services. Supports compliance requirements for log retention.\n\n**Considerations**: Log aggregation and retention costs can be significant. Consider using S3 for long-term archive with lifecycle policies. Implement log filtering to reduce noise."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "08241125-4657-49c8-98fc-f537497a8fbc",
+      "numericId": 28,
+      "content": "Implement X-Ray trace data sanitization to remove sensitive information (credentials, PII, internal IPs) before writing to CloudWatch Logs",
+      "tags": [
+        "Preventative",
+        "Data Protection",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Configure X-Ray SDK to use custom sampling rules that exclude sensitive annotations. Implement trace data sanitization in agent runtime code that redacts credentials, tokens, and PII before sending to X-Ray. Use X-Ray filter expressions to exclude sensitive segments.\n\n**Rationale**: Prevents exposure of sensitive information through X-Ray traces. Reduces risk from unauthorized access to CloudWatch Logs containing trace data.\n\n**Considerations**: May reduce debugging capabilities if too much data is sanitized. Balance security with operational needs. Test sanitization doesn't break trace analysis."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "71b21ef2-c71f-4416-b2c0-838765e6a17f",
+      "numericId": 29,
+      "content": "Implement Lambda function versioning and aliases with gradual deployment using CodeDeploy to detect and rollback malicious code changes",
+      "tags": [
+        "Detective",
+        "CI/CD Security",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable Lambda versioning for all functions. Create production alias pointing to stable version. Configure CodeDeploy for Lambda with Linear10PercentEvery1Minute deployment. Implement CloudWatch alarms monitoring error rates and invocation counts as deployment health checks. Automatic rollback on alarm.\n\n**Rationale**: Limits blast radius of malicious Lambda code changes. Enables rapid detection and rollback if modified function exhibits anomalous behavior.\n\n**Considerations**: Requires CloudWatch alarms tuned to detect malicious behavior vs. normal errors. May slow down deployment process. Test rollback procedures thoroughly."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    },
+    {
+      "id": "b45773e1-2353-4077-bb4b-767350e2cf7b",
+      "numericId": 30,
+      "content": "Implement Cognito user pool account takeover protection with risk-based authentication and automated account lockout for suspicious activity",
+      "tags": [
+        "Preventative",
+        "Authentication",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "Comments",
+          "value": "**Implementation**: Enable Cognito Advanced Security risk-based authentication. Configure account takeover protection to detect suspicious sign-ins (new device, new location, unusual time). Implement automated actions like requiring MFA, blocking sign-in, or sending notification. Configure account lockout after 5 failed attempts.\n\n**Rationale**: Provides adaptive security that responds to authentication threats in real-time. Reduces risk of credential stuffing and account takeover.\n\n**Considerations**: May impact legitimate users traveling or using new devices. Implement user-friendly account recovery process. Monitor false positive rates and adjust risk thresholds."
+        },
+        {
+          "key": "custom:agent",
+          "value": "Defender Persona Agent"
+        }
+      ]
+    }
+  ],
+  "assumptionLinks": [
+    {
+      "type": "Threat",
+      "assumptionId": "c3ce9aa4-1fed-4891-bbf6-445890ce8cde",
+      "linkedId": "07011ddf-24d7-4031-92cc-992ad7918e2d"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "c3ce9aa4-1fed-4891-bbf6-445890ce8cde",
+      "linkedId": "717fb980-85c9-48ca-bfaf-50025681b27e"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "f0479d18-28a5-4e1e-b63f-e99080722dac",
+      "linkedId": "5accbbde-2ddf-4d66-a043-2b25f5ba58e5"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "9cd83104-127a-4ec0-9468-e1310556f03f",
+      "linkedId": "42afe65a-eaa3-455c-b4c9-f19ee6939f36"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "fb77e1ab-1979-4f3f-be10-cef0286a26aa",
+      "linkedId": "4dfaa02c-d328-47d8-96a4-515b023fcbf8"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "b4b5440e-f3f0-416b-872d-4be67c747f73",
+      "linkedId": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "06a437b1-52fa-40e7-9768-20ccbdfe7380",
+      "linkedId": "9c79cfd8-a6f7-493c-9868-c9829d7060d7"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "3f643357-fa29-4657-a782-5a2e56a3e8b5",
+      "linkedId": "70815ea4-8b1a-4ec8-9d52-01a477b9c77e"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "20b48469-c828-43a1-83ef-167983d115c4",
+      "linkedId": "d2072ad8-c676-444a-8bf6-f8fa606e548e"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "b46eb58d-9521-4a1e-ae21-d23d38ae1823",
+      "linkedId": "717fb980-85c9-48ca-bfaf-50025681b27e"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "59b87893-f079-47d8-b2c8-69273dc64382",
+      "linkedId": "9c79cfd8-a6f7-493c-9868-c9829d7060d7"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "6ce481d2-d2dd-4dae-bd2b-52b8815066c8",
+      "linkedId": "06e4ff4e-c1f3-4117-a150-1b8ae8456e3a"
+    },
+    {
+      "type": "Threat",
+      "assumptionId": "32172ca7-ead9-4b67-b8f9-d593ac371cfb",
+      "linkedId": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9"
+    }
+  ],
+  "mitigationLinks": [
+    {
+      "mitigationId": "a417ae65-816f-4ec1-b584-a4c84f850cd7",
+      "linkedId": "02e8cc95-f661-4165-bd1b-da0219b65f83"
+    },
+    {
+      "mitigationId": "8a590c45-3023-4a29-8386-909c2cb5e6df",
+      "linkedId": "02e8cc95-f661-4165-bd1b-da0219b65f83"
+    },
+    {
+      "mitigationId": "057b7ca0-bf4c-46e9-8e05-53914293ffda",
+      "linkedId": "42afe65a-eaa3-455c-b4c9-f19ee6939f36"
+    },
+    {
+      "mitigationId": "7370b308-fb78-4c2b-8dca-8ac897960510",
+      "linkedId": "a5c0d477-4b0b-43ac-b093-98fa47de6be8"
+    },
+    {
+      "mitigationId": "42a95e28-7b3e-40d4-85b2-59ae3e66f22d",
+      "linkedId": "d2072ad8-c676-444a-8bf6-f8fa606e548e"
+    },
+    {
+      "mitigationId": "549aaf13-d0c8-437f-8e35-2f0c43345d7f",
+      "linkedId": "d2072ad8-c676-444a-8bf6-f8fa606e548e"
+    },
+    {
+      "mitigationId": "933826f9-9527-4511-a6b0-a33575854580",
+      "linkedId": "4dfaa02c-d328-47d8-96a4-515b023fcbf8"
+    },
+    {
+      "mitigationId": "b24f5872-c036-461b-ade8-da4fdf7d2523",
+      "linkedId": "4dfaa02c-d328-47d8-96a4-515b023fcbf8"
+    },
+    {
+      "mitigationId": "235cf09e-bc6e-4ef3-a4fc-88d5fae0b124",
+      "linkedId": "89b338bd-c730-4b01-ab60-68ecd529de81"
+    },
+    {
+      "mitigationId": "b86fe9f4-9de9-463a-8bd2-b54fac268779",
+      "linkedId": "89b338bd-c730-4b01-ab60-68ecd529de81"
+    },
+    {
+      "mitigationId": "6e4c8228-abec-448f-9c0d-6a2f9b569031",
+      "linkedId": "5fe821db-3799-4fde-88ad-d0db31756e48"
+    },
+    {
+      "mitigationId": "be3e4997-bec2-4337-ba6d-dbdd490919d3",
+      "linkedId": "5fe821db-3799-4fde-88ad-d0db31756e48"
+    },
+    {
+      "mitigationId": "3eb9c54a-cacc-4bf5-9684-a92ddf4bca25",
+      "linkedId": "9c79cfd8-a6f7-493c-9868-c9829d7060d7"
+    },
+    {
+      "mitigationId": "ebfeb18d-b30d-4bb9-8d98-3d416f6d1911",
+      "linkedId": "9c79cfd8-a6f7-493c-9868-c9829d7060d7"
+    },
+    {
+      "mitigationId": "d9a7ed35-27d6-4e29-9ce0-863268933294",
+      "linkedId": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9"
+    },
+    {
+      "mitigationId": "961cf9f2-8d1e-4df3-a696-033183751faf",
+      "linkedId": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9"
+    },
+    {
+      "mitigationId": "0148dc5c-677c-46df-904d-dd04edc0daa2",
+      "linkedId": "717fb980-85c9-48ca-bfaf-50025681b27e"
+    },
+    {
+      "mitigationId": "5afe56d4-3fe3-414e-a971-700009c42937",
+      "linkedId": "717fb980-85c9-48ca-bfaf-50025681b27e"
+    },
+    {
+      "mitigationId": "52e2cc1d-faad-40b0-96ab-951ebf154311",
+      "linkedId": "0e81dd3a-dcd5-48e4-aac5-4df14a042262"
+    },
+    {
+      "mitigationId": "4dce2647-0331-425b-b759-09b1b2d5950a",
+      "linkedId": "0e81dd3a-dcd5-48e4-aac5-4df14a042262"
+    },
+    {
+      "mitigationId": "cf8d39aa-4cef-4b70-91c6-ddb530ba37cf",
+      "linkedId": "7f84cddd-bcbc-42ce-a47a-1878b6e32eca"
+    },
+    {
+      "mitigationId": "2cd75e30-f01e-455c-a07b-8b0baf83dd7a",
+      "linkedId": "7f84cddd-bcbc-42ce-a47a-1878b6e32eca"
+    },
+    {
+      "mitigationId": "bd18bad9-bb5f-4847-8e70-5f4bffd95c2e",
+      "linkedId": "602c5fe8-dff5-43ee-996d-11d19644098d"
+    },
+    {
+      "mitigationId": "e0cffc0e-5ad5-473d-8370-722b92d536bd",
+      "linkedId": "e4e5993d-2928-44a5-bba5-db2497eda1f7"
+    },
+    {
+      "mitigationId": "b45773e1-2353-4077-bb4b-767350e2cf7b",
+      "linkedId": "70815ea4-8b1a-4ec8-9d52-01a477b9c77e"
+    },
+    {
+      "mitigationId": "c12f9abd-3ff1-4a1b-93a9-69eb031ee18e",
+      "linkedId": "3ca729a2-2eda-412d-8be8-395751521831"
+    },
+    {
+      "mitigationId": "71b21ef2-c71f-4416-b2c0-838765e6a17f",
+      "linkedId": "5accbbde-2ddf-4d66-a043-2b25f5ba58e5"
+    },
+    {
+      "mitigationId": "08241125-4657-49c8-98fc-f537497a8fbc",
+      "linkedId": "e8c1079f-96f5-4877-b489-43de58fb2f75"
+    },
+    {
+      "mitigationId": "b86fe9f4-9de9-463a-8bd2-b54fac268779",
+      "linkedId": "0c45f223-4b42-47da-889f-e752c778722e"
+    },
+    {
+      "mitigationId": "d6600406-d647-43b9-b422-696da82542c8",
+      "linkedId": "02e8cc95-f661-4165-bd1b-da0219b65f83"
+    },
+    {
+      "mitigationId": "d6600406-d647-43b9-b422-696da82542c8",
+      "linkedId": "d2072ad8-c676-444a-8bf6-f8fa606e548e"
+    },
+    {
+      "mitigationId": "d6600406-d647-43b9-b422-696da82542c8",
+      "linkedId": "5fe821db-3799-4fde-88ad-d0db31756e48"
+    },
+    {
+      "mitigationId": "1b362d00-fa17-4147-b732-8c80f0d7513b",
+      "linkedId": "e8c1079f-96f5-4877-b489-43de58fb2f75"
+    },
+    {
+      "mitigationId": "1b362d00-fa17-4147-b732-8c80f0d7513b",
+      "linkedId": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9"
+    }
+  ],
+  "threats": [
+    {
+      "id": "02e8cc95-f661-4165-bd1b-da0219b65f83",
+      "numericId": 1,
+      "threatSource": "internet-based actor",
+      "prerequisites": "with access to a valid JWT token from a compromised user session",
+      "threatAction": "inject malicious prompts into agent invocations to manipulate LLM behavior or extract sensitive information from memory service",
+      "threatImpact": "unauthorized access to conversation history, technical issues, or CloudWatch data stored in agent memory",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "bedrock agentcore memory service",
+        "conversation context",
+        "technical issue data"
+      ],
+      "statement": "An internet-based actor with access to a valid JWT token from a compromised user session can inject malicious prompts into agent invocations to manipulate LLM behavior or extract sensitive information from memory service, which leads to unauthorized access to conversation history, technical issues, or CloudWatch data stored in agent memory, resulting in reduced confidentiality of bedrock agentcore memory service, conversation context, technical issue data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-02",
+        "DF-09",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "I",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker obtains valid JWT through session hijacking, XSS, or credential theft. Uses token to invoke agents with crafted prompts designed to extract information from memory or manipulate agent behavior.\n\n**Technical Details**: Memory service stores conversation context and technical issues per actor. Malicious prompts could attempt to retrieve other users' data or manipulate agent responses.\n\n**Business Impact**: Exposure of sensitive CloudWatch data, AWS infrastructure details, or user conversation history."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "a5c0d477-4b0b-43ac-b093-98fa47de6be8",
+      "numericId": 2,
+      "threatSource": "actor",
+      "prerequisites": "with network access to cognito oauth2 token endpoint",
+      "threatAction": "perform credential stuffing or brute force attacks against m2m client credentials to obtain oauth2 access tokens",
+      "threatImpact": "unauthorized agent-to-agent communication and potential access to cloudwatch operations",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity",
+        "availability"
+      ],
+      "impactedAssets": [
+        "oauth2 m2m tokens",
+        "agent runtime authentication",
+        "cloudwatch logs and metrics"
+      ],
+      "statement": "An actor with network access to cognito oauth2 token endpoint can perform credential stuffing or brute force attacks against m2m client credentials to obtain oauth2 access tokens, which leads to unauthorized agent-to-agent communication and potential access to cloudwatch operations, resulting in reduced confidentiality of oauth2 m2m tokens, agent runtime authentication, cloudwatch logs and metrics.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-05",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker attempts to guess or brute force M2M client credentials stored in Secrets Manager or intercept them during OAuth2 token exchange.\n\n**Technical Details**: Four Cognito clients configured for M2M authentication. If credentials are weak or leaked, attacker can impersonate agents.\n\n**Business Impact**: Unauthorized access to CloudWatch monitoring data, ability to invoke agents without proper authorization, potential for lateral movement within agent ecosystem."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "d2072ad8-c676-444a-8bf6-f8fa606e548e",
+      "numericId": 3,
+      "threatSource": "internal actor",
+      "prerequisites": "with access to secrets manager",
+      "threatAction": "extract m2m client credentials and use them to impersonate agent runtimes",
+      "threatImpact": "unauthorized invocation of monitoring or web search agents with malicious parameters",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "m2m client credentials",
+        "agent runtime identities",
+        "cloudwatch data"
+      ],
+      "statement": "An internal actor with access to secrets manager can extract m2m client credentials and use them to impersonate agent runtimes, which leads to unauthorized invocation of monitoring or web search agents with malicious parameters, resulting in reduced confidentiality of m2m client credentials, agent runtime identities, cloudwatch data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-05",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Insider threat or compromised AWS credentials with Secrets Manager read permissions. Attacker extracts OAuth2 client secrets for agent M2M authentication.\n\n**Technical Details**: Client credentials stored in Secrets Manager for Host, Monitoring, and Gateway clients. No rotation policy mentioned in code.\n\n**Business Impact**: Complete compromise of agent authentication, ability to invoke agents as legitimate services, access to CloudWatch monitoring capabilities."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "07011ddf-24d7-4031-92cc-992ad7918e2d",
+      "numericId": 4,
+      "threatSource": "actor",
+      "prerequisites": "with ability to intercept network traffic between frontend and host agent runtime",
+      "threatAction": "capture jwt tokens or session identifiers from streaming sse responses",
+      "threatImpact": "session hijacking and unauthorized access to user's agent interactions",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "jwt tokens",
+        "session identifiers",
+        "user conversation data"
+      ],
+      "statement": "An actor with ability to intercept network traffic between frontend and host agent runtime can capture jwt tokens or session identifiers from streaming sse responses, which leads to session hijacking and unauthorized access to user's agent interactions, resulting in reduced confidentiality of jwt tokens, session identifiers, user conversation data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-02",
+        "DF-03",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Man-in-the-middle attack on network path between user and AWS. Attacker intercepts SSE streaming responses containing session data.\n\n**Technical Details**: Frontend uses SSE for streaming responses. If TLS is misconfigured or compromised, tokens and session data could be exposed.\n\n**Business Impact**: Account takeover, unauthorized access to user's conversation history and agent capabilities."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "4dfaa02c-d328-47d8-96a4-515b023fcbf8",
+      "numericId": 5,
+      "threatSource": "actor",
+      "prerequisites": "with access to ecr repository write permissions",
+      "threatAction": "push malicious docker images to ecr repositories to replace legitimate agent containers",
+      "threatImpact": "code execution within agent runtime environment with access to aws services and credentials",
+      "impactedGoal": [
+        "integrity",
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "agent runtime containers",
+        "aws credentials",
+        "cloudwatch data",
+        "bedrock api access"
+      ],
+      "statement": "An actor with access to ecr repository write permissions can push malicious docker images to ecr repositories to replace legitimate agent containers, which leads to code execution within agent runtime environment with access to aws services and credentials, resulting in reduced integrity of agent runtime containers, aws credentials, cloudwatch data, bedrock api access.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-10",
+        "DF-11",
+        "DF-12",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Compromised AWS credentials with ECR push permissions. Attacker pushes malicious container image which triggers EventBridge to auto-update runtime.\n\n**Technical Details**: EventBridge automatically triggers Lambda to update agent runtime when new ECR image is pushed. No image signing or verification mentioned.\n\n**Business Impact**: Complete compromise of agent runtime, access to workload identity tokens, ability to access CloudWatch, Bedrock, and other AWS services with agent IAM role permissions."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "89b338bd-c730-4b01-ab60-68ecd529de81",
+      "numericId": 6,
+      "threatSource": "actor",
+      "prerequisites": "with ability to invoke lambda functions",
+      "threatAction": "trigger ecrimage notification function with crafted events to update agent runtimes with malicious container uris",
+      "threatImpact": "replacement of legitimate agent containers with attacker-controlled images",
+      "impactedGoal": [
+        "integrity",
+        "availability"
+      ],
+      "impactedAssets": [
+        "agent runtime configuration",
+        "container uris",
+        "agent execution environment"
+      ],
+      "statement": "An actor with ability to invoke lambda functions can trigger ecrimage notification function with crafted events to update agent runtimes with malicious container uris, which leads to replacement of legitimate agent containers with attacker-controlled images, resulting in reduced integrity of agent runtime configuration, container uris, agent execution environment.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-11",
+        "DF-12",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with Lambda invoke permissions crafts EventBridge event to trigger ECRImageNotificationFunction with malicious container URI.\n\n**Technical Details**: Lambda function updates runtime configuration based on EventBridge events. No validation of container URI source or integrity.\n\n**Business Impact**: Agent runtime compromise, potential for persistent backdoor in agent infrastructure."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "e8c1079f-96f5-4877-b489-43de58fb2f75",
+      "numericId": 7,
+      "threatSource": "actor",
+      "prerequisites": "with access to cloudwatch logs containing x-ray traces",
+      "threatAction": "analyze distributed traces to map agent communication patterns and identify sensitive data flows",
+      "threatImpact": "reconnaissance of system architecture and identification of high-value targets",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "system architecture information",
+        "agent communication patterns",
+        "data flow topology"
+      ],
+      "statement": "An actor with access to cloudwatch logs containing x-ray traces can analyze distributed traces to map agent communication patterns and identify sensitive data flows, which leads to reconnaissance of system architecture and identification of high-value targets, resulting in reduced confidentiality of system architecture information, agent communication patterns, data flow topology.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-14",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker gains read access to CloudWatch Logs where X-Ray traces are delivered. Analyzes trace data to understand system topology.\n\n**Technical Details**: X-Ray tracing configured for all runtimes and gateway. Traces may contain sensitive information about agent interactions and data flows.\n\n**Business Impact**: Information disclosure enabling more targeted attacks, understanding of security controls and trust boundaries."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "42afe65a-eaa3-455c-b4c9-f19ee6939f36",
+      "numericId": 8,
+      "threatSource": "actor",
+      "prerequisites": "with ability to invoke host agent runtime",
+      "threatAction": "send high-volume concurrent requests to exhaust agent resources and cause denial of service",
+      "threatImpact": "agent runtime becoming unresponsive and unable to process legitimate user requests",
+      "impactedGoal": [
+        "availability"
+      ],
+      "impactedAssets": [
+        "host agent runtime",
+        "bedrock api quota",
+        "user session availability"
+      ],
+      "statement": "An actor with ability to invoke host agent runtime can send high-volume concurrent requests to exhaust agent resources and cause denial of service, which leads to agent runtime becoming unresponsive and unable to process legitimate user requests, resulting in reduced availability of host agent runtime, bedrock api quota, user session availability.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-02",
+        "DF-08",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with valid JWT token sends thousands of concurrent agent invocation requests to overwhelm runtime.\n\n**Technical Details**: No rate limiting or throttling mentioned in frontend or agent runtime code. Bedrock API has quotas that could be exhausted.\n\n**Business Impact**: Service disruption, inability for legitimate users to access agent capabilities, potential AWS service quota exhaustion."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "5fe821db-3799-4fde-88ad-d0db31756e48",
+      "numericId": 9,
+      "threatSource": "actor",
+      "prerequisites": "with compromised monitoring agent credentials",
+      "threatAction": "invoke mcp gateway to exfiltrate cloudwatch logs and metrics from production environments",
+      "threatImpact": "unauthorized access to sensitive operational data and potential exposure of application secrets in logs",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "cloudwatch logs",
+        "cloudwatch metrics",
+        "application secrets",
+        "operational data"
+      ],
+      "statement": "An actor with compromised monitoring agent credentials can invoke mcp gateway to exfiltrate cloudwatch logs and metrics from production environments, which leads to unauthorized access to sensitive operational data and potential exposure of application secrets in logs, resulting in reduced confidentiality of cloudwatch logs, cloudwatch metrics, application secrets, operational data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-06",
+        "DF-07",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker obtains monitoring agent OAuth2 credentials and uses them to invoke MCP Gateway CloudWatch operations.\n\n**Technical Details**: MCP Gateway exposes 7 CloudWatch operations including FilterLogEvents and GetLogEvents. No scope restrictions on which log groups can be accessed.\n\n**Business Impact**: Exposure of sensitive operational data, potential credential leakage from logs, compliance violations."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "0c45f223-4b42-47da-889f-e752c778722e",
+      "numericId": 10,
+      "threatSource": "actor",
+      "prerequisites": "with ability to manipulate eventbridge events",
+      "threatAction": "send crafted events to trigger lambda functions with malicious parameters",
+      "threatImpact": "unauthorized modification of agent runtime configurations or x-ray tracing settings",
+      "impactedGoal": [
+        "integrity"
+      ],
+      "impactedAssets": [
+        "agent runtime configuration",
+        "x-ray tracing configuration",
+        "oauth2 credential providers"
+      ],
+      "statement": "An actor with ability to manipulate eventbridge events can send crafted events to trigger lambda functions with malicious parameters, which leads to unauthorized modification of agent runtime configurations or x-ray tracing settings, resulting in reduced integrity of agent runtime configuration, x-ray tracing configuration, oauth2 credential providers.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-11",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with EventBridge permissions creates or modifies rules to trigger Lambda functions with crafted event payloads.\n\n**Technical Details**: Multiple Lambda functions triggered by EventBridge for runtime updates, X-Ray setup, and OAuth2 configuration. Limited input validation.\n\n**Business Impact**: Configuration tampering, potential for disabling security controls like X-Ray tracing, modification of authentication settings."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "70815ea4-8b1a-4ec8-9d52-01a477b9c77e",
+      "numericId": 11,
+      "threatSource": "actor",
+      "prerequisites": "with access to cognito user pool",
+      "threatAction": "create unauthorized user accounts or modify existing user attributes to escalate privileges",
+      "threatImpact": "unauthorized access to agent invocation capabilities with elevated permissions",
+      "impactedGoal": [
+        "integrity",
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "cognito user pool",
+        "user identities",
+        "jwt tokens"
+      ],
+      "statement": "An actor with access to cognito user pool can create unauthorized user accounts or modify existing user attributes to escalate privileges, which leads to unauthorized access to agent invocation capabilities with elevated permissions, resulting in reduced integrity of cognito user pool, user identities, jwt tokens.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-01",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "E",
+            "T"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with Cognito admin permissions creates new users or modifies user attributes to gain unauthorized access.\n\n**Technical Details**: Cognito User Pool manages authentication. No mention of MFA or advanced security features. JWT sub claim used as actor ID.\n\n**Business Impact**: Unauthorized access to agent capabilities, potential for privilege escalation, ability to access other users' conversation history."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "9c79cfd8-a6f7-493c-9868-c9829d7060d7",
+      "numericId": 12,
+      "threatSource": "actor",
+      "prerequisites": "with ability to modify frontend code or inject malicious javascript",
+      "threatAction": "steal jwt tokens from browser storage or intercept them during authentication flow",
+      "threatImpact": "session hijacking and unauthorized agent invocations on behalf of legitimate users",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "jwt tokens",
+        "user sessions",
+        "browser storage"
+      ],
+      "statement": "An actor with ability to modify frontend code or inject malicious javascript can steal jwt tokens from browser storage or intercept them during authentication flow, which leads to session hijacking and unauthorized agent invocations on behalf of legitimate users, resulting in reduced confidentiality of jwt tokens, user sessions, browser storage.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-01",
+        "DF-02",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "S",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: XSS vulnerability in React frontend or compromised npm dependencies. Attacker injects code to steal JWT tokens from browser storage.\n\n**Technical Details**: Frontend uses AWS Amplify for authentication. Tokens likely stored in browser localStorage or sessionStorage.\n\n**Business Impact**: Account takeover, unauthorized access to agent capabilities, potential for data exfiltration through agent memory."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "a0dece9c-8d67-46e1-b7f4-32767dbbc0a9",
+      "numericId": 13,
+      "threatSource": "actor",
+      "prerequisites": "with access to bedrock agentcore memory service",
+      "threatAction": "query or modify conversation context and technical issues stored for other users",
+      "threatImpact": "unauthorized access to sensitive conversation history and potential manipulation of agent memory",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "conversation context",
+        "technical issue data",
+        "user memory data"
+      ],
+      "statement": "An actor with access to bedrock agentcore memory service can query or modify conversation context and technical issues stored for other users, which leads to unauthorized access to sensitive conversation history and potential manipulation of agent memory, resulting in reduced confidentiality of conversation context, technical issue data, user memory data.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-09",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I",
+            "T"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with access to Memory Service API or underlying storage queries data across actor boundaries.\n\n**Technical Details**: Memory service stores conversation context per actor and session. Custom extraction strategies for monitoring issues and search patterns. No mention of encryption at rest.\n\n**Business Impact**: Privacy violation, exposure of sensitive CloudWatch data and AWS infrastructure details, potential for memory poisoning attacks."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "717fb980-85c9-48ca-bfaf-50025681b27e",
+      "numericId": 14,
+      "threatSource": "actor",
+      "prerequisites": "with ability to intercept a2a protocol messages between host and sub-agents",
+      "threatAction": "capture or modify agent-to-agent communication to inject malicious instructions or extract sensitive data",
+      "threatImpact": "manipulation of agent behavior and potential exposure of internal agent communications",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "a2a protocol messages",
+        "agent instructions",
+        "sub-agent responses"
+      ],
+      "statement": "An actor with ability to intercept a2a protocol messages between host and sub-agents can capture or modify agent-to-agent communication to inject malicious instructions or extract sensitive data, which leads to manipulation of agent behavior and potential exposure of internal agent communications, resulting in reduced confidentiality of a2a protocol messages, agent instructions, sub-agent responses.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-04",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I",
+            "T"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Man-in-the-middle attack on A2A protocol communication between host and sub-agents. Requires network position between agent runtimes.\n\n**Technical Details**: A2A protocol used for agent-to-agent communication with OAuth2 M2M authentication. Communication occurs within AWS but could be intercepted if network controls are weak.\n\n**Business Impact**: Agent behavior manipulation, potential for injecting malicious instructions to monitoring or web search agents, exposure of internal agent logic."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "602c5fe8-dff5-43ee-996d-11d19644098d",
+      "numericId": 15,
+      "threatSource": "actor",
+      "prerequisites": "with access to codebuild project",
+      "threatAction": "modify buildspec to inject malicious code into docker images during build process",
+      "threatImpact": "persistent backdoor in all agent runtime containers",
+      "impactedGoal": [
+        "integrity",
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "docker images",
+        "agent runtime code",
+        "build pipeline"
+      ],
+      "statement": "An actor with access to codebuild project can modify buildspec to inject malicious code into docker images during build process, which leads to persistent backdoor in all agent runtime containers, resulting in reduced integrity of docker images, agent runtime code, build pipeline.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-10",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with CodeBuild modify permissions alters buildspec.yml to inject malicious code during Docker build.\n\n**Technical Details**: CodeBuild performs parallel Docker build and ECR push. BuildSpec stored in source control but could be modified by attacker with repository access.\n\n**Business Impact**: Supply chain compromise, persistent backdoor in all agent runtimes, potential for long-term undetected access to AWS resources."
+        },
+        {
+          "key": "Priority",
+          "value": "High"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "e4e5993d-2928-44a5-bba5-db2497eda1f7",
+      "numericId": 16,
+      "threatSource": "actor",
+      "prerequisites": "with ability to invoke web search agent",
+      "threatAction": "craft malicious search queries to extract sensitive information from tavily api or manipulate search results",
+      "threatImpact": "information disclosure or injection of misleading information into agent responses",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "web search results",
+        "tavily api access",
+        "agent responses"
+      ],
+      "statement": "An actor with ability to invoke web search agent can craft malicious search queries to extract sensitive information from tavily api or manipulate search results, which leads to information disclosure or injection of misleading information into agent responses, resulting in reduced confidentiality of web search results, tavily api access, agent responses.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-13",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "I"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker invokes web search agent with crafted queries designed to extract sensitive information or poison search results.\n\n**Technical Details**: Web search agent uses Tavily API for external searches. No mention of query sanitization or result validation.\n\n**Business Impact**: Potential for information disclosure through search queries, injection of misleading information that could affect decision-making."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "5accbbde-2ddf-4d66-a043-2b25f5ba58e5",
+      "numericId": 17,
+      "threatSource": "actor",
+      "prerequisites": "with access to lambda function execution role",
+      "threatAction": "escalate privileges by modifying lambda function code to access additional aws resources",
+      "threatImpact": "unauthorized access to aws services beyond intended lambda function scope",
+      "impactedGoal": [
+        "confidentiality",
+        "integrity"
+      ],
+      "impactedAssets": [
+        "lambda execution roles",
+        "aws service access",
+        "agent runtime configuration"
+      ],
+      "statement": "An actor with access to lambda function execution role can escalate privileges by modifying lambda function code to access additional aws resources, which leads to unauthorized access to aws services beyond intended lambda function scope, resulting in reduced confidentiality of lambda execution roles, aws service access, agent runtime configuration.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-11",
+        "DF-12",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "E",
+            "T"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with Lambda function update permissions modifies function code to access additional AWS resources using execution role.\n\n**Technical Details**: Multiple Lambda functions with different execution roles for ECR notifications, X-Ray setup, and OAuth2 configuration. Lambda upgrades boto3 at runtime which could be exploited.\n\n**Business Impact**: Privilege escalation, potential for lateral movement to other AWS services, unauthorized access to sensitive resources."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "3ca729a2-2eda-412d-8be8-395751521831",
+      "numericId": 18,
+      "threatSource": "actor",
+      "prerequisites": "with access to in-memory session service",
+      "threatAction": "enumerate active sessions to identify high-value targets or hijack existing sessions",
+      "threatImpact": "unauthorized access to user sessions and conversation context",
+      "impactedGoal": [
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "session identifiers",
+        "user sessions",
+        "conversation state"
+      ],
+      "statement": "An actor with access to in-memory session service can enumerate active sessions to identify high-value targets or hijack existing sessions, which leads to unauthorized access to user sessions and conversation context, resulting in reduced confidentiality of session identifiers, user sessions, conversation state.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-02",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "I",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker gains access to in-memory session service (Google ADK InMemorySessionService) and enumerates or hijacks active sessions.\n\n**Technical Details**: Sessions scoped by app name, user ID, and session ID. In-memory storage means sessions lost on restart but vulnerable while active.\n\n**Business Impact**: Session hijacking, unauthorized access to ongoing conversations, potential for impersonation."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "0e81dd3a-dcd5-48e4-aac5-4df14a042262",
+      "numericId": 19,
+      "threatSource": "actor",
+      "prerequisites": "with ability to manipulate smithy model in s3",
+      "threatAction": "modify cloudwatch operations exposed by mcp gateway to add unauthorized operations or remove security controls",
+      "threatImpact": "expanded attack surface for cloudwatch access or removal of operation restrictions",
+      "impactedGoal": [
+        "integrity",
+        "confidentiality"
+      ],
+      "impactedAssets": [
+        "smithy model",
+        "mcp gateway operations",
+        "cloudwatch api access"
+      ],
+      "statement": "An actor with ability to manipulate smithy model in s3 can modify cloudwatch operations exposed by mcp gateway to add unauthorized operations or remove security controls, which leads to expanded attack surface for cloudwatch access or removal of operation restrictions, resulting in reduced integrity of smithy model, mcp gateway operations, cloudwatch api access.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-06",
+        "DF-07",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "T",
+            "E"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker with S3 write permissions modifies Smithy model that defines MCP Gateway operations.\n\n**Technical Details**: Smithy model stored in S3 defines 7 CloudWatch operations. If modified, could expose additional operations or remove restrictions.\n\n**Business Impact**: Expanded attack surface for CloudWatch access, potential for unauthorized operations like DeleteLogGroup or PutMetricData."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    },
+    {
+      "id": "7f84cddd-bcbc-42ce-a47a-1878b6e32eca",
+      "numericId": 20,
+      "threatSource": "actor",
+      "prerequisites": "with compromised bedrock api credentials",
+      "threatAction": "invoke claude model directly to bypass agent orchestration and access controls",
+      "threatImpact": "unauthorized llm usage and potential for extracting training data or model behavior",
+      "impactedGoal": [
+        "confidentiality",
+        "availability"
+      ],
+      "impactedAssets": [
+        "bedrock api access",
+        "claude model",
+        "api quotas"
+      ],
+      "statement": "An actor with compromised bedrock api credentials can invoke claude model directly to bypass agent orchestration and access controls, which leads to unauthorized llm usage and potential for extracting training data or model behavior, resulting in reduced confidentiality of bedrock api access, claude model, api quotas.",
+      "status": "threatIdentified",
+      "tags": [
+        "DF-08",
+        "AI Generated"
+      ],
+      "metadata": [
+        {
+          "key": "STRIDE",
+          "value": [
+            "E",
+            "D"
+          ]
+        },
+        {
+          "key": "Comments",
+          "value": "**Attack Vector**: Attacker obtains IAM credentials with Bedrock invoke permissions and directly calls Claude model API bypassing agent orchestration.\n\n**Technical Details**: All agents use Claude Sonnet 4.5 via Bedrock. Direct API access would bypass agent logic and memory controls.\n\n**Business Impact**: Unauthorized LLM usage, quota exhaustion, potential for model abuse, bypassing of agent-level security controls."
+        },
+        {
+          "key": "Priority",
+          "value": "Medium"
+        },
+        {
+          "key": "custom:agent",
+          "value": "STRIDE Analysis Agent"
+        }
+      ]
+    }
+  ]
+}
